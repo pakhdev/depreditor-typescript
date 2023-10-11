@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Depreditor</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./src/assets/css/styles.css">
+    <link rel="stylesheet" href="./src/assets/css/icons.css">
+</head>
+<body>
+
+<div id="editor-container" class="editor-container">
+    <div id="editor-toolbar" class="editor-toolbar">
+        <div class="editor-toolbar__icons-container" id="editor-toolbar__icons-container"></div>
+    </div>
+    <div id="editor-content-container" class="editor-content-container">
+        <div id="editor-content" class="editor-content" contenteditable="true" spellcheck="false">
+            <div style="text-align: center;">
+                <b>Depreditor</b>
+                <br>
+                <font color="#cccccc">Creado por Mikhail Pakhmutov</font>
+            </div>
+            <br>
+            Es un editor personalizado desarrollado para el proyecto BrainCrate. Aunque
+            inicialmente se creó para satisfacer las necesidades específicas de BrainCrate, el editor se ha desarrollado
+            de manera independiente y podría convertirse en un módulo para Angular en el futuro.
+            <br><br>
+            La razón principal detrás de la creación de este editor en lugar de utilizar uno existente es la necesidad
+            de tener un control total sobre sus características y funcionalidades. Esto permite que el editor se ajuste
+            perfectamente a las necesidades del proyecto y pueda ser afinado en detalle a medida que evoluciona.
+            <br><br>
+            Quiero enfatizar que este editor es de código abierto y estoy totalmente abierto a que otros lo utilicen,
+            modifiquen y desarrollen según sus necesidades. La comunidad de desarrolladores es bienvenida para
+            contribuir y mejorar el editor.
+            <br><br>
+            Si decides utilizar o modificar el Depreditor, te animo a que lo hagas y lo adaptes a tus propios proyectos.
+            <br><br>
+
+            <font color="#ff9900"><b>Uso Básico</b></font>
+            <br>
+            El editor se puede integrar fácilmente en diferentes contenedores HTML. Pueden ser varios en la misma
+            página. Aquí hay un ejemplo de cómo llamar al editor:
+            <br><br>
+            <div class="code-text">
+                const firstContentEditableDiv = document.getElementById('editor-content')!;<br>
+                const firstToolbarContainer = document.getElementById('editor-toolbar__icons-container')!;<br>
+                new EditorInitializer(firstContentEditableDiv, firstToolbarContainer);
+            </div>
+            <br>
+            También puedes probar el editor directamente desde el código en GitHub utilizando el comando:
+            <br><br>
+            <div class="code-text">
+                npm run dev
+            </div>
+            <br>
+
+            <font color="#ff9900"><b>Características Principales:</b></font>
+            <br>
+            El código del editor está dividido en varios módulos para facilitar su edición y mantenimiento. Hasta el
+            momento, el editor incluye las siguientes funciones básicas:
+            <ul>
+                <li>Formato de texto: negrita, cursiva, subrayado.</li>
+                <li>Cambio de color de texto y fondo.</li>
+                <li>Creación de listas ordenadas y no ordenadas.</li>
+                <li>Alineación del texto.</li>
+                <li>Inserción de tablas e imágenes.</li>
+            </ul>
+            <br>
+
+            <font color="#ff9900"><b>Procesamiento de Imágenes</b></font>
+            <br>
+            Una característica interesante del editor es el procesamiento automático de imágenes. Las imágenes se
+            redimensionan automáticamente de acuerdo con las configuraciones establecidas en el módulo
+            images-processor.ts. Puedes ajustar estas variables según tus necesidades:
+            <div class="code-text">
+                private maxInitialImageWidth: number = 800;
+                private maxInitialImageHeight: number = 600;
+                private maxResolutionDifference: number = 300;
+                private maxLargeImageWidth: number = 1600;
+                private maxLargeImageHeight: number = 1200;
+            </div>
+            <br>
+            Las imágenes redimensionadas se insertan en el texto del editor en formato base64 y deben procesarse en el
+            backend. Puedes desactivar la opción de crear imágenes grandes al subir imágenes.
+            <br>
+            Para insertar imágenes en el código, se utiliza el siguiente formato:
+            <div class="code-text">
+                &lt;img largeimage="data:image/jpeg;base64..." src="data:image/jpeg;base64..."&gt;
+            </div>
+            <br>
+            Donde el atributo <b>largeimage</b> contiene la imagen grande (si existe) y en caso contrario será
+            null.
+        </div>
+    </div>
+</div>
+
+<div id="editor-container-two" class="editor-container">
+    <div id="editor-toolbar-two" class="editor-toolbar">
+        <div class="editor-toolbar__icons-container" id="editor-toolbar__icons-container-two"></div>
+    </div>
+    <div id="editor-content-container-two" class="editor-content-container">
+        <div id="editor-content-two" class="editor-content" contenteditable="true" spellcheck="false">
+            <div style="text-align: center;">
+                <b>Aviones no tripulados</b>
+            </div>
+            <br>&ZeroWidthSpace;Cuando aparezcan los aviones no tripulados, los programadores serán los primeros en
+            negarse a volar en ellos
+        </div>
+    </div>
+</div>
+
+<script type="module" src="./src/main.ts"></script>
+</body>
+</html>
