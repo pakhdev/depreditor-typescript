@@ -25,14 +25,10 @@ export class ImagesProcessor {
         if (img.width <= this.maxInitialImageWidth && img.height <= this.maxInitialImageHeight) {
             return img.src;
         }
-        return this.resizeImage(img, this.maxLargeImageWidth, this.maxLargeImageHeight);
+        return this.resizeImage(img, this.maxInitialImageWidth, this.maxInitialImageHeight);
     }
 
     private createLargeImage(img: HTMLImageElement): string | null {
-
-        // загружаемая картинка 1024х768
-        // маленькая будет 800х600
-        // большая 1024х768, так как это меньше maxLargeImage по всем параметрам
 
         if (img.width > this.maxInitialImageWidth + this.minResolutionDifference
             ||
