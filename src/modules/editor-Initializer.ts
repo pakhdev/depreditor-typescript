@@ -90,13 +90,16 @@ export class EditorInitializer {
 
     public saveSelection(): void {
         const selection = window.getSelection();
-        console.log(selection);
-        if (
-            selection?.focusNode !== this.editableDiv &&
-            selection?.focusNode?.parentNode !== this.editableDiv
-        ) return;
+        if (!selection || !selection.focusNode) return;
 
-        this.savedSelection = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+        let checkingParentNode = selection.focusNode;
+        while (checkingParentNode) {
+            if (checkingParentNode === this.editableDiv) break;
+            checkingParentNode = checkingParentNode.parentNode as Node;
+        }
+        if (checkingParentNode !== this.editableDiv) return;
+        this.savedSelection = selection!.rangeCount > 0 ? selection!.getRangeAt(0).cloneRange() : null;
+        console.log('Save selection');
     }
 
     public restoreSelection(): void {

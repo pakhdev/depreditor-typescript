@@ -6,4 +6,5 @@ export type FormattingName =
     | 'insertunorderedlist'
     | 'justifyleft'
     | 'justifycenter'
-    | 'justifyright';
+    | 'justifyright'
+    | 'hidetext';

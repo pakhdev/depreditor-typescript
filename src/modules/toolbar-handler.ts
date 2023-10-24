@@ -21,6 +21,8 @@ export class ToolbarHandler {
         { icon: 'icon-set-paragraph-center', action: () => this.depreditor.formatter.align('center') },
         { icon: 'icon-set-paragraph-right', action: () => this.depreditor.formatter.align('right') },
         { icon: 'icon-insert-table', action: () => this.depreditor.popup.showTableForm() },
+        { icon: 'icon-set-hidden', action: () => this.depreditor.formatter.setHidden() },
+        { icon: 'icon-insert-link', action: () => this.depreditor.popup.showLinkForm() },
         { icon: 'icon-insert-image', action: () => this.depreditor.popup.showImageForm() },
         { icon: 'icon-set-text-color', action: () => this.depreditor.popup.showColorsForm('text') },
         { icon: 'icon-set-text-background-color', action: () => this.depreditor.popup.showColorsForm('background') },
@@ -52,6 +54,24 @@ export class ToolbarHandler {
         for (const formattingName of formattingNames) {
             this.setButtonState(formattingName, document.queryCommandState(formattingName));
         }
+        this.setButtonState('hidetext', this.isHiddenTextSelected());
+    }
+
+    public isHiddenTextSelected(): boolean {
+        const selection = window.getSelection()!;
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const commonAncestor = range.commonAncestorContainer as HTMLElement;
+
+            if (
+                commonAncestor.parentNode &&
+                commonAncestor.nodeType === Node.TEXT_NODE &&
+                commonAncestor.parentNode instanceof Element
+            ) {
+                return commonAncestor.parentNode.classList.contains('hidden-text');
+            }
+        }
+        return false;
     }
 
     private setButtonState(formattingName: FormattingName, newState: boolean): void {
@@ -84,6 +104,9 @@ export class ToolbarHandler {
                 break;
             case 'justifyright':
                 button = this.toolbarContainer.querySelector('.icon-set-paragraph-right')!;
+                break;
+            case 'hidetext':
+                button = this.toolbarContainer.querySelector('.icon-set-hidden')!;
                 break;
         }
 

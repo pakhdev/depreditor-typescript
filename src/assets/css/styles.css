@@ -143,6 +143,7 @@ body {
 
 .depreditor-popup-container {
     position: absolute;
+    z-index: 999;
     top: 0;
     left: 0;
     width: 100%;
@@ -271,4 +272,41 @@ body {
     display: flex;
     gap: 0 10px;
     justify-content: center;
+}
+
+.depreditor-input {
+    height: 36px;
+    border: 1px solid #EADFFC;
+    background-color: #EEF4F8;
+    border-radius: 5px;
+    width: 100%;
+    padding: 10px 15px;
+    color: var(--dark-turquoise);
+    font-size: 13px;
+}
+
+.depreditor-input::placeholder {
+    color: var(--dark-turquoise);
+    font-size: 13px;
+}
+
+.hidden-text {
+    position: relative;
+    display: inline-block;
+    padding: 5px;
+    border: 1px dashed #ccc;
+    background-color: white;
+    color: #cccccc;
+}
+
+.hidden-text::after {
+    font-family: 'icons' !important;
+    content: "\e923";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 5px;
+    color: #30435A;
+    z-index: 0;
 }

@@ -16,6 +16,9 @@
     font-size: 13px;
 }
 
+.icon-set-hidden:before {
+    content: "\e923";
+}
 .icon-set-text-color:before {
     content: "\e917";
 }

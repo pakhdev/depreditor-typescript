@@ -10,7 +10,47 @@ export class FormattingUtils {
     }
 
     public insertCode(): void {
-        document.execCommand('insertHTML', false, '<div class="code-text">' + document.getSelection() + '<br>&ZeroWidthSpace;</div><br>');
+        this.depreditor.saveSelection();
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'code-text';
+
+        const selectedHtmlString = this.getSelectedHtml();
+        if (selectedHtmlString) codeDiv.innerHTML = selectedHtmlString;
+
+        this.insertElement(codeDiv);
+        const brElement = document.createElement('br');
+        codeDiv.parentNode!.insertBefore(brElement, codeDiv.nextSibling);
+    }
+
+    public setHidden(): void {
+        if (this.depreditor.toolbar.isHiddenTextSelected()) {
+            this.unsetHidden();
+            return;
+        }
+        this.depreditor.saveSelection();
+        const selectedHtmlString = this.getSelectedHtml();
+        if (!selectedHtmlString || !selectedHtmlString!.replace(/<[^>]*>/g, '').trim().length) return;
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'hidden-text';
+        codeDiv.innerHTML = selectedHtmlString;
+        this.insertElement(codeDiv);
+    }
+
+    public unsetHidden(): void {
+        const selection = window.getSelection()!;
+        const range = selection.getRangeAt(0);
+        const commonAncestor = range.commonAncestorContainer as HTMLElement;
+
+        const hiddenElement = commonAncestor.parentNode as HTMLDivElement;
+        range.selectNode(hiddenElement);
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        const textElement = document.createTextNode(selection.toString());
+        range.deleteContents();
+        range.insertNode(textElement);
+        this.depreditor.moveCaretToEndOfSelection();
     }
 
     public align(direction: string): void {
@@ -61,6 +101,16 @@ export class FormattingUtils {
         this.depreditor.moveCaretToEndOfSelection();
     }
 
+    public insertLink(url: string, text: string): void {
+        if (!url.length) return;
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.textContent = text;
+        link.target = '_blank';
+        this.insertElement(link);
+    }
+
     public setColor(type: 'text' | 'background', color: string) {
         this.depreditor.popup.hidePopup();
         this.depreditor.restoreSelection();
@@ -78,5 +128,15 @@ export class FormattingUtils {
         if (processedImages.largeImage) imgElement.setAttribute('largeImage', processedImages.largeImage);
         imgElement.src = processedImages?.initialImage;
         this.insertElement(imgElement);
+    }
+
+    private getSelectedHtml(): string | undefined {
+        const selection = document.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const container = document.createElement('div');
+            container.appendChild(range.cloneContents());
+            return container.innerHTML;
+        }
     }
 }

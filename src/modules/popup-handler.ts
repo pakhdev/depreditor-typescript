@@ -54,27 +54,16 @@ export class PopupHandler {
         rowsInput.id = 'depreditor-rows-num';
         rowsInput.value = '1';
 
-        const buttonsContainer = document.createElement('div');
-        buttonsContainer.className = 'depreditor-popup__buttons-container';
-
-        const cancelButton = document.createElement('button');
-        cancelButton.className = 'button-danger button';
-        cancelButton.onclick = this.hidePopup;
-        cancelButton.textContent = 'Cancelar';
-
-        const insertButton = document.createElement('button');
-        insertButton.className = 'button-success button';
-        insertButton.onclick = () => this.depreditor.formatter.insertTable(+rowsInput.value, +columnsInput.value);
-        insertButton.textContent = 'Insertar tabla';
-
         popup.appendChild(columnsLabel);
         popup.appendChild(columnsInput);
         popup.appendChild(rowsLabel);
         popup.appendChild(rowsInput);
-        buttonsContainer.appendChild(cancelButton);
-        buttonsContainer.appendChild(insertButton);
-        popup.appendChild(buttonsContainer);
 
+        const actionButtons = this.createFormButtons(
+            'Insertar tabla',
+            () => this.depreditor.formatter.insertTable(+rowsInput.value, +columnsInput.value),
+        );
+        popup.appendChild(actionButtons);
         this.popupContainer.appendChild(popup);
         this.popupContainer.style.display = 'block';
     }
@@ -125,27 +114,83 @@ export class PopupHandler {
         fileInput.style.display = 'none';
         popup.appendChild(fileInput);
 
-        const buttonsContainerDiv = document.createElement('div');
-        buttonsContainerDiv.className = 'depreditor-popup__buttons-container';
+        const actionButtons = this.createFormButtons(
+            'Seleccionar imágen',
+            () => fileInput.click(),
+        );
+        popup.appendChild(actionButtons);
+        this.popupContainer.appendChild(popup);
+        this.popupContainer.style.display = 'block';
+    }
 
-        const cancelButton = document.createElement('button');
-        cancelButton.className = 'button-danger button';
-        cancelButton.onclick = this.hidePopup;
-        cancelButton.textContent = 'Cancelar';
+    public showLinkForm(): void {
+        if (this.isPopupOpened) {
+            if (this.isPopupOpened === 'showLinkForm') this.hidePopup();
+            return;
+        }
+        this.isPopupOpened = 'showLinkForm';
 
-        // Создаем кнопку "Seleccionar imágen" с классом "button-success button"
-        const selectImageButton = document.createElement('button');
-        selectImageButton.className = 'button-success button';
-        selectImageButton.onclick = () => fileInput.click();
-        selectImageButton.textContent = 'Seleccionar imágen';
+        let linkTextInput: HTMLInputElement;
+        let existingLink = '';
 
-        // Добавляем кнопки в div "depreditor-popup__buttons-container"
-        buttonsContainerDiv.appendChild(cancelButton);
-        buttonsContainerDiv.appendChild(selectImageButton);
+        let selection = window.getSelection()!;
+        let selectedText = selection.toString();
 
-        // Добавляем div "depreditor-popup__buttons-container" в "depreditor-popup"
-        popup.appendChild(buttonsContainerDiv);
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const commonAncestor = range.commonAncestorContainer as HTMLElement;
 
+            if (
+                commonAncestor.parentNode &&
+                commonAncestor.nodeType === Node.TEXT_NODE &&
+                commonAncestor.parentNode instanceof Element &&
+                commonAncestor.parentNode.tagName === 'A'
+            ) {
+                const linkElement = commonAncestor.parentNode as HTMLAnchorElement;
+                range.selectNode(linkElement);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                selectedText = selection.toString();
+                existingLink = commonAncestor.parentNode.getAttribute('href')!;
+            }
+        }
+
+        const popup = document.createElement('div');
+        popup.className = 'depreditor-popup';
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'depreditor-popup__title';
+        titleDiv.textContent = 'Insertar enlace';
+        popup.appendChild(titleDiv);
+
+        const centeringDiv = document.createElement('div');
+        centeringDiv.className = 'depreditor-popup__centering-container';
+
+        const linkInput = document.createElement('input');
+        linkInput.classList.add('depreditor-input');
+        linkInput.type = 'text';
+        linkInput.placeholder = 'Dirección del enlace';
+        linkInput.value = existingLink;
+        centeringDiv.appendChild(linkInput);
+
+        if (!selectedText.length) {
+            linkTextInput = document.createElement('input');
+            linkTextInput.classList.add('depreditor-input');
+            linkTextInput.type = 'text';
+            linkTextInput.placeholder = 'Texto del enlace';
+            centeringDiv.appendChild(linkTextInput);
+        }
+
+        popup.appendChild(centeringDiv);
+
+        const actionButtons = this.createFormButtons(
+            'Insertar enlace',
+            () => this.depreditor.formatter.insertLink(
+                linkInput.value,
+                selectedText.length ? selectedText : linkTextInput.value,
+            ),
+        );
+        popup.appendChild(actionButtons);
         this.popupContainer.appendChild(popup);
         this.popupContainer.style.display = 'block';
     }
@@ -188,16 +233,8 @@ export class PopupHandler {
 
         popup.appendChild(colorsContainer);
 
-        const buttonsContainer = document.createElement('div');
-        buttonsContainer.className = 'depreditor-popup__buttons-container';
-
-        const cancelButton = document.createElement('button');
-        cancelButton.className = 'button-danger button';
-        cancelButton.onclick = this.hidePopup;
-        cancelButton.textContent = 'Cancelar';
-
-        buttonsContainer.appendChild(cancelButton);
-        popup.appendChild(buttonsContainer);
+        const actionButtons = this.createFormButtons();
+        popup.appendChild(actionButtons);
 
         this.popupContainer.appendChild(popup);
         this.popupContainer.style.display = 'block';
@@ -208,5 +245,26 @@ export class PopupHandler {
         this.popupContainer.innerText = '';
         this.isPopupOpened = false;
     };
+
+    private createFormButtons(actionName?: string, actionFunc?: () => void) {
+        const buttonsContainerDiv = document.createElement('div');
+        buttonsContainerDiv.className = 'depreditor-popup__buttons-container';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.className = 'button-danger button';
+        cancelButton.onclick = this.hidePopup;
+        cancelButton.textContent = 'Cancelar';
+        buttonsContainerDiv.appendChild(cancelButton);
+
+        if (actionName && actionFunc) {
+            const insertActionButton = document.createElement('button');
+            insertActionButton.className = 'button-success button';
+            insertActionButton.onclick = () => actionFunc();
+            insertActionButton.textContent = actionName;
+            buttonsContainerDiv.appendChild(insertActionButton);
+        }
+
+        return buttonsContainerDiv;
+    }
 
 }
