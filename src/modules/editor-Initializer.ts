@@ -33,9 +33,12 @@ export class EditorInitializer {
             text = text.replace(/&/g, '&amp;');
             text = text.replace(/</g, '&lt;');
             text = text.replace(/>/g, '&gt;');
-            text = text.replace(/ /g, '&nbsp;');
+            text = text.replace('\t', '  ');
+            text = this.isSelectionInsideCode()
+                ? this.indentationInCode(text)
+                : this.indentationInText(text);
             text = text.replace(/\n/g, '<br>');
-            document.execCommand('insertHTML', false, text);
+            this.formattingHandler.insertHtml(text);
         };
 
         this.enterEventListener = (e: Event) => {
@@ -125,7 +128,7 @@ export class EditorInitializer {
 
     private lineBreak() {
         const selection = window.getSelection();
-        if (!selection) return;
+        if (!selection || selection.focusNode === null) return;
         if (selection.rangeCount > 0) {
             const range = selection.getRangeAt(0);
             const fragment = range.createContextualFragment('<br>&ZeroWidthSpace;');
@@ -133,6 +136,41 @@ export class EditorInitializer {
             range.setStart(selection.focusNode, selection.focusOffset);
             range.collapse(true);
         }
+    }
+
+    private indentationInCode(text: string): string {
+        let minIndentation = 0;
+        const noIndentation = text
+            .split('\n')
+            .some(line => !line.startsWith(' ') && line.trim().length > 0);
+        if (!noIndentation) {
+            let matches = text.match(/^( +)/gm);
+            minIndentation = Math.min(...matches!.map(match => match.length));
+        }
+        return text.split('\n')
+            .map(line => line.replace(/^( +)/gm, (_, p1) => '&nbsp;'.repeat(p1.length - minIndentation)))
+            .join('\n');
+    };
+
+    private indentationInText(text: string): string {
+        return text.split('\n')
+            .map(line => line.replace(/^( +)/gm, ''))
+            .join('\n');
+    };
+
+    private isSelectionInsideCode(): boolean {
+        const selection = window.getSelection();
+        if (!selection || !selection.focusNode) return false;
+
+        let checkingParentNode = selection.focusNode;
+        while (checkingParentNode) {
+            if (checkingParentNode.nodeType === Node.ELEMENT_NODE) {
+                const element = checkingParentNode as Element;
+                if (element.classList.contains('code-text')) return true;
+            }
+            checkingParentNode = checkingParentNode.parentNode as Node;
+        }
+        return false;
     }
 
     public get popup(): PopupHandler {

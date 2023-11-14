@@ -79,6 +79,19 @@ export class FormattingUtils {
         this.depreditor.moveCaretToEndOfSelection();
     }
 
+    public insertHtml(html: string): void {
+        this.depreditor.restoreSelection();
+        const selection = window.getSelection();
+
+        if (selection) {
+            const range = selection.getRangeAt(0);
+            const fragment = range.createContextualFragment(html);
+            range.deleteContents();
+            range.insertNode(fragment);
+        }
+        this.depreditor.moveCaretToEndOfSelection();
+    }
+
     public insertTable(rows: number, cols: number): void {
         if (rows && cols) {
             const table = document.createElement('table');
@@ -138,5 +151,6 @@ export class FormattingUtils {
             container.appendChild(range.cloneContents());
             return container.innerHTML;
         }
+        return;
     }
 }

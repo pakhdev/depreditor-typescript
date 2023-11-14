@@ -37,6 +37,7 @@ export class ToolbarHandler {
         justifyleft: false,
         justifycenter: false,
         justifyright: false,
+        hidetext: false,
     };
 
     private createButtons(): void {

@@ -7,4 +7,5 @@ export type ButtonsState = {
     justifyleft: boolean,
     justifycenter: boolean,
     justifyright: boolean,
+    hidetext: boolean,
 };
