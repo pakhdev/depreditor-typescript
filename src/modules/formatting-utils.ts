@@ -80,7 +80,6 @@ export class FormattingUtils {
     }
 
     public insertHtml(html: string): void {
-        this.depreditor.restoreSelection();
         const selection = window.getSelection();
 
         if (selection) {

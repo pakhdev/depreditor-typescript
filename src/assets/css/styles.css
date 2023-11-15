@@ -78,6 +78,7 @@ body {
     border-radius: 7px;
     margin: 100px auto;
     filter: drop-shadow(0px 3px 4px rgba(79, 90, 110, 0.1));
+    position: relative;
 }
 
 .editor-header {
@@ -91,6 +92,9 @@ body {
     background-color: var(--ethereal-blue);
     padding: 0 15px;
     height: 41px;
+    position: sticky;
+    top: 0;
+    z-index: 5;
 }
 
 .editor-toolbar__icons-container {
