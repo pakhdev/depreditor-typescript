@@ -28,6 +28,7 @@ export class PopupHandler {
             this.depreditor.editableDiv.parentNode.insertBefore(this.popupContainer, this.depreditor.editableDiv);
             return popup;
         }
+        return;
     }
 
     public showTableForm(): void {
