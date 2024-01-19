@@ -294,13 +294,21 @@ body {
     color: #cccccc;
     &::after {
         font-family: 'icons' !important;
+        font-weight: normal;
         content: "\e923";
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         padding: 5px;
-        color: #30435A;
+        color: rgba(48, 67, 90, 0.5);
         z-index: 0;
+        pointer-events: none;
+    }
+    &:hover {
+        color: inherit;
+    }
+    &:hover::after {
+        color: rgba(48, 67, 90, 0);
     }
 }

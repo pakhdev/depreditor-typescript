@@ -16,12 +16,12 @@ export class PopupHandler {
 
         this.popupContainer = document.createElement('div');
         this.popupContainer.className = 'depreditor-popup-container';
-        this.popupContainer.onclick = () => {
+        this.popupContainer.onmousedown = () => {
             this.hidePopup();
         };
         const popup = document.createElement('div');
         popup.className = 'depreditor-popup';
-        popup.onclick = (e) => e.stopPropagation();
+        popup.onmousedown = (e) => e.stopPropagation();
         this.popupContainer.appendChild(popup);
 
         if (this.depreditor.editableDiv && this.depreditor.editableDiv.parentNode) {
