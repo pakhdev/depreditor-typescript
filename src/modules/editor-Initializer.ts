@@ -2,6 +2,7 @@ import { ToolbarHandler } from './toolbar-handler.ts';
 import { PopupHandler } from './popup-handler.ts';
 import { ImagesProcessor } from './images-processor.ts';
 import { FormattingUtils } from './formatting-utils.ts';
+import { ActionsHistory } from './actions-history.ts';
 
 export class EditorInitializer {
 
@@ -9,11 +10,13 @@ export class EditorInitializer {
     private readonly popupHandler!: PopupHandler;
     private readonly formattingHandler!: FormattingUtils;
     private readonly imagesHandler!: ImagesProcessor;
+    private readonly historyHandler!: ActionsHistory;
 
     private domChangeObserver!: MutationObserver;
     private pasteEventListener!: EventListener;
     private enterEventListener!: EventListener;
     private deleteEventListener!: EventListener;
+    private undoListener!: EventListener;
     private savedSelection: Range | null = null;
 
     constructor(
@@ -26,6 +29,7 @@ export class EditorInitializer {
         this.imagesHandler = new ImagesProcessor();
         this.popupHandler = new PopupHandler(this);
         this.toolbarHandler = new ToolbarHandler(toolbarContainer, this);
+        this.historyHandler = new ActionsHistory();
     }
 
     private initListeners(editableDiv: HTMLElement): void {
@@ -63,10 +67,18 @@ export class EditorInitializer {
             }
         };
 
+        this.undoListener = (e: Event) => {
+            if ((e as KeyboardEvent).key === 'z' && (e as KeyboardEvent).ctrlKey) {
+                e.preventDefault();
+                if (!this.history.undo()) document.execCommand('undo', false);
+            }
+        };
+
         editableDiv.addEventListener('paste', this.pasteEventListener);
         editableDiv.addEventListener('keydown', this.enterEventListener);
         editableDiv.addEventListener('keydown', this.deleteEventListener);
         editableDiv.addEventListener('blur', () => this.saveSelection());
+        editableDiv.addEventListener('keydown', this.undoListener);
 
         editableDiv.addEventListener('mouseup', () => this.toolbar.handleButtonsState());
         editableDiv.addEventListener('keyup', () => this.toolbar.handleButtonsState());
@@ -256,6 +268,10 @@ export class EditorInitializer {
 
     public get imagesProcessor(): ImagesProcessor {
         return this.imagesHandler!;
+    }
+
+    public get history(): ActionsHistory {
+        return this.historyHandler!;
     }
 
 }

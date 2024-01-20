@@ -70,17 +70,21 @@ export class FormattingUtils {
         this.depreditor.popup.hidePopup();
         this.depreditor.restoreSelection();
         const selection = window.getSelection();
+        this.depreditor.history.saveText();
 
         if (selection) {
             const range = selection.getRangeAt(0);
             range.deleteContents();
             range.insertNode(element);
         }
+
+        this.depreditor.history.saveRange();
         this.depreditor.moveCaretToEndOfSelection();
     }
 
     public insertHtml(html: string): void {
         const selection = window.getSelection();
+        this.depreditor.history.saveText();
 
         if (selection) {
             const range = selection.getRangeAt(0);
@@ -88,6 +92,8 @@ export class FormattingUtils {
             range.deleteContents();
             range.insertNode(fragment);
         }
+
+        this.depreditor.history.saveRange();
         this.depreditor.moveCaretToEndOfSelection();
     }
 
