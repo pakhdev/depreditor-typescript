@@ -4,8 +4,11 @@ export class FormattingUtils {
 
     constructor(private readonly depreditor: EditorInitializer) {}
 
-    public format(style: string): void {
+    public format(style: string, avoidHistory?: boolean): void {
         document.execCommand(style, false);
+        if (avoidHistory) return;
+        this.depreditor.history.saveState(style);
+        this.depreditor.history.saveRange();
         this.depreditor.toolbar.handleButtonsState();
     }
 
@@ -70,7 +73,7 @@ export class FormattingUtils {
         this.depreditor.popup.hidePopup();
         this.depreditor.restoreSelection();
         const selection = window.getSelection();
-        this.depreditor.history.saveText();
+        this.depreditor.history.saveState();
 
         if (selection) {
             const range = selection.getRangeAt(0);
@@ -84,7 +87,7 @@ export class FormattingUtils {
 
     public insertHtml(html: string): void {
         const selection = window.getSelection();
-        this.depreditor.history.saveText();
+        this.depreditor.history.saveState();
 
         if (selection) {
             const range = selection.getRangeAt(0);

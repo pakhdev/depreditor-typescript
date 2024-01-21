@@ -16,7 +16,6 @@ export class EditorInitializer {
     private pasteEventListener!: EventListener;
     private enterEventListener!: EventListener;
     private deleteEventListener!: EventListener;
-    private undoListener!: EventListener;
     private savedSelection: Range | null = null;
 
     constructor(
@@ -24,12 +23,12 @@ export class EditorInitializer {
         toolbarContainer: HTMLElement,
     ) {
         this.normalizeCode();
-        this.initListeners(this.editableDiv);
         this.formattingHandler = new FormattingUtils(this);
         this.imagesHandler = new ImagesProcessor();
         this.popupHandler = new PopupHandler(this);
         this.toolbarHandler = new ToolbarHandler(toolbarContainer, this);
-        this.historyHandler = new ActionsHistory();
+        this.historyHandler = new ActionsHistory(this);
+        this.initListeners(this.editableDiv);
     }
 
     private initListeners(editableDiv: HTMLElement): void {
@@ -67,18 +66,12 @@ export class EditorInitializer {
             }
         };
 
-        this.undoListener = (e: Event) => {
-            if ((e as KeyboardEvent).key === 'z' && (e as KeyboardEvent).ctrlKey) {
-                e.preventDefault();
-                if (!this.history.undo()) document.execCommand('undo', false);
-            }
-        };
+        this.history.setUndoListener();
 
         editableDiv.addEventListener('paste', this.pasteEventListener);
         editableDiv.addEventListener('keydown', this.enterEventListener);
         editableDiv.addEventListener('keydown', this.deleteEventListener);
         editableDiv.addEventListener('blur', () => this.saveSelection());
-        editableDiv.addEventListener('keydown', this.undoListener);
 
         editableDiv.addEventListener('mouseup', () => this.toolbar.handleButtonsState());
         editableDiv.addEventListener('keyup', () => this.toolbar.handleButtonsState());
@@ -104,6 +97,7 @@ export class EditorInitializer {
 
     private destroyListeners(): void {
         if (!this.editableDiv) return;
+        this.history.removeUndoListener();
         this.editableDiv.removeEventListener('paste', this.pasteEventListener);
         this.editableDiv.removeEventListener('keydown', this.enterEventListener);
         this.editableDiv.removeEventListener('keydown', this.deleteEventListener);
@@ -127,6 +121,18 @@ export class EditorInitializer {
         }
         if (checkingParentNode !== this.editableDiv) return;
         this.savedSelection = selection!.rangeCount > 0 ? selection!.getRangeAt(0).cloneRange() : null;
+    }
+
+    public isSelectionOnEditableDiv(): boolean {
+        const selection = window.getSelection();
+        if (!selection || !selection.focusNode) return false;
+
+        let checkingParentNode = selection.focusNode;
+        while (checkingParentNode) {
+            if (checkingParentNode === this.editableDiv) return true;
+            checkingParentNode = checkingParentNode.parentNode as Node;
+        }
+        return false;
     }
 
     public restoreSelection(): void {
