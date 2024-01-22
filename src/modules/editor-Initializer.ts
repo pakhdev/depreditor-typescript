@@ -123,16 +123,16 @@ export class EditorInitializer {
         this.savedSelection = selection!.rangeCount > 0 ? selection!.getRangeAt(0).cloneRange() : null;
     }
 
-    public isSelectionOnEditableDiv(): boolean {
+    public selectionOnEditableDiv(): Selection | null {
         const selection = window.getSelection();
-        if (!selection || !selection.focusNode) return false;
+        if (!selection || !selection.focusNode) return null;
 
         let checkingParentNode = selection.focusNode;
         while (checkingParentNode) {
-            if (checkingParentNode === this.editableDiv) return true;
+            if (checkingParentNode === this.editableDiv) return selection;
             checkingParentNode = checkingParentNode.parentNode as Node;
         }
-        return false;
+        return null;
     }
 
     public restoreSelection(): void {
