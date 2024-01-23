@@ -16,6 +16,7 @@ export class EditorInitializer {
     private pasteEventListener!: EventListener;
     private enterEventListener!: EventListener;
     private deleteEventListener!: EventListener;
+    private backspaceEventListener!: EventListener;
     private savedSelection: Range | null = null;
 
     constructor(
@@ -36,6 +37,14 @@ export class EditorInitializer {
         this.deleteEventListener = (e: Event) => {
             if ((e as KeyboardEvent).key === 'Delete') {
                 if (this.preventDelete()) {
+                    e.preventDefault();
+                }
+            }
+        };
+
+        this.backspaceEventListener = (e: Event) => {
+            if ((e as KeyboardEvent).key === 'Backspace') {
+                if (this.preventBackspace()) {
                     e.preventDefault();
                 }
             }
@@ -71,6 +80,7 @@ export class EditorInitializer {
         editableDiv.addEventListener('paste', this.pasteEventListener);
         editableDiv.addEventListener('keydown', this.enterEventListener);
         editableDiv.addEventListener('keydown', this.deleteEventListener);
+        editableDiv.addEventListener('keydown', this.backspaceEventListener);
         editableDiv.addEventListener('blur', () => this.saveSelection());
 
         editableDiv.addEventListener('mouseup', () => this.toolbar.handleButtonsState());
@@ -221,6 +231,13 @@ export class EditorInitializer {
             }
         }
 
+        if (focusNode.nodeType === Node.ELEMENT_NODE) {
+            const focusNodeElement = focusNode as Element;
+            if (focusNodeElement.classList.contains('code-text')) {
+                return true;
+            }
+        }
+
         if (focusNode.nodeType === Node.TEXT_NODE) {
             const textNode = focusNode as Text;
             const textLength = textNode.textContent?.trim().length || 0;
@@ -255,6 +272,16 @@ export class EditorInitializer {
             }
             nextSibling = nextSibling.nextSibling;
         }
+        return false;
+    }
+
+    private preventBackspace() {
+        // Casos para prevenir el comportamiento por defecto:
+        // EL OFFSET ES CERO
+        // 1. El nodo de foco es un elemento div, y tiene contenido
+        // 2. El nodo de foco es un elemento div, y tiene elementos hijos?
+        // 3. El nodo de foco es un texto, y el nodo anterior(o el padre) es un tag y no es un BR, ni span, ni font
+        // 4. El nodo de foco es un li, y no es el primer li
         return false;
     }
 
