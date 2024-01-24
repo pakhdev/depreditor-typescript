@@ -3,52 +3,39 @@ import { PopupHandler } from './popup-handler.ts';
 import { ImagesProcessor } from './images-processor.ts';
 import { FormattingUtils } from './formatting-utils.ts';
 import { ActionsHistory } from './actions-history.ts';
+import { SafeDeletion } from './safe-deletion.ts';
+import { CaretTracking } from './caret-tracking.ts';
 
 export class EditorInitializer {
 
+    private readonly caretTracking!: CaretTracking;
     private readonly toolbarHandler!: ToolbarHandler;
     private readonly popupHandler!: PopupHandler;
     private readonly formattingHandler!: FormattingUtils;
     private readonly imagesHandler!: ImagesProcessor;
     private readonly historyHandler!: ActionsHistory;
+    private readonly safeDeletion: SafeDeletion;
 
     private domChangeObserver!: MutationObserver;
     private pasteEventListener!: EventListener;
     private enterEventListener!: EventListener;
-    private deleteEventListener!: EventListener;
-    private backspaceEventListener!: EventListener;
-    private savedSelection: Range | null = null;
 
     constructor(
         public readonly editableDiv: HTMLDivElement,
         toolbarContainer: HTMLElement,
     ) {
         this.normalizeCode();
+        this.caretTracking = new CaretTracking(this);
         this.formattingHandler = new FormattingUtils(this);
         this.imagesHandler = new ImagesProcessor();
         this.popupHandler = new PopupHandler(this);
         this.toolbarHandler = new ToolbarHandler(toolbarContainer, this);
         this.historyHandler = new ActionsHistory(this);
+        this.safeDeletion = new SafeDeletion(this);
         this.initListeners(this.editableDiv);
     }
 
     private initListeners(editableDiv: HTMLElement): void {
-
-        this.deleteEventListener = (e: Event) => {
-            if ((e as KeyboardEvent).key === 'Delete') {
-                if (this.preventDelete()) {
-                    e.preventDefault();
-                }
-            }
-        };
-
-        this.backspaceEventListener = (e: Event) => {
-            if ((e as KeyboardEvent).key === 'Backspace') {
-                if (this.preventBackspace()) {
-                    e.preventDefault();
-                }
-            }
-        };
 
         this.pasteEventListener = (e: Event) => {
             e.preventDefault();
@@ -57,7 +44,7 @@ export class EditorInitializer {
             text = text.replace(/</g, '&lt;');
             text = text.replace(/>/g, '&gt;');
             text = text.replace('\t', '  ');
-            text = this.isSelectionInsideCode()
+            text = this.caret.isSelectionInsideCodeText()
                 ? this.setIndentationInCode(text)
                 : this.setIndentationInText(text);
             text = text.replace(/\n/g, '<br>');
@@ -79,12 +66,6 @@ export class EditorInitializer {
 
         editableDiv.addEventListener('paste', this.pasteEventListener);
         editableDiv.addEventListener('keydown', this.enterEventListener);
-        editableDiv.addEventListener('keydown', this.deleteEventListener);
-        editableDiv.addEventListener('keydown', this.backspaceEventListener);
-        editableDiv.addEventListener('blur', () => this.saveSelection());
-
-        editableDiv.addEventListener('mouseup', () => this.toolbar.handleButtonsState());
-        editableDiv.addEventListener('keyup', () => this.toolbar.handleButtonsState());
 
         this.startObservingDOM();
     }
@@ -107,11 +88,11 @@ export class EditorInitializer {
 
     private destroyListeners(): void {
         if (!this.editableDiv) return;
-        this.history.removeUndoListener();
+        this.history.destroyListeners();
+        this.safeDeletion.destroyListeners();
+        this.toolbar.destroyListeners();
         this.editableDiv.removeEventListener('paste', this.pasteEventListener);
         this.editableDiv.removeEventListener('keydown', this.enterEventListener);
-        this.editableDiv.removeEventListener('keydown', this.deleteEventListener);
-        this.editableDiv.removeEventListener('blur', this.saveSelection);
         this.stopObservingDOM();
     }
 
@@ -120,20 +101,7 @@ export class EditorInitializer {
         this.domChangeObserver.disconnect();
     }
 
-    public saveSelection(): void {
-        const selection = window.getSelection();
-        if (!selection || !selection.focusNode) return;
-
-        let checkingParentNode = selection.focusNode;
-        while (checkingParentNode) {
-            if (checkingParentNode === this.editableDiv) break;
-            checkingParentNode = checkingParentNode.parentNode as Node;
-        }
-        if (checkingParentNode !== this.editableDiv) return;
-        this.savedSelection = selection!.rangeCount > 0 ? selection!.getRangeAt(0).cloneRange() : null;
-    }
-
-    public selectionOnEditableDiv(): Selection | null {
+    public selectionOnEditableDiv(): Selection | null { // TO DELETE
         const selection = window.getSelection();
         if (!selection || !selection.focusNode) return null;
 
@@ -143,25 +111,6 @@ export class EditorInitializer {
             checkingParentNode = checkingParentNode.parentNode as Node;
         }
         return null;
-    }
-
-    public restoreSelection(): void {
-        if (this.savedSelection) {
-            const selection = window.getSelection();
-            selection?.removeAllRanges();
-            selection?.addRange(this.savedSelection);
-        } else {
-            this.editableDiv.focus();
-        }
-    }
-
-    public moveCaretToEndOfSelection() {
-        const selection = window.getSelection();
-
-        if (selection && selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            range.collapse(false);
-        }
     }
 
     private normalizeCode(): void {
@@ -202,89 +151,6 @@ export class EditorInitializer {
             .join('\n');
     };
 
-    private isSelectionInsideCode(): boolean {
-        const selection = window.getSelection();
-        if (!selection || !selection.focusNode) return false;
-
-        let checkingParentNode = selection.focusNode;
-        while (checkingParentNode) {
-            if (checkingParentNode.nodeType === Node.ELEMENT_NODE) {
-                const element = checkingParentNode as Element;
-                if (element.classList.contains('code-text')) return true;
-            }
-            checkingParentNode = checkingParentNode.parentNode as Node;
-        }
-        return false;
-    }
-
-    private preventDelete() {
-        const selection = window.getSelection();
-        if (!selection || !selection.focusNode) return false;
-
-        const focusNode = selection.focusNode;
-        if (this.isNextSiblingCodeText(focusNode)) {
-            const textNode = selection.focusNode as Text;
-            const textLength = textNode.textContent?.trim().length || 0;
-            const offset = selection.focusOffset;
-            if (offset >= textLength) {
-                return true;
-            }
-        }
-
-        if (focusNode.nodeType === Node.ELEMENT_NODE) {
-            const focusNodeElement = focusNode as Element;
-            if (focusNodeElement.classList.contains('code-text')) {
-                return true;
-            }
-        }
-
-        if (focusNode.nodeType === Node.TEXT_NODE) {
-            const textNode = focusNode as Text;
-            const textLength = textNode.textContent?.trim().length || 0;
-            const offset = selection.focusOffset;
-            if (offset >= textLength) {
-                const focusNodeParent = focusNode.parentNode as Element;
-                if (focusNodeParent.classList.contains('code-text')) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private isNextSiblingCodeText(focusNode: Node): boolean {
-        let siblingDistance = 2;
-        let nextSibling = focusNode.nextSibling;
-        while (nextSibling) {
-            if (siblingDistance === 0) return false;
-            if (nextSibling.nodeType === Node.ELEMENT_NODE) {
-                const element = nextSibling as Element;
-                if (element.classList.contains('code-text')) {
-                    return true;
-                } else {
-                    siblingDistance--;
-                }
-            } else if (nextSibling.nodeType === Node.TEXT_NODE) {
-                const textNode = nextSibling as Text;
-                if (textNode.textContent?.replace(/\s/g, '') !== '') {
-                    siblingDistance--;
-                }
-            }
-            nextSibling = nextSibling.nextSibling;
-        }
-        return false;
-    }
-
-    private preventBackspace() {
-        // Casos para prevenir el comportamiento por defecto:
-        // EL OFFSET ES CERO
-        // 1. El nodo de foco es un elemento div, y tiene contenido
-        // 2. El nodo de foco es un elemento div, y tiene elementos hijos?
-        // 3. El nodo de foco es un texto, y el nodo anterior(o el padre) es un tag y no es un BR, ni span, ni font
-        // 4. El nodo de foco es un li, y no es el primer li
-        return false;
-    }
-
     // Acceso a métodos de otras clases
 
     public get popup(): PopupHandler {
@@ -305,6 +171,10 @@ export class EditorInitializer {
 
     public get history(): ActionsHistory {
         return this.historyHandler!;
+    }
+
+    public get caret(): CaretTracking {
+        return this.caretTracking!;
     }
 
 }

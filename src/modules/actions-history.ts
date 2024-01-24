@@ -44,7 +44,8 @@ export class ActionsHistory {
 
     }
 
-    public removeUndoListener() {}
+    public destroyListeners() {
+    }
 
     public saveState(style?: string) {
         this.savedStyle = style || null;

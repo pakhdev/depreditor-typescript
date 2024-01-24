@@ -1,11 +1,18 @@
 import { EditorInitializer } from './editor-Initializer.ts';
+import { FormattingUtils } from './formatting-utils.ts';
 
 export class PopupHandler {
+
+    private readonly editableDiv: HTMLDivElement;
+    private readonly formatter!: FormattingUtils;
 
     private popupContainer: HTMLElement | undefined;
     private isPopupOpened: boolean | string = false;
 
-    constructor(private readonly depreditor: EditorInitializer) {}
+    constructor(private readonly depreditor: EditorInitializer) {
+        this.editableDiv = this.depreditor.editableDiv;
+        this.formatter = this.depreditor.formatter;
+    }
 
     private createPopup(popupName: string): HTMLDivElement | undefined {
         if (this.isPopupOpened) {
@@ -24,8 +31,8 @@ export class PopupHandler {
         popup.onmousedown = (e) => e.stopPropagation();
         this.popupContainer.appendChild(popup);
 
-        if (this.depreditor.editableDiv && this.depreditor.editableDiv.parentNode) {
-            this.depreditor.editableDiv.parentNode.insertBefore(this.popupContainer, this.depreditor.editableDiv);
+        if (this.editableDiv && this.editableDiv.parentNode) {
+            this.editableDiv.parentNode.insertBefore(this.popupContainer, this.editableDiv);
             return popup;
         }
         return;
@@ -65,7 +72,7 @@ export class PopupHandler {
 
         const actionButtons = this.createFormButtons(
             'Insertar tabla',
-            () => this.depreditor.formatter.insertTable(+rowsInput.value, +columnsInput.value),
+            () => this.formatter.insertTable(+rowsInput.value, +columnsInput.value),
         );
         popup.appendChild(actionButtons);
         this.popupContainer.appendChild(popup);
@@ -108,7 +115,7 @@ export class PopupHandler {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.setAttribute('accept', 'image/*');
-        fileInput.onchange = () => this.depreditor.formatter.insertImage(fileInput, checkboxInput.checked);
+        fileInput.onchange = () => this.formatter.insertImage(fileInput, checkboxInput.checked);
         fileInput.style.display = 'none';
         popup.appendChild(fileInput);
 
@@ -177,7 +184,7 @@ export class PopupHandler {
 
         const actionButtons = this.createFormButtons(
             'Insertar enlace',
-            () => this.depreditor.formatter.insertLink(
+            () => this.formatter.insertLink(
                 linkInput.value,
                 selectedText.length ? selectedText : linkTextInput.value,
             ),
@@ -213,7 +220,7 @@ export class PopupHandler {
         colors.forEach(colorCode => {
             const colorDiv = document.createElement('div');
             colorDiv.style.backgroundColor = colorCode;
-            colorDiv.onmousedown = () => this.depreditor.formatter.setColor(type, colorCode);
+            colorDiv.onmousedown = () => this.formatter.setColor(type, colorCode);
             colorsContainer.appendChild(colorDiv);
         });
 
