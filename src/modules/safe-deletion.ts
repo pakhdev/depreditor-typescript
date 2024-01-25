@@ -1,38 +1,38 @@
-import { CaretTracking } from './caret-tracking.ts';
 import { EditorInitializer } from './editor-Initializer.ts';
 
 export class SafeDeletion {
 
-    private readonly caret!: CaretTracking;
-    private readonly deletionKeysListener: EventListener;
+    private readonly editableDiv!: HTMLDivElement;
+    private readonly deletionKeysListenerHandler = (e: Event) => this.deletionKeysListener(e);
 
     constructor(private readonly depreditor: EditorInitializer) {
-        this.caret = this.depreditor.caret;
-
-        this.deletionKeysListener = (e: Event) => {
-            if ((e as KeyboardEvent).key === 'Delete') {
-                if (this.preventDelete()) {
-                    e.preventDefault();
-                }
-            }
-            if ((e as KeyboardEvent).key === 'Backspace') {
-                if (this.preventBackspace()) {
-                    e.preventDefault();
-                }
-            }
-        };
+        this.editableDiv = this.depreditor.editableDiv;
+        this.editableDiv.addEventListener('keydown', this.deletionKeysListenerHandler);
     }
 
-    public destroyListeners() {
-        document.removeEventListener('keydown', this.deletionKeysListener);
+    public destroyListeners(): void {
+        this.editableDiv.removeEventListener('keydown', this.deletionKeysListenerHandler);
     }
 
-    private preventDelete() {
+    private deletionKeysListener(e: Event): void {
+        if ((e as KeyboardEvent).key === 'Delete') {
+            if (this.preventDelete()) {
+                e.preventDefault();
+            }
+        }
+        if ((e as KeyboardEvent).key === 'Backspace') {
+            if (this.preventBackspace()) {
+                e.preventDefault();
+            }
+        }
+    };
+
+    private preventDelete(): boolean {
         const selection = window.getSelection();
         if (!selection || !selection.focusNode) return false;
 
         const focusNode = selection.focusNode;
-        if (this.caret.isNextSiblingCodeText(focusNode)) {
+        if (this.depreditor.caret.isNextSiblingCodeText(focusNode)) {
             const textNode = selection.focusNode as Text;
             const textLength = textNode.textContent?.trim().length || 0;
             const offset = selection.focusOffset;
@@ -62,7 +62,7 @@ export class SafeDeletion {
         return false;
     }
 
-    private preventBackspace() {
+    private preventBackspace(): boolean {
         // Casos para prevenir el comportamiento por defecto:
         // EL OFFSET ES CERO
         // 1. El nodo de foco es un elemento div, y tiene contenido

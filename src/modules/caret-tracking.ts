@@ -3,11 +3,16 @@ import { EditorInitializer } from './editor-Initializer.ts';
 export class CaretTracking {
 
     private readonly editableDiv: HTMLDivElement;
+    private readonly blurHandler = () => this.saveRange();
     private savedRange: Range | null = null;
 
     constructor(private readonly depreditor: EditorInitializer) {
         this.editableDiv = this.depreditor.editableDiv;
-        this.editableDiv.addEventListener('blur', () => this.saveRange());
+        this.editableDiv.addEventListener('blur', this.blurHandler);
+    }
+
+    public destroyListeners(): void {
+        this.editableDiv.removeEventListener('blur', this.blurHandler);
     }
 
     public getSelection(): Selection | null {
@@ -28,6 +33,19 @@ export class CaretTracking {
             const range = selection.getRangeAt(0);
             range.collapse(false);
         }
+    }
+
+    public setCaretAtPosition(node: Node, offset: number): void {
+        const currentSelection = this.getSelection();
+        if (!currentSelection) this.editableDiv.focus();
+
+        const range = document.createRange();
+        range.setStart(node, offset);
+        range.collapse(true);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+
     }
 
     public saveRange(): void {
