@@ -6,6 +6,7 @@ import { ActionsHistory } from './actions-history.ts';
 import { SafeDeletion } from './safe-deletion.ts';
 import { CaretTracking } from './caret-tracking.ts';
 import { InsertingHandler } from './inserting-handler.ts';
+import { NodeInspector } from './node-inspector.ts';
 
 export class EditorInitializer {
 
@@ -17,6 +18,7 @@ export class EditorInitializer {
     private readonly historyHandler!: ActionsHistory;
     private readonly insertingHandler!: InsertingHandler;
     private readonly safeDeletion: SafeDeletion;
+    private readonly nodeInfo!: NodeInspector;
 
     private domChangeObserver!: MutationObserver;
     private enterEventListener!: EventListener;
@@ -35,6 +37,7 @@ export class EditorInitializer {
         this.historyHandler = new ActionsHistory(this);
         this.safeDeletion = new SafeDeletion(this);
         this.insertingHandler = new InsertingHandler(this);
+        this.nodeInfo = new NodeInspector(this);
 
         this.initListeners(this.editableDiv);
     }
@@ -61,6 +64,10 @@ export class EditorInitializer {
 
     public get caret(): CaretTracking {
         return this.caretTracking!;
+    }
+
+    public get node(): NodeInspector {
+        return this.nodeInfo!;
     }
 
     public selectionOnEditableDiv(): Selection | null { // TO DELETE

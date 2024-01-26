@@ -43,7 +43,8 @@ export class SafeDeletion {
 
         if (focusNode.nodeType === Node.ELEMENT_NODE) {
             const focusNodeElement = focusNode as Element;
-            if (focusNodeElement.classList.contains('code-text')) {
+            if (this.depreditor.node.isEmpty(focusNodeElement)) {
+                this.depreditor.formatter.deleteNode(focusNodeElement);
                 return true;
             }
         }

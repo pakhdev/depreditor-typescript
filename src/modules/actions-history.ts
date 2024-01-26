@@ -3,8 +3,10 @@ import { EditorInitializer } from './editor-Initializer.ts';
 
 export class ActionsHistory {
     private actions: HistoryAction[] = [];
+    // private actions: HistoryAction[] | HistoryAction[][] = [];
     private savedText: string = '';
     private savedStyle: string | null = null;
+    private savedProperty: string | null = null;
 
     // Variables para el manejo del historial de escritura
     private writingSelection: Range | null = null;
@@ -17,17 +19,18 @@ export class ActionsHistory {
         // TODO: Guardar la selección al hacer focus
         this.depreditor.editableDiv.addEventListener('keydown', (e) => {
             const keyboardEvent = e as KeyboardEvent;
+            this.processWriting(keyboardEvent);
+        });
+
+        this.depreditor.editableDiv.addEventListener('keyup', (e) => {
+            const keyboardEvent = e as KeyboardEvent;
             if (keyboardEvent.code.startsWith('Arrow')) {
                 this.initWritingEvent();
-                return;
             }
-            this.processWriting(keyboardEvent);
         });
 
         document.addEventListener('keydown', (e) => {
             const keyboardEvent = e as KeyboardEvent;
-
-            // Prevención del comportamiento nativo de Ctrl+Z
             if (keyboardEvent.code === 'KeyZ' && keyboardEvent.ctrlKey) {
                 if (this.depreditor.selectionOnEditableDiv()) {
                     e.preventDefault();
@@ -47,12 +50,14 @@ export class ActionsHistory {
     public destroyListeners() {
     }
 
-    public saveState(style?: string) {
+    public saveState(style?: string, property?: string) {
         this.savedStyle = style || null;
         this.savedText = window.getSelection()?.getRangeAt(0)
             .cloneRange()
             .cloneContents()
             .textContent || '';
+        console.log('saveState', this.savedText);
+        this.savedProperty = property || null;
     }
 
     public saveRange() {
@@ -62,6 +67,7 @@ export class ActionsHistory {
             range: selection.getRangeAt(0).cloneRange(),
             previousData: this.savedText || '',
             styling: this.savedStyle,
+            property: this.savedProperty,
         });
     }
 
@@ -73,6 +79,9 @@ export class ActionsHistory {
 
         if (this.actions.length === 0) return;
         const action = this.actions.pop()!;
+        // if (Array.isArray(action)) {
+        //
+        // }
         if (action.styling) {
             this.restoreStyle(action);
         } else {
@@ -94,7 +103,12 @@ export class ActionsHistory {
         const selection = window.getSelection();
         selection?.removeAllRanges();
         selection?.addRange(action.range);
-        this.depreditor.formatter.format(action.styling!, true);
+        if (['text', 'background'].includes(action.styling!)) {
+            console.log(action.styling, action.property);
+            this.depreditor.formatter.setColor(action.styling as 'text' | 'background', action.property!, true);
+        } else {
+            this.depreditor.formatter.format(action.styling!, true);
+        }
     }
 
     private initWritingEvent() {
@@ -127,6 +141,7 @@ export class ActionsHistory {
             range,
             previousData: '',
             styling: null,
+            property: null,
         });
     }
 

@@ -50,6 +50,10 @@ export class CaretTracking {
 
     public saveRange(): void {
         const currentSelection = this.getSelection();
+        
+        const range = currentSelection?.getRangeAt(0);
+        console.log('saveRange', range!.startOffset, range!.endOffset);
+
         if (!currentSelection) return;
         this.savedRange = currentSelection.rangeCount > 0
             ? currentSelection.getRangeAt(0).cloneRange()

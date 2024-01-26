@@ -7,13 +7,14 @@ export class FormattingUtils {
     public format(style: string, avoidHistory?: boolean): void {
         if (!this.depreditor.caret.getSelection()) return;
         document.execCommand(style, false);
+        this.depreditor.toolbar.handleButtonsState();
         if (avoidHistory) return;
         this.depreditor.history.saveState(style);
         this.depreditor.history.saveRange();
-        this.depreditor.toolbar.handleButtonsState();
     }
 
     public insertCode(): void {
+        if (!this.depreditor.caret.getSelection()) return;
         this.depreditor.caret.saveRange();
         const codeDiv = document.createElement('div');
         codeDiv.className = 'code-text';
@@ -27,6 +28,7 @@ export class FormattingUtils {
     }
 
     public setHidden(): void {
+        if (!this.depreditor.caret.getSelection()) return;
         if (this.depreditor.caret.isSelectionInsideHiddenText()) {
             this.unsetHidden();
             return;
@@ -57,9 +59,13 @@ export class FormattingUtils {
         this.depreditor.caret.moveCaretToEndOfSelection();
     }
 
-    public align(direction: string): void {
+    public align(direction: string, avoidHistory?: boolean): void {
+        const previousAlignment = this.depreditor.node.getAlignment();
         document.execCommand('justify' + direction);
         this.depreditor.toolbar.handleButtonsState();
+        if (avoidHistory || !previousAlignment) return;
+        this.depreditor.history.saveState(previousAlignment);
+        this.depreditor.history.saveRange();
     }
 
     public insertList(type: string): void {
@@ -73,7 +79,8 @@ export class FormattingUtils {
     public insertElement(element: HTMLElement): void {
         this.depreditor.popup.hidePopup();
         this.depreditor.caret.restoreRange();
-        const selection = window.getSelection();
+        const selection = this.depreditor.caret.getSelection();
+        if (!selection) return;
         this.depreditor.history.saveState();
 
         if (selection) {
@@ -133,13 +140,20 @@ export class FormattingUtils {
         this.insertElement(link);
     }
 
-    public setColor(type: 'text' | 'background', color: string) {
+    public setColor(type: 'text' | 'background', color: string, avoidHistory?: boolean): void {
+        const oldColor = type === 'text'
+            ? this.depreditor.node.getForeColor()
+            : this.depreditor.node.getBackgroundColor();
         this.depreditor.popup.hidePopup();
         this.depreditor.caret.restoreRange();
         type === 'text'
             ? document.execCommand('foreColor', false, color)
             : document.execCommand('hiliteColor', false, color);
-        this.depreditor.caret.moveCaretToEndOfSelection();
+        if (!avoidHistory) {
+            this.depreditor.history.saveState(type, oldColor!);
+            this.depreditor.history.saveRange();
+        }
+        // this.depreditor.caret.moveCaretToEndOfSelection();
     }
 
     public async insertImage(fileInput: HTMLInputElement, doLargeImage: boolean): Promise<void> {
@@ -150,6 +164,17 @@ export class FormattingUtils {
         if (processedImages.largeImage) imgElement.setAttribute('largeImage', processedImages.largeImage);
         imgElement.src = processedImages?.initialImage;
         this.insertElement(imgElement);
+    }
+
+    public deleteNode(node: Node): void {
+        const selection = this.depreditor.caret.getSelection();
+        if (!selection) return;
+
+        const range = selection.getRangeAt(0);
+        range.selectNode(node);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        node.parentNode?.removeChild(node);
     }
 
     private getSelectedHtml(): string | undefined {
