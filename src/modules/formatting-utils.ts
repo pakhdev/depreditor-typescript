@@ -7,7 +7,6 @@ export class FormattingUtils {
     public format(style: string, avoidHistory?: boolean): void {
         if (!this.depreditor.caret.getSelection()) return;
         document.execCommand(style, false);
-        this.depreditor.toolbar.handleButtonsState();
         if (avoidHistory) return;
         this.depreditor.history.saveState(style);
         this.depreditor.history.saveRange();
@@ -62,7 +61,6 @@ export class FormattingUtils {
     public align(direction: string, avoidHistory?: boolean): void {
         const previousAlignment = this.depreditor.node.getAlignment();
         document.execCommand('justify' + direction);
-        this.depreditor.toolbar.handleButtonsState();
         if (avoidHistory || !previousAlignment) return;
         this.depreditor.history.saveState(previousAlignment);
         this.depreditor.history.saveRange();
@@ -73,7 +71,6 @@ export class FormattingUtils {
             ? 'insertOrderedList'
             : 'insertUnorderedList',
         );
-        this.depreditor.toolbar.handleButtonsState();
     }
 
     public insertElement(element: HTMLElement): void {
@@ -141,11 +138,12 @@ export class FormattingUtils {
     }
 
     public setColor(type: 'text' | 'background', color: string, avoidHistory?: boolean): void {
+        this.depreditor.popup.hidePopup();
+        this.depreditor.caret.restoreRange();
+        // RESTORE SELECTION FROM HISTORY
         const oldColor = type === 'text'
             ? this.depreditor.node.getForeColor()
             : this.depreditor.node.getBackgroundColor();
-        this.depreditor.popup.hidePopup();
-        this.depreditor.caret.restoreRange();
         type === 'text'
             ? document.execCommand('foreColor', false, color)
             : document.execCommand('hiliteColor', false, color);

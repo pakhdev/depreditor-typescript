@@ -14,6 +14,7 @@ export class ToolbarHandler {
         this.createButtons();
         this.editableDiv.addEventListener('mouseup', this.handleButtonsStateHandler);
         this.editableDiv.addEventListener('keyup', this.handleButtonsStateHandler);
+        this.toolbarContainer.addEventListener('mouseup', this.handleButtonsStateHandler);
     }
 
     private readonly buttons: ToolbarButton[] = [
