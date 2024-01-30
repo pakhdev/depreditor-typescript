@@ -21,7 +21,13 @@ export class ToolbarHandler {
         { icon: 'icon-set-bold', action: () => this.depreditor.formatter.format('bold') },
         { icon: 'icon-set-italic', action: () => this.depreditor.formatter.format('italic') },
         { icon: 'icon-set-underline', action: () => this.depreditor.formatter.format('underline') },
-        { icon: 'icon-set-code', action: () => this.depreditor.formatter.insertCode() },
+        // { icon: 'icon-set-code', action: () => this.depreditor.formatter.insertCode() },
+        {
+            icon: 'icon-set-code', action: () => this.depreditor.formatter.injectContainer({
+                tag: 'div',
+                classes: ['code-text'],
+            }),
+        },
         { icon: 'icon-set-list-numbered', action: () => this.depreditor.formatter.insertList('numbered') },
         { icon: 'icon-set-list-dots', action: () => this.depreditor.formatter.insertList('dotted') },
         { icon: 'icon-set-paragraph-left', action: () => this.depreditor.formatter.align('left') },

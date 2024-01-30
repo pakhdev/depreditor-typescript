@@ -1,0 +1,1 @@
+export type NodeOrFalse = Node | false | NodeOrFalse[];

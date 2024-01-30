@@ -1,4 +1,5 @@
 import { EditorInitializer } from './editor-Initializer.ts';
+import { ContainerProps } from '../types/container-props.type.ts';
 
 export class FormattingUtils {
 
@@ -184,5 +185,21 @@ export class FormattingUtils {
             return container.innerHTML;
         }
         return;
+    }
+
+    public injectContainer(props: ContainerProps): void {
+        const selection = this.depreditor.caret.getSelection();
+        if (!selection) return;
+
+        this.depreditor.caret.saveRange();
+        const range = selection.getRangeAt(0);
+
+        const container = document.createElement(props.tag);
+        if (props.classes) container.classList.add(...props.classes);
+
+        if (selection.rangeCount > 0) container.appendChild(range.cloneContents());
+
+        range.deleteContents();
+        range.insertNode(container);
     }
 }

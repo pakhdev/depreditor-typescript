@@ -1,7 +1,6 @@
 import { EditorInitializer } from './editor-Initializer.ts';
 import { FormattingName } from '../types';
-
-type NodeOrFalse = Node | false | NodeOrFalse[];
+import { NodeOrFalse } from '../types/node-or-false.type.ts';
 
 export class NodeInspector {
 
@@ -78,6 +77,25 @@ export class NodeInspector {
         return node.parentNode === ancestor;
     }
 
+    public getContainerIndexInAncestor(node: Node, ancestor: Node): number {
+        let index = -1;
+        for (const childNode of ancestor.childNodes) {
+            index++;
+            if (this.isNodeInAncestor(node, childNode))
+                break;
+        }
+        return index;
+    }
+
+    public getNodeByIndexInAncestor(index: number, ancestor: Node): Node | null {
+        let currentIndex = -1;
+        for (const childNode of ancestor.childNodes) {
+            currentIndex++;
+            if (currentIndex === index) return childNode;
+        }
+        return null;
+    }
+
     public compareChildNodes(originalChildNodes: Node[], copyChildNodes: Node[]): NodeOrFalse[] {
         const nodesMapping: NodeOrFalse[] = [];
         for (let i = 0; i < originalChildNodes.length; i++) {
@@ -86,7 +104,7 @@ export class NodeInspector {
             const copyChild = copyChildNodes[i];
 
             if (!copyChild) {
-                nodesMapping.push(originalChild);
+                nodesMapping.push(originalChild.cloneNode(true));
                 continue;
             }
 
@@ -95,10 +113,10 @@ export class NodeInspector {
             } else if (originalChild.childNodes.length) {
                 const childNodesMapping = this.compareChildNodes(Array.from(originalChild.childNodes), Array.from(copyChild.childNodes));
                 childNodesMapping.length === originalChild.childNodes.length
-                    ? nodesMapping.push(originalChild)
+                    ? nodesMapping.push(originalChild.cloneNode(true))
                     : nodesMapping.push(childNodesMapping);
             } else {
-                nodesMapping.push(originalChild);
+                nodesMapping.push(originalChild.cloneNode(true));
             }
         }
         return nodesMapping;
