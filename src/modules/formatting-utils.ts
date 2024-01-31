@@ -191,8 +191,18 @@ export class FormattingUtils {
         const selection = this.depreditor.caret.getSelection();
         if (!selection) return;
 
-        this.depreditor.caret.saveRange();
+        this.depreditor.caret.saveRange(); // Guardar la selección de forma automática
         const range = selection.getRangeAt(0);
+
+        const startContainer = range.startContainer;
+        const endContainer = range.endContainer;
+        if (startContainer === endContainer) console.log('Seleccionado un solo elemento');
+
+        const commonAncestor = range.commonAncestorContainer;
+        const startContainerParent = this.depreditor.node.findFirstParent(startContainer, commonAncestor);
+        const endContainerParent = this.depreditor.node.findFirstParent(endContainer, commonAncestor);
+        console.log(startContainerParent, endContainerParent);
+        if (startContainerParent === endContainerParent) console.log('Los elementos seleccionados están en el mismo contenedor');
 
         const container = document.createElement(props.tag);
         if (props.classes) container.classList.add(...props.classes);
@@ -201,5 +211,7 @@ export class FormattingUtils {
 
         range.deleteContents();
         range.insertNode(container);
+
+        if (this.depreditor.node.isNodeEmpty(startContainer)) startContainer.parentNode?.removeChild(startContainer);
     }
 }

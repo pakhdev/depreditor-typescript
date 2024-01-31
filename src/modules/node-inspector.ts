@@ -4,9 +4,7 @@ import { NodeOrFalse } from '../types/node-or-false.type.ts';
 
 export class NodeInspector {
 
-    constructor(private readonly depreditor: EditorInitializer) {
-
-    }
+    constructor(private readonly depreditor: EditorInitializer) {}
 
     getCurrent() {
         const currentSelection = this.depreditor.caret.getSelection();
@@ -28,12 +26,6 @@ export class NodeInspector {
 
     getBackgroundColor(): string | null {
         return document.queryCommandValue('backColor');
-    }
-
-    isEmpty(node: Node): boolean {
-        const childElements = node.childNodes;
-        if (childElements.length === 0) return true;
-        return childElements.length === 1 && node.firstChild?.nodeName.toLowerCase() === 'br';
     }
 
     // Devuelve los nodos seleccionados completos, aunque no estén completamente seleccionados
@@ -120,5 +112,48 @@ export class NodeInspector {
             }
         }
         return nodesMapping;
+    }
+
+    public getNodePath(nodeToFind: Node, parentNode: Node): { path: number[], depth: number } {
+        const innerNodes = parentNode.childNodes;
+
+        let path: number[] = [];
+        let position = -1;
+
+        for (const innerNode of innerNodes) {
+            position++;
+            if (innerNode === nodeToFind) {
+                path.push(position);
+                break;
+            }
+            if (this.isNodeInAncestor(nodeToFind, innerNode)) {
+                path.push(position);
+                const findNodeInside = this.getNodePath(nodeToFind, innerNode);
+                path = [position, ...findNodeInside.path];
+                break;
+            }
+        }
+        return { path, depth: path.length };
+    }
+
+    public isNodeEmpty(node: Node): boolean {
+        if (node.textContent?.trim() !== '') return false;
+        if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'img')
+            return false;
+
+        const childNodes = node.childNodes;
+        for (let i = 0; i < childNodes.length; i++) {
+            const childNode = childNodes[i];
+            if (!this.isNodeEmpty(childNode)) return false;
+        }
+        return true;
+    }
+
+    public findFirstParent(node: Node, commonAncestor: Node): Node {
+        let parentNode = node.parentNode;
+        while (parentNode && parentNode.parentNode !== commonAncestor) {
+            parentNode = parentNode.parentNode;
+        }
+        return parentNode ?? node;
     }
 }
