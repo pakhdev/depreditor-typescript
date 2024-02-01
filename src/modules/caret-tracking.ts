@@ -50,7 +50,7 @@ export class CaretTracking {
 
     public saveRange(): void {
         const currentSelection = this.getSelection();
-        
+
         const range = currentSelection?.getRangeAt(0);
         console.log('saveRange', range!.startOffset, range!.endOffset);
 
@@ -122,6 +122,26 @@ export class CaretTracking {
                 commonAncestor.parentNode instanceof Element
             ) {
                 return commonAncestor.parentNode.classList.contains('hidden-text');
+            }
+        }
+        return false;
+    }
+
+    public isTextNodeFullySelected(): boolean {
+        const selection = this.getSelection();
+        if (!selection) return false;
+
+        const range = selection.getRangeAt(0);
+        const startContainer = range.startContainer;
+        const endContainer = range.endContainer;
+        if (startContainer === endContainer) {
+            if (startContainer.nodeType === Node.TEXT_NODE) {
+                const textNode = startContainer as Text;
+                if (range.startOffset === 0 && range.endOffset === textNode.length) return true;
+                if (range.endOffset > textNode.length) {
+                    const rangeExcess = range.endOffset - textNode.length;
+                    if (range.startOffset - rangeExcess === 0) return true;
+                }
             }
         }
         return false;
