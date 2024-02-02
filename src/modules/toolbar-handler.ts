@@ -24,6 +24,8 @@ export class ToolbarHandler {
         // { icon: 'icon-set-code', action: () => this.depreditor.formatter.insertCode() },
         {
             icon: 'icon-set-code', action: () => this.depreditor.formatter.injectContainer({
+                name: 'code',
+                icon: 'icon-set-code',
                 tag: 'div',
                 classes: ['code-text'],
             }),
@@ -54,6 +56,7 @@ export class ToolbarHandler {
     };
 
     public handleButtonsState(): void {
+        console.log(this.depreditor.caret.getStylesAtCaret());
         const formattingNames: FormattingName[] = ['bold', 'italic', 'underline', 'insertorderedlist', 'insertunorderedlist', 'justifyleft', 'justifycenter', 'justifyright'];
         for (const formattingName of formattingNames) {
             this.setButtonState(formattingName, document.queryCommandState(formattingName));

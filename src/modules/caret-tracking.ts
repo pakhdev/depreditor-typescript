@@ -1,4 +1,6 @@
 import { EditorInitializer } from './editor-Initializer.ts';
+import { FormattingName } from '../types';
+import { toolsConfig } from '../tools.config.ts';
 
 export class CaretTracking {
 
@@ -145,6 +147,81 @@ export class CaretTracking {
             }
         }
         return false;
+    }
+
+    public getStylesAtCaret(): FormattingName[] {
+        const selection = this.getSelection();
+        if (!selection) return [];
+        const range = selection.getRangeAt(0);
+
+        const formatting: FormattingName[] = [];
+
+        let parentChecking = range.commonAncestorContainer;
+        while (parentChecking) {
+            if (parentChecking === this.editableDiv) break;
+            const element = parentChecking as HTMLElement;
+            const formattingName = this.getNodeFormatting(element);
+            if (formattingName) formatting.push(formattingName);
+            if (!parentChecking.parentNode) break;
+            parentChecking = parentChecking.parentNode;
+        }
+
+        if (range.collapsed) return [...new Set(formatting)];
+
+        const fragment = range.cloneContents();
+        const fragmentFormatting = this.getNodeChildrenFormatting(fragment);
+        formatting.push(...fragmentFormatting);
+
+        return [...new Set(formatting)];
+    }
+
+    public getNodeChildrenFormatting(node: Node): FormattingName[] {
+        const formatting: FormattingName[] = [];
+        for (const childNode of node.childNodes) {
+            const formattingName = this.getNodeFormatting(childNode);
+            if (formattingName) formatting.push(formattingName);
+            if (childNode.childNodes.length > 0) {
+                const childrenFormatting = this.getNodeChildrenFormatting(childNode);
+                formatting.push(...childrenFormatting);
+            }
+        }
+        return formatting;
+    }
+
+    public getNodeFormatting(node: Node): FormattingName | void {
+        if (node.nodeType === Node.TEXT_NODE) return;
+        const element = node as HTMLElement;
+
+        formattingChecking:
+            for (const tool of toolsConfig) {
+                if (element.tagName.toLowerCase() !== tool.tag) continue;
+                if (tool.classes) {
+                    for (const className of tool.classes) {
+                        if (!element.classList.contains(className))
+                            continue formattingChecking;
+                    }
+                }
+                if (tool.styles) {
+                    for (const styleName in tool.styles) {
+                        if (!element.style[styleName])
+                            continue formattingChecking;
+
+                        if (tool.styles[styleName] !== '' && element.style[styleName] !== tool.styles[styleName])
+                            continue formattingChecking;
+                    }
+                }
+                if (tool.attributes) {
+                    for (const attributeName in tool.attributes) {
+                        if (!element.hasAttribute(attributeName))
+                            continue formattingChecking;
+                        if (tool.attributes[attributeName] !== '' && element.getAttribute(attributeName) !== tool.attributes[attributeName])
+                            continue formattingChecking;
+                    }
+                }
+                return tool.name;
+            }
+
+        return;
     }
 
 }
