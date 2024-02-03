@@ -133,7 +133,9 @@ export class EditorInitializer {
     private normalizeCode(): void {
         this.editableDiv.innerHTML = this.editableDiv.innerHTML
             .replace(/\n/g, '')
-            .replace(/\s+/g, ' ');
+            .replace(/\s+/g, ' ')
+            .replace(/>\s/g, '>')
+            .replace(/\s</g, '<');
     }
 
     private insertLineBreak() {

@@ -29,6 +29,31 @@ export class CaretTracking {
         return null;
     }
 
+    public inspectSelection(): void {
+        const selection = this.getSelection();
+        if (!selection) return;
+        const range = selection.getRangeAt(0);
+
+        const selectionDetails = {
+            isRange: !range.collapsed,
+            sameElement: range.startContainer === range.endContainer,
+            commonAncestor: range.commonAncestorContainer,
+            firstElement: range.startContainer,
+            firstElementFullSelected: false,
+            firstElementOffset: {
+                start: 0,
+                end: 0,
+            },
+            lastElement: range.endContainer,
+            lastElementFullSelected: false,
+            lastElementStartOffset: {
+                start: 0,
+                end: 0,
+            },
+        };
+
+    }
+
     public moveCaretToEndOfSelection(): void {
         const selection = this.getSelection();
         if (selection && selection.rangeCount > 0) {
@@ -78,8 +103,7 @@ export class CaretTracking {
         while (nextSibling) {
             if (siblingDistance === 0) return false;
             if (nextSibling.nodeType === Node.ELEMENT_NODE) {
-                const element = nextSibling as Element;
-                if (element.classList.contains('code-text')) {
+                if (this.hasStyle('code', nextSibling)) {
                     return true;
                 } else {
                     siblingDistance--;
@@ -101,10 +125,7 @@ export class CaretTracking {
 
         let checkingParentNode = selection.focusNode;
         while (checkingParentNode) {
-            if (checkingParentNode.nodeType === Node.ELEMENT_NODE) {
-                const element = checkingParentNode as Element;
-                if (element.classList.contains('code-text')) return true;
-            }
+            if (this.hasStyle('code', checkingParentNode)) return true;
             checkingParentNode = checkingParentNode.parentNode as Node;
         }
         return false;
@@ -150,12 +171,17 @@ export class CaretTracking {
     }
 
     public getStylesAtCaret(): FormattingName[] {
+        // TODO: Error, al hacer mouseup después de una selección se muestran estilos anteriores
+        // TODO: Si existen elementos sin alineación, se añade 'paragraph-left' por defecto incluso si hay otros
+        //  estilos de alineación
         const selection = this.getSelection();
         if (!selection) return [];
         const range = selection.getRangeAt(0);
-
         const formatting: FormattingName[] = [];
 
+        console.log(range);
+
+        // Obtener los estilos de los nodos padres para ver los estilos aplicados
         let parentChecking = range.commonAncestorContainer;
         while (parentChecking) {
             if (parentChecking === this.editableDiv) break;
@@ -166,15 +192,21 @@ export class CaretTracking {
             parentChecking = parentChecking.parentNode;
         }
 
-        if (range.collapsed) return [...new Set(formatting)];
+        // Obtener los estilos de los nodos hijos de los elementos seleccionados
+        if (!range.collapsed) {
+            const fragment = range.cloneContents();
+            const fragmentFormatting = this.getNodeChildrenFormatting(fragment);
+            formatting.push(...fragmentFormatting);
+        }
 
-        const fragment = range.cloneContents();
-        const fragmentFormatting = this.getNodeChildrenFormatting(fragment);
-        formatting.push(...fragmentFormatting);
+        if (!formatting.includes('paragraph-right') && !formatting.includes('paragraph-center')) {
+            formatting.push('paragraph-left');
+        }
 
         return [...new Set(formatting)];
     }
 
+    // Devuelve los estilos de los nodos hijos
     public getNodeChildrenFormatting(node: Node): FormattingName[] {
         const formatting: FormattingName[] = [];
         for (const childNode of node.childNodes) {
@@ -188,40 +220,48 @@ export class CaretTracking {
         return formatting;
     }
 
+    // Devuelve el nombre del formato aplicado a un nodo html
     public getNodeFormatting(node: Node): FormattingName | void {
         if (node.nodeType === Node.TEXT_NODE) return;
-        const element = node as HTMLElement;
-
-        formattingChecking:
-            for (const tool of toolsConfig) {
-                if (element.tagName.toLowerCase() !== tool.tag) continue;
-                if (tool.classes) {
-                    for (const className of tool.classes) {
-                        if (!element.classList.contains(className))
-                            continue formattingChecking;
-                    }
-                }
-                if (tool.styles) {
-                    for (const styleName in tool.styles) {
-                        if (!element.style[styleName])
-                            continue formattingChecking;
-
-                        if (tool.styles[styleName] !== '' && element.style[styleName] !== tool.styles[styleName])
-                            continue formattingChecking;
-                    }
-                }
-                if (tool.attributes) {
-                    for (const attributeName in tool.attributes) {
-                        if (!element.hasAttribute(attributeName))
-                            continue formattingChecking;
-                        if (tool.attributes[attributeName] !== '' && element.getAttribute(attributeName) !== tool.attributes[attributeName])
-                            continue formattingChecking;
-                    }
-                }
+        for (const tool of toolsConfig) {
+            if (this.hasStyle(tool.name, node))
                 return tool.name;
-            }
-
+        }
         return;
+    }
+
+    // Devuelve si el nodo sirve para aplicar un formato
+    public hasStyle(formattingName: FormattingName, node: Node): boolean {
+        if (node.nodeType === Node.TEXT_NODE) return false;
+        const element = node as HTMLElement;
+        const tool = toolsConfig.find(tool => tool.name === formattingName);
+        if (!tool) return false;
+
+        if (element.tagName.toLowerCase() !== tool.tag) return false;
+        if (tool.classes) {
+            for (const className of tool.classes) {
+                if (!element.classList.contains(className))
+                    return false;
+            }
+        }
+        if (tool.styles) {
+            for (const styleName in tool.styles) {
+                if (!element.style[styleName])
+                    return false;
+
+                if (tool.styles[styleName] !== '' && element.style[styleName] !== tool.styles[styleName])
+                    return false;
+            }
+        }
+        if (tool.attributes) {
+            for (const attributeName in tool.attributes) {
+                if (!element.hasAttribute(attributeName))
+                    return false;
+                if (tool.attributes[attributeName] !== '' && element.getAttribute(attributeName) !== tool.attributes[attributeName])
+                    return false;
+            }
+        }
+        return true;
     }
 
 }

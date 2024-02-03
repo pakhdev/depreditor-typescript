@@ -234,12 +234,13 @@ export class FormattingUtils {
         // TODO: Obtener si la selección del último nodo es: parcial o completa, está al principio y si está al final
 
         let result = null;
-        const formattingMode = ['a', 'b', 'u', 'i', 'span'].includes(props.tag)
+        const formattingMode: 'inline' | 'block' = ['a', 'b', 'u', 'i', 'span'].includes(props.tag)
             ? 'inline'
             : 'block';
 
-        // TODO: Crear un método para comprobar si la selección ya contiene el formato
-        const action: 'apply' | 'remove' = 'apply';
+        const action: 'apply' | 'remove' = this.depreditor.caret.getStylesAtCaret().includes(props.name)
+            ? 'remove'
+            : 'apply';
 
         if (formattingMode === 'inline') {
             result = action === 'apply'
