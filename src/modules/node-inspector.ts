@@ -29,7 +29,7 @@ export class NodeInspector {
     }
 
     // Devuelve los nodos seleccionados completos, aunque no estén completamente seleccionados
-    public getSelectedNodes(): Node[] {
+    public getAffectedNodes(): Node[] {
         const selection = window.getSelection();
         const nodes: Node[] = [];
 

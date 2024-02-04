@@ -1,5 +1,6 @@
 import { EditorInitializer } from './editor-Initializer.ts';
 import { ContainerProps } from '../types/container-props.type.ts';
+import { DetailedSelection } from '../types/detailed-selection.type.ts';
 
 export class FormattingUtils {
 
@@ -226,18 +227,12 @@ export class FormattingUtils {
     }
 
     public apply(props: ContainerProps, saveToHistory: boolean = true) {
-        const selection = this.depreditor.caret.getSelection();
+        const selection = this.depreditor.caret.inspectSelection();
         if (!selection) return;
-        // TODO: Obtener si la selección es un rango
-        // TODO: Obtener si la selección solo es un nodo
-        // TODO: Obtener si la selección del primer nodo es: parcial o completa, está al principio y si está al final
-        // TODO: Obtener si la selección del último nodo es: parcial o completa, está al principio y si está al final
-
         let result = null;
         const formattingMode: 'inline' | 'block' = ['a', 'b', 'u', 'i', 'span'].includes(props.tag)
             ? 'inline'
             : 'block';
-
         const action: 'apply' | 'remove' = this.depreditor.caret.getStylesAtCaret().includes(props.name)
             ? 'remove'
             : 'apply';
@@ -261,31 +256,58 @@ export class FormattingUtils {
         }
     }
 
-    private setContainer(props: ContainerProps, selection: Selection) {
+    private setContainer(props: ContainerProps, selection: DetailedSelection) {
+        // Preparar el contenedor
+        const container = document.createElement(props.tag);
+        if (props.classes) container.classList.add(...props.classes);
+        const content = selection.range?.cloneContents();
+        if (content) container.appendChild(content);
 
         // TODO: Si solo está seleccionado un nodo de texto parcialmente, guardar el texto que no está seleccionado
-        // TODO: Si están seleccionados varios nodos, extraer elementos que fáltan por seleccionar de los nodos
-        //  afectados
+        if (selection.sameNode) {
+            if (!selection.startNode.startSelected) {
+                console.log(selection.startNode.node.textContent?.slice(0, selection.startNode.start));
+                // Если выделение не в начале, запомнить путь выделенного элемента
+            }
+            if (!selection.endNode.endSelected) {
+                console.log(selection.endNode.node.textContent?.slice(selection.endNode.end, selection.endNode.length));
+                // Если выделение не в конце, запомнить путь выделенного элемента + 2
+            }
+        } else {
+            // TODO: Si están seleccionados varios nodos, extraer elementos que fáltan por seleccionar de los nodos
+            //  afectados
+            const affectedNodes = this.depreditor.node.getAffectedNodes();
+            const rebuildScheme = this.depreditor.node.compareChildNodes(affectedNodes, Array.from(container.childNodes));
+            const removePrevious = rebuildScheme[0] !== false;
+            const removeNext = rebuildScheme.length > 1 && rebuildScheme[rebuildScheme.length - 1] !== false;
+
+            console.log(rebuildScheme, removePrevious, removeNext);
+            const restoreStartPoint = this.depreditor.node.getNodePath(affectedNodes[0], this.depreditor.editableDiv);
+        }
+
+        // Reemplazar el contenido seleccionado por el contenedor
+        selection.range?.deleteContents();
+        selection.range?.insertNode(container);
 
         // TODO: Devolver elementos a eliminar (path numérico) para poder deshacer la acción
         // TODO: Devolver texto (prepend + append) o nodos que habría que restaurar al deshacer la acción
         // TODO: Devolver elemento contenedor creado (path numérico) para poder deshacer la acción
     }
 
-    private removeContainer(props: ContainerProps, selection: Selection) {
+    private removeContainer(props: ContainerProps, selection: DetailedSelection) {
         // TODO: Extraer el contenido del contenedor, añadir nodos faltanes, añadirlo al nodo padre y eliminar el
         //  contenedor
         // TODO: Devolver la selección (path numérico) y posición del cursor para poder deshacer la acción
     }
 
-    private setInlineFormatting(props: ContainerProps, selection: Selection) {
+    private setInlineFormatting(props: ContainerProps, selection: DetailedSelection) {
         // TODO: Si la selección no es un rango, aplicar el formato al nodo seleccionado
         // TODO: Obtener todos los nodos de texto dentro de la selección y envolverlos en la etiqueta requerida
         // TODO: Envolver el texto del primer y el último nodo de la selección solo parcialmente si es necesario
         // TODO: Devolver un array con los nodos creados (path numérico) para poder deshacer la acción
     }
 
-    private removeInlineFormatting(props: ContainerProps, selection: Selection) {
+    private removeInlineFormatting(props: ContainerProps, selection: DetailedSelection) {
         // TODO: Encontrar los nodos que contienen el formato dentro de la selección y eliminarlos
         // TODO: Devolver la selección (path numérico) y posición del cursor para poder deshacer la acción
     }

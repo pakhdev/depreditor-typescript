@@ -23,7 +23,7 @@ export class ToolbarHandler {
         { icon: 'icon-set-underline', action: () => this.depreditor.formatter.format('underline') },
         // { icon: 'icon-set-code', action: () => this.depreditor.formatter.insertCode() },
         {
-            icon: 'icon-set-code', action: () => this.depreditor.formatter.injectContainer({
+            icon: 'icon-set-code', action: () => this.depreditor.formatter.apply({
                 name: 'code',
                 icon: 'icon-set-code',
                 tag: 'div',

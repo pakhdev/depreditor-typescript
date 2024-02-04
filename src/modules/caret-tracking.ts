@@ -1,6 +1,7 @@
 import { EditorInitializer } from './editor-Initializer.ts';
 import { FormattingName } from '../types';
 import { toolsConfig } from '../tools.config.ts';
+import { DetailedSelection } from '../types/detailed-selection.type.ts';
 
 export class CaretTracking {
 
@@ -29,28 +30,59 @@ export class CaretTracking {
         return null;
     }
 
-    public inspectSelection(): void {
+    public inspectSelection(): DetailedSelection | void {
         const selection = this.getSelection();
         if (!selection) return;
         const range = selection.getRangeAt(0);
 
         const selectionDetails = {
             isRange: !range.collapsed,
-            sameElement: range.startContainer === range.endContainer,
+            range: selection.rangeCount > 0 ? range : null,
+            sameNode: range.startContainer === range.endContainer,
             commonAncestor: range.commonAncestorContainer,
-            firstElement: range.startContainer,
-            firstElementFullSelected: false,
-            firstElementOffset: {
+            startNode: {
+                node: range.startContainer,
+                fullySelected: false,
+                startSelected: false,
+                endSelected: false,
                 start: 0,
                 end: 0,
+                length: range.startContainer.textContent?.length,
             },
-            lastElement: range.endContainer,
-            lastElementFullSelected: false,
-            lastElementStartOffset: {
+            endNode: {
+                node: range.endContainer,
+                fullySelected: false,
+                startSelected: false,
+                endSelected: false,
                 start: 0,
                 end: 0,
+                length: range.endContainer.textContent?.length,
             },
         };
+
+        if (range.startContainer.nodeType === Node.TEXT_NODE) {
+            const textNode = range.startContainer as Text;
+            selectionDetails.startNode.start = range.startOffset;
+            selectionDetails.startNode.end = range.startContainer !== range.endContainer
+                ? textNode.length
+                : range.endOffset;
+            selectionDetails.startNode.startSelected = selectionDetails.startNode.start === 0;
+            selectionDetails.startNode.endSelected = selectionDetails.startNode.end === textNode.length;
+            selectionDetails.startNode.fullySelected = selectionDetails.startNode.startSelected && selectionDetails.startNode.endSelected;
+        }
+
+        if (range.endContainer.nodeType === Node.TEXT_NODE) {
+            const endTextNode = range.endContainer as Text;
+            selectionDetails.endNode.start = range.startContainer !== range.endContainer
+                ? 0
+                : range.startOffset;
+            selectionDetails.endNode.end = range.endOffset;
+            selectionDetails.endNode.startSelected = selectionDetails.endNode.start === 0;
+            selectionDetails.endNode.endSelected = selectionDetails.endNode.end === endTextNode.length;
+            selectionDetails.endNode.fullySelected = selectionDetails.endNode.startSelected && selectionDetails.endNode.endSelected;
+        }
+
+        return selectionDetails;
 
     }
 
@@ -179,7 +211,7 @@ export class CaretTracking {
         const range = selection.getRangeAt(0);
         const formatting: FormattingName[] = [];
 
-        console.log(range);
+        console.log(this.inspectSelection());
 
         // Obtener los estilos de los nodos padres para ver los estilos aplicados
         let parentChecking = range.commonAncestorContainer;
