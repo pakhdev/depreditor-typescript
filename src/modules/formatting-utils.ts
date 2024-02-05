@@ -244,9 +244,8 @@ export class FormattingUtils {
         }
 
         if (formattingMode === 'block') {
-            result = action === 'apply'
-                ? this.setContainer(props, selection)
-                : this.removeContainer(props, selection);
+            if (action === 'remove') return;
+            this.setContainer(props, selection);
         }
 
         // TODO: Realizar la limpieza de nodos vacíos
@@ -259,9 +258,13 @@ export class FormattingUtils {
     private setContainer(props: ContainerProps, selection: DetailedSelection) {
         // Preparar el contenedor
         const container = document.createElement(props.tag);
-        if (props.classes) container.classList.add(...props.classes);
         const content = selection.range?.cloneContents();
-        if (content) container.appendChild(content);
+        if (props.classes)
+            container.classList.add(...props.classes);
+        if (content)
+            container.appendChild(content);
+
+        let ancestorPath, startPosition, rebuildScheme;
 
         // TODO: Si solo está seleccionado un nodo de texto parcialmente, guardar el texto que no está seleccionado
         if (selection.sameNode) {
@@ -277,27 +280,31 @@ export class FormattingUtils {
             // TODO: Si están seleccionados varios nodos, extraer elementos que fáltan por seleccionar de los nodos
             //  afectados
             const affectedNodes = this.depreditor.node.getAffectedNodes();
-            const rebuildScheme = this.depreditor.node.compareChildNodes(affectedNodes, Array.from(container.childNodes));
-            const removePrevious = rebuildScheme[0] !== false;
-            const removeNext = rebuildScheme.length > 1 && rebuildScheme[rebuildScheme.length - 1] !== false;
+            rebuildScheme = this.depreditor.node.compareChildNodes(affectedNodes, Array.from(container.childNodes));
 
-            console.log(rebuildScheme, removePrevious, removeNext);
-            const restoreStartPoint = this.depreditor.node.getNodePath(affectedNodes[0], this.depreditor.editableDiv);
+            console.log(rebuildScheme);
+
+            ancestorPath = this.depreditor.node
+                .getNodePath(selection.range!.commonAncestorContainer, this.depreditor.editableDiv).path;
+            const startElementPath = this.depreditor.node.getNodePath(affectedNodes[0], this.depreditor.editableDiv).path;
+            startPosition = startElementPath[startElementPath.length - 1];
+            // TODO: Guardar datos relativos de la selección
+            const historyObject = {
+                ancestorPath,
+                startPosition,
+            };
+
         }
 
         // Reemplazar el contenido seleccionado por el contenedor
         selection.range?.deleteContents();
         selection.range?.insertNode(container);
 
+        this.depreditor.history.undoContainer(ancestorPath, startPosition, rebuildScheme);
+
         // TODO: Devolver elementos a eliminar (path numérico) para poder deshacer la acción
         // TODO: Devolver texto (prepend + append) o nodos que habría que restaurar al deshacer la acción
         // TODO: Devolver elemento contenedor creado (path numérico) para poder deshacer la acción
-    }
-
-    private removeContainer(props: ContainerProps, selection: DetailedSelection) {
-        // TODO: Extraer el contenido del contenedor, añadir nodos faltanes, añadirlo al nodo padre y eliminar el
-        //  contenedor
-        // TODO: Devolver la selección (path numérico) y posición del cursor para poder deshacer la acción
     }
 
     private setInlineFormatting(props: ContainerProps, selection: DetailedSelection) {

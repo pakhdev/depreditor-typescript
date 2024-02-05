@@ -1,5 +1,6 @@
 import { HistoryAction } from '../types/history-action.type.ts';
 import { EditorInitializer } from './editor-Initializer.ts';
+import { NodeOrFalse } from '../types/node-or-false.type.ts';
 
 export class ActionsHistory {
     private actions: HistoryAction[] = [];
@@ -148,6 +149,43 @@ export class ActionsHistory {
     private getCurrentRange(): Range {
         const selection = this.depreditor.selectionOnEditableDiv();
         return selection!.getRangeAt(0).cloneRange();
+    }
+
+    public undoContainer(ancestorPath: number[], startPoint: number, structure: NodeOrFalse[]) {
+        const ancestor = this.depreditor.node.getNodeByPath(ancestorPath);
+        if (!ancestor) return;
+
+        if (structure.length > 1 && structure[structure.length - 1] !== false)
+            ancestor.removeChild(ancestor.childNodes[startPoint + 2]);
+        if (structure[0] !== false)
+            ancestor.removeChild(ancestor.childNodes[startPoint]);
+
+        const containerNode = this.depreditor.node.getNodeByIndex(startPoint, ancestor);
+        if (!containerNode) return;
+
+        const restoredFragment = this.restoreStructure(containerNode, structure);
+        ancestor.replaceChild(restoredFragment, containerNode);
+    }
+
+    public restoreStructure(parent: Node, structure: NodeOrFalse[]): DocumentFragment {
+        const fragment = document.createDocumentFragment();
+        const nodesList: Node[] = [];
+        const containerContent = parent.childNodes;
+
+        for (let i = 0, s = 0; s < structure.length; i++, s++) {
+            if (structure[s] === false) {
+                nodesList.push(containerContent[i]);
+                continue;
+            }
+
+            const newNode = Array.isArray(structure[s])
+                ? this.restoreStructure(containerContent[i], structure[s])
+                : structure[s] as Node;
+
+            nodesList.push(newNode);
+        }
+        fragment.append(...nodesList);
+        return fragment;
     }
 
 }

@@ -79,13 +79,10 @@ export class NodeInspector {
         return index;
     }
 
-    public getNodeByIndexInAncestor(index: number, ancestor: Node): Node | null {
-        let currentIndex = -1;
-        for (const childNode of ancestor.childNodes) {
-            currentIndex++;
-            if (currentIndex === index) return childNode;
-        }
-        return null;
+    public getNodeByIndex(index: number, ancestor: Node): Node | null {
+        const childNodes = ancestor.childNodes;
+        if (index >= childNodes.length) return null;
+        return childNodes[index];
     }
 
     public compareChildNodes(originalChildNodes: Node[], copyChildNodes: Node[]): NodeOrFalse[] {
@@ -134,6 +131,16 @@ export class NodeInspector {
             }
         }
         return { path, depth: path.length };
+    }
+
+    public getNodeByPath(path: number[]): Node | null {
+        let node: Node = this.depreditor.editableDiv;
+        for (let idx of path) {
+            const findNode = this.getNodeByIndex(idx, node);
+            if (!findNode) return null;
+            node = findNode;
+        }
+        return node;
     }
 
     public isNodeEmpty(node: Node): boolean {
