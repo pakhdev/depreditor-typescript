@@ -38,6 +38,9 @@ export class NodeInspector {
             const commonAncestor = range.commonAncestorContainer;
             const { startContainer, endContainer } = range;
 
+            if (startContainer === endContainer) return [startContainer];
+            console.log('CURRENT RANGE', range);
+
             let startContainerFound = false;
             for (const node of commonAncestor.childNodes) {
 
@@ -112,6 +115,7 @@ export class NodeInspector {
     }
 
     public getNodePath(nodeToFind: Node, parentNode: Node): { path: number[], depth: number } {
+        if (nodeToFind === parentNode) return { path: [], depth: 0 };
         const innerNodes = parentNode.childNodes;
 
         let path: number[] = [];
@@ -123,6 +127,7 @@ export class NodeInspector {
                 path.push(position);
                 break;
             }
+
             if (this.isNodeInAncestor(nodeToFind, innerNode)) {
                 path.push(position);
                 const findNodeInside = this.getNodePath(nodeToFind, innerNode);
@@ -163,4 +168,5 @@ export class NodeInspector {
         }
         return parentNode ?? node;
     }
+
 }

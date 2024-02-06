@@ -248,7 +248,10 @@ export class FormattingUtils {
             this.setContainer(props, selection);
         }
 
-        // TODO: Realizar la limpieza de nodos vacíos
+        // TODO: Decomentar esto para limpiar nodos vacíos
+        // if (selection.startNode.node !== selection.endNode.node)
+        //     this.cleanEmptyNodes(selection.endNode.node, selection.commonAncestor);
+        // this.cleanEmptyNodes(selection.startNode.node, selection.commonAncestor);
 
         if (saveToHistory && result) {
             // TODO: Guardar el resultado en el historial
@@ -256,7 +259,6 @@ export class FormattingUtils {
     }
 
     private setContainer(props: ContainerProps, selection: DetailedSelection) {
-        // Preparar el contenedor
         const container = document.createElement(props.tag);
         const content = selection.range?.cloneContents();
         if (props.classes)
@@ -264,43 +266,27 @@ export class FormattingUtils {
         if (content)
             container.appendChild(content);
 
-        let ancestorPath, startPosition, rebuildScheme;
+        const {
+            ancestorPath,
+            startPosition,
+            rebuildScheme,
+        } = this.depreditor.history.createStructuralBackup(selection, container.childNodes);
 
-        // TODO: Si solo está seleccionado un nodo de texto parcialmente, guardar el texto que no está seleccionado
+        let forceRemovePrevious = false;
+        let forceRemoveNext = false;
+
         if (selection.sameNode) {
-            if (!selection.startNode.startSelected) {
-                console.log(selection.startNode.node.textContent?.slice(0, selection.startNode.start));
-                // Если выделение не в начале, запомнить путь выделенного элемента
-            }
-            if (!selection.endNode.endSelected) {
-                console.log(selection.endNode.node.textContent?.slice(selection.endNode.end, selection.endNode.length));
-                // Если выделение не в конце, запомнить путь выделенного элемента + 2
-            }
-        } else {
-            // TODO: Si están seleccionados varios nodos, extraer elementos que fáltan por seleccionar de los nodos
-            //  afectados
-            const affectedNodes = this.depreditor.node.getAffectedNodes();
-            rebuildScheme = this.depreditor.node.compareChildNodes(affectedNodes, Array.from(container.childNodes));
-
-            console.log(rebuildScheme);
-
-            ancestorPath = this.depreditor.node
-                .getNodePath(selection.range!.commonAncestorContainer, this.depreditor.editableDiv).path;
-            const startElementPath = this.depreditor.node.getNodePath(affectedNodes[0], this.depreditor.editableDiv).path;
-            startPosition = startElementPath[startElementPath.length - 1];
-            // TODO: Guardar datos relativos de la selección
-            const historyObject = {
-                ancestorPath,
-                startPosition,
-            };
-
+            if (!selection.startNode.startSelected) forceRemovePrevious = true;
+            if (!selection.endNode.endSelected) forceRemoveNext = true;
         }
 
-        // Reemplazar el contenido seleccionado por el contenedor
         selection.range?.deleteContents();
         selection.range?.insertNode(container);
 
-        this.depreditor.history.undoContainer(ancestorPath, startPosition, rebuildScheme);
+        this.cleanEmptyNodes(selection.startNode.node, selection.commonAncestor);
+
+        // TODO: Eliminar, temporalmente para pruebas
+        this.depreditor.history.undoContainer(ancestorPath, startPosition, rebuildScheme, forceRemovePrevious, forceRemoveNext);
 
         // TODO: Devolver elementos a eliminar (path numérico) para poder deshacer la acción
         // TODO: Devolver texto (prepend + append) o nodos que habría que restaurar al deshacer la acción
@@ -318,4 +304,21 @@ export class FormattingUtils {
         // TODO: Encontrar los nodos que contienen el formato dentro de la selección y eliminarlos
         // TODO: Devolver la selección (path numérico) y posición del cursor para poder deshacer la acción
     }
+
+    private cleanEmptyNodes(node: Node, stopNode: Node) {
+        if (!this.depreditor.node.isNodeEmpty(node)) {
+            console.log('FIRST NODE IS NOT EMPTY');
+            return;
+        }
+        while (node.parentNode !== stopNode) {
+            if (node.parentNode && this.depreditor.node.isNodeEmpty(node.parentNode)) {
+                node = node.parentNode;
+            } else {
+                break;
+            }
+        }
+        console.log('CLEANED NODE', node);
+        node.parentNode?.removeChild(node);
+    }
+
 }

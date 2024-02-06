@@ -1,6 +1,7 @@
 import { HistoryAction } from '../types/history-action.type.ts';
 import { EditorInitializer } from './editor-Initializer.ts';
 import { NodeOrFalse } from '../types/node-or-false.type.ts';
+import { DetailedSelection } from '../types/detailed-selection.type.ts';
 
 export class ActionsHistory {
     private actions: HistoryAction[] = [];
@@ -151,13 +152,18 @@ export class ActionsHistory {
         return selection!.getRangeAt(0).cloneRange();
     }
 
-    public undoContainer(ancestorPath: number[], startPoint: number, structure: NodeOrFalse[]) {
+    public undoContainer(ancestorPath: number[], startPoint: number, structure: NodeOrFalse[], forceRemovePrevious: boolean = false, forceRemoveNext: boolean = false) {
         const ancestor = this.depreditor.node.getNodeByPath(ancestorPath);
         if (!ancestor) return;
 
-        if (structure.length > 1 && structure[structure.length - 1] !== false)
-            ancestor.removeChild(ancestor.childNodes[startPoint + 2]);
-        if (structure[0] !== false)
+        if (forceRemoveNext || structure.length > 1 && structure[structure.length - 1] !== false) {
+            const lastNodeOffset = (
+                (structure.length > 1 && structure[0] === false)
+                || (structure.length === 1 && !forceRemovePrevious)
+            ) ? 1 : 2;
+            ancestor.removeChild(ancestor.childNodes[startPoint + lastNodeOffset]);
+        }
+        if (forceRemovePrevious || (structure[0] !== false && structure.length > 1))
             ancestor.removeChild(ancestor.childNodes[startPoint]);
 
         const containerNode = this.depreditor.node.getNodeByIndex(startPoint, ancestor);
@@ -186,6 +192,31 @@ export class ActionsHistory {
         }
         fragment.append(...nodesList);
         return fragment;
+    }
+
+    public createStructuralBackup(selection: DetailedSelection, copiedNodes: NodeListOf<ChildNode>) {
+        console.log('COPIED NODES', copiedNodes);
+        const affectedNodes = this.depreditor.node.getAffectedNodes();
+        const rebuildScheme = this.depreditor.node.compareChildNodes(affectedNodes, Array.from(copiedNodes));
+
+        const commonAncestor = selection.sameNode
+            ? selection.range!.commonAncestorContainer.parentNode!
+            : selection.range!.commonAncestorContainer;
+        const ancestorPath = this.depreditor.node
+            .getNodePath(commonAncestor, this.depreditor.editableDiv).path;
+        console.log('affectedNodes', affectedNodes);
+
+        // TODO: En caso de que el elementos inicial es el nodo principal: Obtener el indice del último nodo y
+        //  restarle la cantidad de nodos que se encuentran en el array de los nodos copiados
+
+        const startElementPath = this.depreditor.node.getNodePath(affectedNodes[0], this.depreditor.editableDiv).path;
+
+        const startPosition = startElementPath[startElementPath.length - 1];
+        return {
+            ancestorPath,
+            startPosition,
+            rebuildScheme,
+        };
     }
 
 }
