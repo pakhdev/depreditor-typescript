@@ -60,6 +60,18 @@ export class CaretTracking {
             },
         };
 
+        if (range.startContainer === this.depreditor.editableDiv) {
+            const newStartNode = this.prepareBrSelection(range.startOffset);
+            if (newStartNode) selectionDetails.startNode = newStartNode;
+            if (selectionDetails.isRange) selectionDetails.sameNode = false;
+        }
+
+        if (range.endContainer === this.depreditor.editableDiv) {
+            const newEndNode = this.prepareBrSelection(range.endOffset);
+            if (newEndNode) selectionDetails.endNode = newEndNode;
+            if (selectionDetails.isRange) selectionDetails.sameNode = false;
+        }
+
         if (range.startContainer.nodeType === Node.TEXT_NODE) {
             const textNode = range.startContainer as Text;
             selectionDetails.startNode.start = range.startOffset;
@@ -207,8 +219,6 @@ export class CaretTracking {
         const range = selection.getRangeAt(0);
         const formatting: FormattingName[] = [];
 
-        console.log(this.inspectSelection());
-
         // Obtener los estilos de los nodos padres para ver los estilos aplicados
         let parentChecking = range.commonAncestorContainer;
         while (parentChecking) {
@@ -290,6 +300,20 @@ export class CaretTracking {
             }
         }
         return true;
+    }
+
+    private prepareBrSelection(offset: number): Object | void {
+        const editableDivChildNode = this.editableDiv.childNodes[offset];
+        if (!editableDivChildNode) return;
+        return {
+            node: editableDivChildNode,
+            fullySelected: true,
+            startSelected: true,
+            endSelected: true,
+            start: 0,
+            end: 0,
+            length: 0,
+        };
     }
 
 }

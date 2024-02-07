@@ -29,28 +29,27 @@ export class NodeInspector {
     }
 
     // Devuelve los nodos seleccionados completos, aunque no estén completamente seleccionados
-    public getAffectedNodes(): Node[] {
-        const selection = window.getSelection();
+    public getAffectedNodes(selectedNodesCount: number): Node[] {
+        const selection = this.depreditor.caret.inspectSelection();
+        if (!selection) return [];
         const nodes: Node[] = [];
 
-        if (selection) {
-            const range = selection.getRangeAt(0);
-            const commonAncestor = range.commonAncestorContainer;
-            const { startContainer, endContainer } = range;
+        const range = selection.range;
+        const commonAncestor = range.commonAncestorContainer;
+        const startContainer = selection.startNode.node;
+        const endContainer = selection.endNode.node;
 
-            if (startContainer === endContainer) return [startContainer];
-            console.log('CURRENT RANGE', range);
+        if (startContainer === endContainer) return [startContainer];
 
-            let startContainerFound = false;
-            for (const node of commonAncestor.childNodes) {
+        let startContainerFound = false;
+        for (const node of commonAncestor.childNodes) {
 
-                if (!startContainerFound && this.isNodeInAncestor(startContainer, node))
-                    startContainerFound = true;
+            if (!startContainerFound && this.isNodeInAncestor(startContainer, node))
+                startContainerFound = true;
 
-                if (startContainerFound) nodes.push(node);
+            if (startContainerFound) nodes.push(node);
 
-                if (this.isNodeInAncestor(endContainer, node)) break;
-            }
+            if (this.isNodeInAncestor(endContainer, node)) break;
         }
         return nodes;
     }

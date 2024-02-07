@@ -188,44 +188,6 @@ export class FormattingUtils {
         return;
     }
 
-    public injectContainer(props: ContainerProps): void {
-        const selection = this.depreditor.caret.getSelection();
-        if (!selection) return;
-
-        this.depreditor.caret.saveRange(); // Guardar la selección de forma automática
-        const range = selection.getRangeAt(0);
-        const startContainer = range.startContainer;
-        const endContainer = range.endContainer;
-
-        // Si solo hay un nodo seleccionado
-        if (startContainer === endContainer) {
-            if (this.depreditor.caret.isTextNodeFullySelected()) {
-                const parenNode = startContainer.parentNode;
-                if (parenNode && parenNode.childNodes.length === 1) {
-                    range.selectNode(parenNode);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                }
-            }
-        }
-
-        const commonAncestor = range.commonAncestorContainer;
-        const startContainerParent = this.depreditor.node.findFirstParent(startContainer, commonAncestor);
-        const endContainerParent = this.depreditor.node.findFirstParent(endContainer, commonAncestor);
-        console.log(startContainerParent, endContainerParent);
-        if (startContainerParent === endContainerParent) console.log('Los elementos seleccionados están en el mismo contenedor');
-
-        const container = document.createElement(props.tag);
-        if (props.classes) container.classList.add(...props.classes);
-
-        if (selection.rangeCount > 0) container.appendChild(range.cloneContents());
-
-        range.deleteContents();
-        range.insertNode(container);
-
-        if (this.depreditor.node.isNodeEmpty(startContainer)) startContainer.parentNode?.removeChild(startContainer);
-    }
-
     public apply(props: ContainerProps, saveToHistory: boolean = true) {
         const selection = this.depreditor.caret.inspectSelection();
         if (!selection) return;
@@ -245,13 +207,20 @@ export class FormattingUtils {
 
         if (formattingMode === 'block') {
             if (action === 'remove') return;
-            this.setContainer(props, selection);
+            result = this.setContainer(props, selection);
         }
 
-        // TODO: Decomentar esto para limpiar nodos vacíos
-        // if (selection.startNode.node !== selection.endNode.node)
-        //     this.cleanEmptyNodes(selection.endNode.node, selection.commonAncestor);
-        // this.cleanEmptyNodes(selection.startNode.node, selection.commonAncestor);
+        this.cleanEmptyNodes(selection.startNode.node, selection.commonAncestor);
+
+        // TODO: Eliminar al terminar de probar
+        const {
+            ancestorPath,
+            startPosition,
+            rebuildScheme,
+            forceRemovePrevious,
+            forceRemoveNext,
+        } = result!;
+        this.depreditor.history.undoContainer(ancestorPath, startPosition, rebuildScheme, forceRemovePrevious, forceRemoveNext);
 
         if (saveToHistory && result) {
             // TODO: Guardar el resultado en el historial
@@ -266,31 +235,11 @@ export class FormattingUtils {
         if (content)
             container.appendChild(content);
 
-        const {
-            ancestorPath,
-            startPosition,
-            rebuildScheme,
-        } = this.depreditor.history.createStructuralBackup(selection, container.childNodes);
-
-        let forceRemovePrevious = false;
-        let forceRemoveNext = false;
-
-        if (selection.sameNode) {
-            if (!selection.startNode.startSelected) forceRemovePrevious = true;
-            if (!selection.endNode.endSelected) forceRemoveNext = true;
-        }
-
+        // TODO: Guardar la selección actual relativa
+        const structuralBackup = this.depreditor.history.createStructuralBackup(selection, container.childNodes);
         selection.range?.deleteContents();
         selection.range?.insertNode(container);
-
-        this.cleanEmptyNodes(selection.startNode.node, selection.commonAncestor);
-
-        // TODO: Eliminar, temporalmente para pruebas
-        this.depreditor.history.undoContainer(ancestorPath, startPosition, rebuildScheme, forceRemovePrevious, forceRemoveNext);
-
-        // TODO: Devolver elementos a eliminar (path numérico) para poder deshacer la acción
-        // TODO: Devolver texto (prepend + append) o nodos que habría que restaurar al deshacer la acción
-        // TODO: Devolver elemento contenedor creado (path numérico) para poder deshacer la acción
+        return structuralBackup;
     }
 
     private setInlineFormatting(props: ContainerProps, selection: DetailedSelection) {
@@ -307,7 +256,6 @@ export class FormattingUtils {
 
     private cleanEmptyNodes(node: Node, stopNode: Node) {
         if (!this.depreditor.node.isNodeEmpty(node)) {
-            console.log('FIRST NODE IS NOT EMPTY');
             return;
         }
         while (node.parentNode !== stopNode) {
@@ -317,7 +265,6 @@ export class FormattingUtils {
                 break;
             }
         }
-        console.log('CLEANED NODE', node);
         node.parentNode?.removeChild(node);
     }
 

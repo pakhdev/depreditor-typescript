@@ -195,7 +195,6 @@ export class ActionsHistory {
     }
 
     public createStructuralBackup(selection: DetailedSelection, copiedNodes: NodeListOf<ChildNode>) {
-        console.log('COPIED NODES', copiedNodes);
         const affectedNodes = this.depreditor.node.getAffectedNodes();
         const rebuildScheme = this.depreditor.node.compareChildNodes(affectedNodes, Array.from(copiedNodes));
 
@@ -204,18 +203,16 @@ export class ActionsHistory {
             : selection.range!.commonAncestorContainer;
         const ancestorPath = this.depreditor.node
             .getNodePath(commonAncestor, this.depreditor.editableDiv).path;
-        console.log('affectedNodes', affectedNodes);
-
-        // TODO: En caso de que el elementos inicial es el nodo principal: Obtener el indice del último nodo y
-        //  restarle la cantidad de nodos que se encuentran en el array de los nodos copiados
 
         const startElementPath = this.depreditor.node.getNodePath(affectedNodes[0], this.depreditor.editableDiv).path;
-
         const startPosition = startElementPath[startElementPath.length - 1];
+
         return {
             ancestorPath,
             startPosition,
             rebuildScheme,
+            forceRemovePrevious: !selection.startNode.startSelected,
+            forceRemoveNext: !selection.endNode.endSelected,
         };
     }
 
