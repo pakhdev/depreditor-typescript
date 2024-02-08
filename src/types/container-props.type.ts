@@ -8,4 +8,5 @@ export type ContainerProps = {
     attributes?: { [key: string]: string };
     styles?: { [key: string]: string };
     content?: string;
+    groups?: string[];
 };

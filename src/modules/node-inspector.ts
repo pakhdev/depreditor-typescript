@@ -1,6 +1,7 @@
 import { EditorInitializer } from './editor-Initializer.ts';
 import { FormattingName } from '../types';
 import { NodeOrFalse } from '../types/node-or-false.type.ts';
+import { toolsConfig } from '../tools.config.ts';
 
 export class NodeInspector {
 
@@ -160,12 +161,62 @@ export class NodeInspector {
         return true;
     }
 
-    public findFirstParent(node: Node, commonAncestor: Node): Node {
-        let parentNode = node.parentNode;
-        while (parentNode && parentNode.parentNode !== commonAncestor) {
-            parentNode = parentNode.parentNode;
+    // Devuelve el nombre del formato aplicado a un nodo html
+    public getNodeFormatting(node: Node): FormattingName | void {
+        if (node.nodeType === Node.TEXT_NODE) return;
+        for (const tool of toolsConfig) {
+            if (this.hasStyle(tool.name, node))
+                return tool.name;
         }
-        return parentNode ?? node;
+        return;
+    }
+
+    // Devuelve los estilos de los nodos hijos
+    public getNodeChildrenFormatting(node: Node): FormattingName[] {
+        const formatting: FormattingName[] = [];
+        for (const childNode of node.childNodes) {
+            const formattingName = this.getNodeFormatting(childNode);
+            if (formattingName) formatting.push(formattingName);
+            if (childNode.childNodes.length > 0) {
+                const childrenFormatting = this.getNodeChildrenFormatting(childNode);
+                formatting.push(...childrenFormatting);
+            }
+        }
+        return formatting;
+    }
+
+    // Devuelve si el nodo sirve para aplicar un formato
+    public hasStyle(formattingName: FormattingName, node: Node): boolean {
+        if (node.nodeType === Node.TEXT_NODE) return false;
+        const element = node as HTMLElement;
+        const tool = toolsConfig.find(tool => tool.name === formattingName);
+        if (!tool) return false;
+
+        if (element.tagName.toLowerCase() !== tool.tag) return false;
+        if (tool.classes) {
+            for (const className of tool.classes) {
+                if (!element.classList.contains(className))
+                    return false;
+            }
+        }
+        if (tool.styles) {
+            for (const styleName in tool.styles) {
+                if (!element.style[styleName])
+                    return false;
+
+                if (tool.styles[styleName] !== '' && element.style[styleName] !== tool.styles[styleName])
+                    return false;
+            }
+        }
+        if (tool.attributes) {
+            for (const attributeName in tool.attributes) {
+                if (!element.hasAttribute(attributeName))
+                    return false;
+                if (tool.attributes[attributeName] !== '' && element.getAttribute(attributeName) !== tool.attributes[attributeName])
+                    return false;
+            }
+        }
+        return true;
     }
 
 }

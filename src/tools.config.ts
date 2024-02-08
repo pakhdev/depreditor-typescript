@@ -37,18 +37,21 @@ export const toolsConfig: ContainerProps[] = [
         icon: 'icon-set-paragraph-left',
         tag: 'div',
         styles: { textAlign: 'left' },
+        groups: ['alignments'],
     },
     {
         name: 'paragraph-center',
         icon: 'icon-set-paragraph-center',
         tag: 'div',
         styles: { textAlign: 'center' },
+        groups: ['alignments'],
     },
     {
         name: 'paragraph-right',
         icon: 'icon-set-paragraph-right',
         tag: 'div',
         styles: { textAlign: 'right' },
+        groups: ['alignments'],
     },
     {
         name: 'hidden',

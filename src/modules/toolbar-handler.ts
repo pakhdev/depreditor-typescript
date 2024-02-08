@@ -34,7 +34,15 @@ export class ToolbarHandler {
         { icon: 'icon-set-list-dots', action: () => this.depreditor.formatter.insertList('dotted') },
         { icon: 'icon-set-paragraph-left', action: () => this.depreditor.formatter.align('left') },
         { icon: 'icon-set-paragraph-center', action: () => this.depreditor.formatter.align('center') },
-        { icon: 'icon-set-paragraph-right', action: () => this.depreditor.formatter.align('right') },
+        {
+            icon: 'icon-set-paragraph-right', action: () => this.depreditor.formatter.apply({
+                name: 'paragraph-right',
+                icon: 'icon-set-paragraph-right',
+                tag: 'div',
+                styles: { textAlign: 'right' },
+                groups: ['alignments'],
+            }),
+        },
         { icon: 'icon-insert-table', action: () => this.depreditor.popup.showTableForm() },
         { icon: 'icon-set-hidden', action: () => this.depreditor.formatter.setHidden() },
         { icon: 'icon-insert-link', action: () => this.depreditor.popup.showLinkForm() },

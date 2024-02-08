@@ -1,6 +1,8 @@
 import { EditorInitializer } from './editor-Initializer.ts';
 import { ContainerProps } from '../types/container-props.type.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
+import { toolsConfig } from '../tools.config.ts';
+import { NumberOrFalse } from '../types/number-or-false.type.ts';
 
 export class FormattingUtils {
 
@@ -228,14 +230,24 @@ export class FormattingUtils {
     }
 
     private setContainer(props: ContainerProps, selection: DetailedSelection) {
+        let makeFullBackup = false;
         const container = document.createElement(props.tag);
         const content = selection.range?.cloneContents();
         if (props.classes)
             container.classList.add(...props.classes);
-        if (content)
+        if (props.styles) {
+            for (const [key, value] of Object.entries(props.styles)) {
+                container.style[key] = value;
+            }
+        }
+        if (content) {
+            if (this.clearSameGroupContainers(props, Array.from(content.childNodes)))
+                makeFullBackup = true;
             container.appendChild(content);
+        }
 
         // TODO: Guardar la selección actual relativa
+        // TODO: Pasar el argumento makeFullBackup
         const structuralBackup = this.depreditor.history.createStructuralBackup(selection, container.childNodes);
         selection.range?.deleteContents();
         selection.range?.insertNode(container);
@@ -266,6 +278,44 @@ export class FormattingUtils {
             }
         }
         node.parentNode?.removeChild(node);
+    }
+
+    private clearSameGroupContainers(props: ContainerProps, nodes: Node[]) {
+        if (!props.groups) return false;
+        let containersFound = false;
+
+        const groupFormattingNames = toolsConfig
+            .filter(tool => tool.groups && tool.groups.some(value => props.groups!.includes(value)))
+            .map(tool => tool.name);
+
+        for (const node of nodes) {
+            if (node.nodeType === Node.TEXT_NODE) continue;
+            for (const formattingName of groupFormattingNames) {
+                if (!this.depreditor.node.hasStyle(formattingName, node)) continue;
+
+                if (node.childNodes.length > 0)
+                    this.clearSameGroupContainers(props, Array.from(node.childNodes));
+
+                const fragment = this.childNodesToFragment(node);
+
+                node.parentNode?.replaceChild(fragment, node);
+                containersFound = true;
+                break;
+            }
+        }
+        return containersFound;
+    }
+
+    private childNodesToFragment(node: Node): DocumentFragment {
+        const fragment = document.createDocumentFragment();
+        const nodesList: Node[] = [];
+        if (node.childNodes.length) {
+            for (const childNode of node.childNodes) {
+                nodesList.push(childNode);
+            }
+        }
+        fragment.append(...nodesList);
+        return fragment;
     }
 
 }
