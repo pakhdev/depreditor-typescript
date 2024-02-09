@@ -7,12 +7,6 @@ export class NodeInspector {
 
     constructor(private readonly depreditor: EditorInitializer) {}
 
-    getCurrent() {
-        const currentSelection = this.depreditor.caret.getSelection();
-        if (!currentSelection) return null;
-        return currentSelection.focusNode;
-    }
-
     getAlignment(): string | null {
         const alignmentNames: FormattingName[] = ['justifyleft', 'justifycenter', 'justifyright'];
         for (const alignmentName of alignmentNames) {
@@ -30,7 +24,7 @@ export class NodeInspector {
     }
 
     // Devuelve los nodos seleccionados completos, aunque no estén completamente seleccionados
-    public getAffectedNodes(selectedNodesCount: number): Node[] {
+    public getAffectedNodes(): Node[] {
         const selection = this.depreditor.caret.inspectSelection();
         if (!selection) return [];
         const nodes: Node[] = [];
@@ -52,16 +46,8 @@ export class NodeInspector {
 
             if (this.isNodeInAncestor(endContainer, node)) break;
         }
-        return nodes;
-    }
 
-    // Devuelve los nodos seleccionados completos, pero solo con el contenido seleccionado
-    public getSelectedFragment(): Node[] {
-        const selection = window.getSelection();
-        if (!selection) return [];
-        const range = selection.getRangeAt(0);
-        const fragment = range.cloneContents();
-        return Array.from(fragment.childNodes);
+        return nodes;
     }
 
     public isNodeInAncestor(node: Node, ancestor: Node): boolean {
@@ -88,7 +74,7 @@ export class NodeInspector {
         return childNodes[index];
     }
 
-    public compareChildNodes(originalChildNodes: Node[], copyChildNodes: Node[]): NodeOrFalse[] {
+    public getDifferenceMap(originalChildNodes: Node[], copyChildNodes: Node[]): NodeOrFalse[] {
         const nodesMapping: NodeOrFalse[] = [];
         for (let i = 0; i < originalChildNodes.length; i++) {
 
@@ -103,7 +89,7 @@ export class NodeInspector {
             if (originalChild.isEqualNode(copyChild)) {
                 nodesMapping.push(false);
             } else if (originalChild.childNodes.length) {
-                const childNodesMapping = this.compareChildNodes(Array.from(originalChild.childNodes), Array.from(copyChild.childNodes));
+                const childNodesMapping = this.getDifferenceMap(Array.from(originalChild.childNodes), Array.from(copyChild.childNodes));
                 childNodesMapping.length === originalChild.childNodes.length
                     ? nodesMapping.push(originalChild.cloneNode(true))
                     : nodesMapping.push(childNodesMapping);

@@ -152,23 +152,31 @@ export class ActionsHistory {
         return selection!.getRangeAt(0).cloneRange();
     }
 
-    public undoContainer(ancestorPath: number[], startPoint: number, structure: NodeOrFalse[], forceRemovePrevious: boolean = false, forceRemoveNext: boolean = false) {
+    public undoContainer(config: {
+        ancestorPath: number[],
+        startPoint: number,
+        structure: NodeOrFalse[],
+        forceRemovePrevious: boolean,
+        forceRemoveNext: boolean,
+    }) {
+
+        const {
+            ancestorPath,
+            startPoint,
+            structure,
+            forceRemovePrevious,
+            forceRemoveNext,
+        } = config;
+
         const ancestor = this.depreditor.node.getNodeByPath(ancestorPath);
         if (!ancestor) return;
 
-        // TODO: Recibir argumentos como un objeto
-        // TODO: Recibir cuantos elementos hay que eliminar antes y después del punto inicial
-        // TODO: Eliminar la eliminación de nodos sobrantes actual
-        // TODO: Añadir funcionalidad de eliminación de nodos sobrantes
-
         if (forceRemoveNext || structure.length > 1 && structure[structure.length - 1] !== false) {
-            const lastNodeOffset = (
-                (structure.length > 1 && structure[0] === false)
-                || (structure.length === 1 && !forceRemovePrevious)
-            ) ? 1 : 2;
+            const lastNodeOffset = !forceRemovePrevious ? 1 : 2;
             ancestor.removeChild(ancestor.childNodes[startPoint + lastNodeOffset]);
         }
-        if (forceRemovePrevious || (structure[0] !== false && structure.length > 1))
+
+        if (forceRemovePrevious)
             ancestor.removeChild(ancestor.childNodes[startPoint]);
 
         const containerNode = this.depreditor.node.getNodeByIndex(startPoint, ancestor);
@@ -199,13 +207,13 @@ export class ActionsHistory {
         return fragment;
     }
 
-    public createStructuralBackup(selection: DetailedSelection, copiedNodes: NodeListOf<ChildNode>) {
+    public createStructuralBackup(selection: DetailedSelection, copiedNodes: NodeListOf<ChildNode>, makeFullBackup: boolean) {
         const affectedNodes = this.depreditor.node.getAffectedNodes();
-        console.log('affectedNodes', affectedNodes);
-        console.log('copiedNodes', copiedNodes);
-        // TODO: Crear la posibilidad de guardar todo el contenido antiguo
-        // TODO: En caso de guardar todo el contenido antiguo calcular cuantos elementos hay que eliminar
-        const rebuildScheme = this.depreditor.node.compareChildNodes(affectedNodes, Array.from(copiedNodes));
+
+        const structure = makeFullBackup
+            ? affectedNodes.map(node => node.cloneNode(true))
+            : this.depreditor.node.getDifferenceMap(affectedNodes, Array.from(copiedNodes));
+        if (makeFullBackup) console.log(affectedNodes.length, copiedNodes.length);
 
         const commonAncestor = selection.sameNode
             ? selection.range!.commonAncestorContainer.parentNode!
@@ -214,12 +222,12 @@ export class ActionsHistory {
             .getNodePath(commonAncestor, this.depreditor.editableDiv).path;
 
         const startElementPath = this.depreditor.node.getNodePath(affectedNodes[0], this.depreditor.editableDiv).path;
-        const startPosition = startElementPath[startElementPath.length - 1];
+        const startPoint = startElementPath[startElementPath.length - 1];
 
         return {
             ancestorPath,
-            startPosition,
-            rebuildScheme,
+            startPoint,
+            structure,
             forceRemovePrevious: !selection.startNode.startSelected,
             forceRemoveNext: !selection.endNode.endSelected,
         };

@@ -16,20 +16,6 @@ export class FormattingUtils {
         this.depreditor.history.saveRange();
     }
 
-    public insertCode(): void {
-        if (!this.depreditor.caret.getSelection()) return;
-        this.depreditor.caret.saveRange();
-        const codeDiv = document.createElement('div');
-        codeDiv.className = 'code-text';
-
-        const selectedHtmlString = this.getSelectedHtml();
-        if (selectedHtmlString) codeDiv.innerHTML = selectedHtmlString;
-
-        this.insertElement(codeDiv);
-        const brElement = document.createElement('br');
-        codeDiv.parentNode!.insertBefore(brElement, codeDiv.nextSibling);
-    }
-
     public setHidden(): void {
         if (!this.depreditor.caret.getSelection()) return;
         if (this.depreditor.caret.isSelectionInsideHiddenText()) {
@@ -60,14 +46,6 @@ export class FormattingUtils {
         range.deleteContents();
         range.insertNode(textElement);
         this.depreditor.caret.moveCaretToEndOfSelection();
-    }
-
-    public align(direction: string, avoidHistory?: boolean): void {
-        const previousAlignment = this.depreditor.node.getAlignment();
-        document.execCommand('justify' + direction);
-        if (avoidHistory || !previousAlignment) return;
-        this.depreditor.history.saveState(previousAlignment);
-        this.depreditor.history.saveRange();
     }
 
     public insertList(type: string): void {
@@ -215,14 +193,8 @@ export class FormattingUtils {
         this.cleanEmptyNodes(selection.startNode.node, selection.commonAncestor);
 
         // TODO: Eliminar al terminar de probar
-        const {
-            ancestorPath,
-            startPosition,
-            rebuildScheme,
-            forceRemovePrevious,
-            forceRemoveNext,
-        } = result!;
-        this.depreditor.history.undoContainer(ancestorPath, startPosition, rebuildScheme, forceRemovePrevious, forceRemoveNext);
+        console.log('Result:', result);
+        // this.depreditor.history.undoContainer(result!);
 
         if (saveToHistory && result) {
             // TODO: Guardar el resultado en el historial
@@ -247,8 +219,7 @@ export class FormattingUtils {
         }
 
         // TODO: Guardar la selección actual relativa
-        // TODO: Pasar el argumento makeFullBackup
-        const structuralBackup = this.depreditor.history.createStructuralBackup(selection, container.childNodes);
+        const structuralBackup = this.depreditor.history.createStructuralBackup(selection, container.childNodes, makeFullBackup);
         selection.range?.deleteContents();
         selection.range?.insertNode(container);
         return structuralBackup;
