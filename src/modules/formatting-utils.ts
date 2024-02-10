@@ -2,7 +2,6 @@ import { EditorInitializer } from './editor-Initializer.ts';
 import { ContainerProps } from '../types/container-props.type.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
 import { toolsConfig } from '../tools.config.ts';
-import { NumberOrFalse } from '../types/number-or-false.type.ts';
 
 export class FormattingUtils {
 

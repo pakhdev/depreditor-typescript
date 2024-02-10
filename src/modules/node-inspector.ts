@@ -7,14 +7,6 @@ export class NodeInspector {
 
     constructor(private readonly depreditor: EditorInitializer) {}
 
-    getAlignment(): string | null {
-        const alignmentNames: FormattingName[] = ['justifyleft', 'justifycenter', 'justifyright'];
-        for (const alignmentName of alignmentNames) {
-            if (document.queryCommandState(alignmentName)) return alignmentName;
-        }
-        return null;
-    }
-
     getForeColor(): string | null {
         return document.queryCommandValue('foreColor');
     }
@@ -147,16 +139,6 @@ export class NodeInspector {
         return true;
     }
 
-    // Devuelve el nombre del formato aplicado a un nodo html
-    public getNodeFormatting(node: Node): FormattingName | void {
-        if (node.nodeType === Node.TEXT_NODE) return;
-        for (const tool of toolsConfig) {
-            if (this.hasStyle(tool.name, node))
-                return tool.name;
-        }
-        return;
-    }
-
     // Devuelve los estilos de los nodos hijos
     public getNodeChildrenFormatting(node: Node): FormattingName[] {
         const formatting: FormattingName[] = [];
@@ -169,6 +151,16 @@ export class NodeInspector {
             }
         }
         return formatting;
+    }
+
+    // Devuelve el nombre del formato aplicado a un nodo html
+    public getNodeFormatting(node: Node): FormattingName | void {
+        if (node.nodeType === Node.TEXT_NODE) return;
+        for (const tool of toolsConfig) {
+            if (this.hasStyle(tool.name, node))
+                return tool.name;
+        }
+        return;
     }
 
     // Devuelve si el nodo sirve para aplicar un formato

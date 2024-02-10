@@ -2,6 +2,7 @@ import { EditorInitializer } from './editor-Initializer.ts';
 import { FormattingName } from '../types';
 import { toolsConfig } from '../tools.config.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
+import { CaretFormattings } from '../types/caret-formattings.type.ts';
 
 export class CaretTracking {
 
@@ -60,6 +61,7 @@ export class CaretTracking {
             },
         };
 
+        // Detectar la selección de un br
         if (range.startContainer === this.depreditor.editableDiv) {
             const newStartNode = this.prepareBrSelection(range.startOffset);
             if (newStartNode) selectionDetails.startNode = newStartNode;
@@ -72,6 +74,15 @@ export class CaretTracking {
             if (selectionDetails.isRange) selectionDetails.sameNode = false;
         }
 
+        if ( // Detectar la situación cuando el cursor se queda en un nodo de texto vacío
+            !selectionDetails.endNode.node.textContent
+            && selectionDetails.endNode.node.previousSibling === selectionDetails.startNode.node
+        ) {
+            selectionDetails.endNode = selectionDetails.startNode;
+            selectionDetails.sameNode = true;
+        }
+
+        // Detectar la posición del caret en un nodo de texto
         if (range.startContainer.nodeType === Node.TEXT_NODE) {
             const textNode = range.startContainer as Text;
             selectionDetails.startNode.start = range.startOffset;
@@ -165,7 +176,7 @@ export class CaretTracking {
 
         let checkingParentNode = selection.focusNode;
         while (checkingParentNode) {
-            if (this.hasStyle('code', checkingParentNode)) return true;
+            if (this.depreditor.node.hasStyle('code', checkingParentNode)) return true;
             checkingParentNode = checkingParentNode.parentNode as Node;
         }
         return false;
@@ -190,38 +201,37 @@ export class CaretTracking {
         return false;
     }
 
-    public getStylesAtCaret(): FormattingName[] {
-        // TODO: Error, al hacer mouseup después de una selección se muestran estilos anteriores
-        // TODO: Si existen elementos sin alineación, se añade 'paragraph-left' por defecto incluso si hay otros
-        //  estilos de alineación
-        const selection = this.getSelection();
+    public getStylesAtCaret(): CaretFormattings[] {
+        const selection = this.depreditor.caret.inspectSelection();
+        console.log('selection', selection);
         if (!selection) return [];
-        const range = selection.getRangeAt(0);
-        const formatting: FormattingName[] = [];
+        const formattings: CaretFormattings[] = [];
 
         // Obtener los estilos de los nodos padres para ver los estilos aplicados
-        let parentChecking = range.commonAncestorContainer;
-        while (parentChecking) {
-            if (parentChecking === this.editableDiv) break;
+        let parentChecking = selection.sameNode
+            ? selection.startNode.node
+            : selection.commonAncestor;
+        while (parentChecking && parentChecking !== this.editableDiv) {
             const element = parentChecking as HTMLElement;
             const formattingName = this.depreditor.node.getNodeFormatting(element);
-            if (formattingName) formatting.push(formattingName);
-            if (!parentChecking.parentNode) break;
-            parentChecking = parentChecking.parentNode;
+
+            if (formattingName && !formattings.some(formatting => formatting.name === formattingName))
+                formattings.push({ name: formattingName, affectsEntireSelection: true });
+
+            parentChecking = parentChecking.parentNode!;
         }
 
         // Obtener los estilos de los nodos hijos de los elementos seleccionados
-        if (!range.collapsed) {
-            const fragment = range.cloneContents();
-            const fragmentFormatting = this.depreditor.node.getNodeChildrenFormatting(fragment);
-            formatting.push(...fragmentFormatting);
+        if (selection.isRange) {
+            const fragment = selection.range!.cloneContents();
+            const fragmentFormatting = this.depreditor.node
+                .getNodeChildrenFormatting(fragment)
+                .filter(formatting => !formattings.some(existing => existing.name === formatting))
+                .map(formatting => ({ name: formatting, affectsEntireSelection: false }));
+            formattings.push(...fragmentFormatting);
         }
 
-        if (!formatting.includes('paragraph-right') && !formatting.includes('paragraph-center')) {
-            formatting.push('paragraph-left');
-        }
-
-        return [...new Set(formatting)];
+        return formattings;
     }
 
     private prepareBrSelection(offset: number): Object | void {

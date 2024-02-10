@@ -4,7 +4,14 @@ import { EditorInitializer } from './editor-Initializer.ts';
 export class ToolbarHandler {
 
     private readonly editableDiv!: HTMLDivElement;
-    private readonly handleButtonsStateHandler = () => this.handleButtonsState();
+    private readonly handleMouseUp = () => setTimeout(() => this.handleButtonsState(), 0);
+    private readonly handleKeyUp = () => this.handleButtonsState();
+    private readonly handleToolbarMouseUp = () => this.handleButtonsState();
+    private readonly handleEditableDivMouseDown = () => this.clickOnEditableDiv = true;
+    private readonly handleDocumentMouseUp = () => setTimeout(() => {
+        if (this.clickOnEditableDiv) this.handleButtonsState();
+    }, 0);
+    private clickOnEditableDiv = false;
 
     constructor(
         private readonly toolbarContainer: HTMLElement,
@@ -12,16 +19,17 @@ export class ToolbarHandler {
     ) {
         this.editableDiv = this.depreditor.editableDiv;
         this.createButtons();
-        this.editableDiv.addEventListener('mouseup', this.handleButtonsStateHandler);
-        this.editableDiv.addEventListener('keyup', this.handleButtonsStateHandler);
-        this.toolbarContainer.addEventListener('mouseup', this.handleButtonsStateHandler);
+        this.editableDiv.addEventListener('mouseup', this.handleMouseUp);
+        this.editableDiv.addEventListener('keyup', this.handleKeyUp);
+        this.toolbarContainer.addEventListener('mouseup', this.handleToolbarMouseUp);
+        this.editableDiv.addEventListener('mousedown', this.handleEditableDivMouseDown);
+        document.addEventListener('mouseup', this.handleDocumentMouseUp);
     }
 
     private readonly buttons: ToolbarButton[] = [
         { icon: 'icon-set-bold', action: () => this.depreditor.formatter.format('bold') },
         { icon: 'icon-set-italic', action: () => this.depreditor.formatter.format('italic') },
         { icon: 'icon-set-underline', action: () => this.depreditor.formatter.format('underline') },
-        // { icon: 'icon-set-code', action: () => this.depreditor.formatter.insertCode() },
         {
             icon: 'icon-set-code', action: () => this.depreditor.formatter.apply({
                 name: 'code',
@@ -80,6 +88,7 @@ export class ToolbarHandler {
     };
 
     public handleButtonsState(): void {
+        this.clickOnEditableDiv = false;
         console.log(this.depreditor.caret.getStylesAtCaret());
         const formattingNames: FormattingName[] = ['bold', 'italic', 'underline', 'insertorderedlist', 'insertunorderedlist', 'justifyleft', 'justifycenter', 'justifyright'];
         for (const formattingName of formattingNames) {
@@ -89,8 +98,11 @@ export class ToolbarHandler {
     }
 
     public destroyListeners(): void {
-        this.editableDiv.removeEventListener('mouseup', this.handleButtonsStateHandler);
-        this.editableDiv.removeEventListener('keyup', this.handleButtonsStateHandler);
+        this.editableDiv.removeEventListener('mouseup', this.handleMouseUp);
+        this.editableDiv.removeEventListener('keyup', this.handleKeyUp);
+        this.toolbarContainer.removeEventListener('mouseup', this.handleToolbarMouseUp);
+        this.editableDiv.removeEventListener('mousedown', this.handleEditableDivMouseDown);
+        document.removeEventListener('mouseup', this.handleDocumentMouseUp);
     }
 
     private createButtons(): void {
