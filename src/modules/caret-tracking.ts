@@ -3,6 +3,7 @@ import { FormattingName } from '../types';
 import { toolsConfig } from '../tools.config.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
 import { CaretFormattings } from '../types/caret-formattings.type.ts';
+import { RelativeSelection } from '../types/relative-selection.type.ts';
 
 export class CaretTracking {
 
@@ -246,6 +247,33 @@ export class CaretTracking {
             end: 0,
             length: 0,
         };
+    }
+
+    public getRelativeSelection(): RelativeSelection | void {
+        const selection = this.depreditor.caret.inspectSelection();
+        if (!selection) return;
+        return {
+            startNode: this.depreditor.node.getNodePath(selection.startNode.node, this.editableDiv),
+            startOffset: selection.startNode.start,
+            endNode: this.depreditor.node.getNodePath(selection.endNode.node, this.editableDiv),
+            endOffset: selection.endNode.end,
+        };
+    }
+
+    public setRelativeSelection(relativeSelection: RelativeSelection): void {
+        const startNode = this.depreditor.node.getNodeByPath(relativeSelection.startNode.path);
+        const endNode = this.depreditor.node.getNodeByPath(relativeSelection.endNode.path);
+
+        if (startNode && endNode) {
+            const selection = window.getSelection();
+            if (selection) {
+                const range = document.createRange();
+                range.setStart(startNode, relativeSelection.startOffset);
+                range.setEnd(endNode, relativeSelection.endOffset);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
     }
 
 }

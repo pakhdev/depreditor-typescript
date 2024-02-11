@@ -2,6 +2,7 @@ import { EditorInitializer } from './editor-Initializer.ts';
 import { FormattingName } from '../types';
 import { NodeOrFalse } from '../types/node-or-false.type.ts';
 import { toolsConfig } from '../tools.config.ts';
+import { NodePath } from '../types/node-path.type.ts';
 
 export class NodeInspector {
 
@@ -92,7 +93,7 @@ export class NodeInspector {
         return nodesMapping;
     }
 
-    public getNodePath(nodeToFind: Node, parentNode: Node): { path: number[], depth: number } {
+    public getNodePath(nodeToFind: Node, parentNode: Node): NodePath {
         if (nodeToFind === parentNode) return { path: [], depth: 0 };
         const innerNodes = parentNode.childNodes;
 

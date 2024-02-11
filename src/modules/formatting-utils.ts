@@ -2,6 +2,7 @@ import { EditorInitializer } from './editor-Initializer.ts';
 import { ContainerProps } from '../types/container-props.type.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
 import { toolsConfig } from '../tools.config.ts';
+import { RelativeSelection } from '../types/relative-selection.type.ts';
 
 export class FormattingUtils {
 
@@ -217,7 +218,7 @@ export class FormattingUtils {
             container.appendChild(content);
         }
 
-        // TODO: Guardar la selección actual relativa
+        const relativeSelection: RelativeSelection = this.depreditor.caret.getRelativeSelection()!;
         const structuralBackup = this.depreditor.history.createStructuralBackup(selection, container.childNodes, makeFullBackup);
         selection.range?.deleteContents();
         selection.range?.insertNode(container);
