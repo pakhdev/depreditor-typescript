@@ -202,37 +202,29 @@ export class CaretTracking {
         return false;
     }
 
-    public getStylesAtCaret(): CaretFormattings[] {
+    public getStylesAtCaret(): FormattingName[] {
         const selection = this.depreditor.caret.inspectSelection();
-        console.log('selection', selection);
         if (!selection) return [];
-        const formattings: CaretFormattings[] = [];
+        const formattings: FormattingName[] = [];
 
         // Obtener los estilos de los nodos padres para ver los estilos aplicados
-        let parentChecking = selection.sameNode
+        const parent = selection.sameNode
             ? selection.startNode.node
             : selection.commonAncestor;
-        while (parentChecking && parentChecking !== this.editableDiv) {
-            const element = parentChecking as HTMLElement;
-            const formattingName = this.depreditor.node.getNodeFormatting(element);
-
-            if (formattingName && !formattings.some(formatting => formatting.name === formattingName))
-                formattings.push({ name: formattingName, affectsEntireSelection: true });
-
-            parentChecking = parentChecking.parentNode!;
-        }
+        const parentFormatting = this.depreditor.node.getParentsFormatting(parent);
+        formattings.push(...parentFormatting);
 
         // Obtener los estilos de los nodos hijos de los elementos seleccionados
         if (selection.isRange) {
             const fragment = selection.range!.cloneContents();
-            const fragmentFormatting = this.depreditor.node
-                .getNodeChildrenFormatting(fragment)
-                .filter(formatting => !formattings.some(existing => existing.name === formatting))
-                .map(formatting => ({ name: formatting, affectsEntireSelection: false }));
+            const fragmentFormatting = this.depreditor.node.getNodeChildrenFormatting(fragment);
             formattings.push(...fragmentFormatting);
         }
 
-        return formattings;
+        if (!formattings.includes('paragraph-left') && this.depreditor.node.hasUnalignedNodes(parent))
+            formattings.push('paragraph-left');
+
+        return [...new Set(formattings)];
     }
 
     private prepareBrSelection(offset: number): Object | void {

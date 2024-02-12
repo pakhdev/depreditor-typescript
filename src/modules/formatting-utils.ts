@@ -171,11 +171,19 @@ export class FormattingUtils {
     public apply(props: ContainerProps, saveToHistory: boolean = true) {
         const selection = this.depreditor.caret.inspectSelection();
         if (!selection) return;
+        const content = selection.range?.cloneContents();
         let result = null;
         const formattingMode: 'inline' | 'block' = ['a', 'b', 'u', 'i', 'span'].includes(props.tag)
             ? 'inline'
             : 'block';
-        const action: 'apply' | 'remove' = this.depreditor.caret.getStylesAtCaret().includes(props.name)
+        const parentHasFormatting = this.depreditor.node.getParentsFormatting(selection.commonAncestor).includes(props.name);
+        const isOverallFormatting = content
+            ? this.depreditor.node.isOverallFormatting(props.name, content)
+            : false;
+
+        console.log('Parent has formatting:', parentHasFormatting);
+        console.log('isOverallFormatting:', isOverallFormatting);
+        const action: 'apply' | 'remove' = parentHasFormatting || isOverallFormatting
             ? 'remove'
             : 'apply';
 
@@ -187,8 +195,12 @@ export class FormattingUtils {
 
         if (formattingMode === 'block') {
             if (action === 'remove') return;
-            result = this.setContainer(props, selection);
+            result = this.setContainer(props, selection, content);
         }
+
+        // TODO: Comprobar que no da problema al revertir los cambios
+        if (selection.startNode.node !== selection.endNode.node)
+            this.cleanEmptyNodes(selection.endNode.node, selection.commonAncestor);
 
         this.cleanEmptyNodes(selection.startNode.node, selection.commonAncestor);
 
@@ -201,10 +213,9 @@ export class FormattingUtils {
         }
     }
 
-    private setContainer(props: ContainerProps, selection: DetailedSelection) {
+    private setContainer(props: ContainerProps, selection: DetailedSelection, content?: DocumentFragment) {
         let makeFullBackup = false;
         const container = document.createElement(props.tag);
-        const content = selection.range?.cloneContents();
         if (props.classes)
             container.classList.add(...props.classes);
         if (props.styles) {

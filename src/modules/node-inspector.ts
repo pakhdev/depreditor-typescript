@@ -140,6 +140,18 @@ export class NodeInspector {
         return true;
     }
 
+    // Devuelve los formatos aplicados a los nodos padres
+    public getParentsFormatting(node: Node): FormattingName[] {
+        const formatting: FormattingName[] = [];
+        let parentNode = node;
+        while (parentNode && parentNode !== this.depreditor.editableDiv) {
+            const formattingName = this.getNodeFormatting(parentNode);
+            if (formattingName !== undefined) formatting.push(formattingName);
+            parentNode = parentNode.parentNode;
+        }
+        return [...new Set(formatting)];
+    }
+
     // Devuelve los estilos de los nodos hijos
     public getNodeChildrenFormatting(node: Node): FormattingName[] {
         const formatting: FormattingName[] = [];
@@ -198,4 +210,37 @@ export class NodeInspector {
         return true;
     }
 
+    // Devuelve si todos los nodos hijos tienen el formato
+    public isOverallFormatting(formattingName: FormattingName, node: Node | DocumentFragment): boolean {
+        if (!(node instanceof DocumentFragment) && this.hasStyle(formattingName, node)) return true;
+        if (node.nodeType === Node.TEXT_NODE) return false;
+        for (const childNode of node.childNodes) {
+            if (!this.isOverallFormatting(formattingName, childNode)) return false;
+        }
+        return true;
+    }
+
+    public hasUnalignedNodes(node: Node, checkParents = true): boolean {
+
+        if (checkParents) {
+            const parentsFormatting = this.getParentsFormatting(node);
+            if (parentsFormatting.includes('paragraph-left')
+                || parentsFormatting.includes('paragraph-center')
+                || parentsFormatting.includes('paragraph-right'))
+                return false;
+        }
+
+        if (node.nodeType === Node.TEXT_NODE) return true;
+
+        const nodeFormatting = this.getNodeFormatting(node);
+        if (nodeFormatting
+            && ['paragraph-left', 'paragraph-center', 'paragraph-right'].includes(nodeFormatting))
+            return false;
+
+        for (const childNode of node.childNodes) {
+            if (this.hasUnalignedNodes(childNode)) return true;
+        }
+        
+        return false;
+    }
 }
