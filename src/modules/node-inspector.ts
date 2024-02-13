@@ -127,6 +127,17 @@ export class NodeInspector {
         return node;
     }
 
+    public getParentFromGroups(node: Node, groupNames: string[]): { node: Node, formatting: FormattingName } | null {
+        const formattingList = toolsConfig.filter(tool => tool.groups && tool.groups.some(group => groupNames.includes(group)));
+        while (node !== this.depreditor.editableDiv) {
+            const formatting = this.getNodeFormatting(node);
+            if (formatting && formattingList.some(tool => tool.name === formatting))
+                return { node, formatting };
+            node = node.parentNode;
+        }
+        return null;
+    }
+
     public isNodeEmpty(node: Node): boolean {
         if (node.textContent?.trim() !== '') return false;
         if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'img')
@@ -240,7 +251,7 @@ export class NodeInspector {
         for (const childNode of node.childNodes) {
             if (this.hasUnalignedNodes(childNode)) return true;
         }
-        
+
         return false;
     }
 }

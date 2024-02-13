@@ -168,18 +168,28 @@ export class FormattingUtils {
         return;
     }
 
-    public apply(props: ContainerProps, saveToHistory: boolean = true) {
-        const selection = this.depreditor.caret.inspectSelection();
+    public apply(props: ContainerProps, saveToHistory: boolean = true): void {
+        let selection = this.depreditor.caret.inspectSelection();
         if (!selection) return;
+
+        if (!selection.isRange) {
+            if (props.groups) {
+                const parentFromGroups = this.depreditor.node.getParentFromGroups(selection.startNode.node, props.groups);
+                if (parentFromGroups) selection = this.depreditor.caret.selectNode(parentFromGroups.node, selection.range);
+            }
+        }
+
         const content = selection.range?.cloneContents();
         let result = null;
-        const formattingMode: 'inline' | 'block' = ['a', 'b', 'u', 'i', 'span'].includes(props.tag)
-            ? 'inline'
-            : 'block';
-        const parentHasFormatting = this.depreditor.node.getParentsFormatting(selection.commonAncestor).includes(props.name);
+
+        const parentFormatting = this.depreditor.node.getParentsFormatting(selection.commonAncestor);
+        const parentHasFormatting = parentFormatting.includes(props.name);
         const isOverallFormatting = content
             ? this.depreditor.node.isOverallFormatting(props.name, content)
             : false;
+        const formattingMode: 'inline' | 'block' = ['a', 'b', 'u', 'i', 'span'].includes(props.tag)
+            ? 'inline'
+            : 'block';
 
         console.log('Parent has formatting:', parentHasFormatting);
         console.log('isOverallFormatting:', isOverallFormatting);
