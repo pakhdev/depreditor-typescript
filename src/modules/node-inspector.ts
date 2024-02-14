@@ -3,6 +3,8 @@ import { FormattingName } from '../types';
 import { NodeOrFalse } from '../types/node-or-false.type.ts';
 import { toolsConfig } from '../tools.config.ts';
 import { NodePath } from '../types/node-path.type.ts';
+import { DetailedSelection } from '../types/detailed-selection.type.ts';
+import { NodeSelection } from '../types/node-selection.type.ts';
 
 export class NodeInspector {
 
@@ -138,6 +140,49 @@ export class NodeInspector {
         return null;
     }
 
+    public getNodesToFormat(selection: DetailedSelection, nodes?: Node[], startNodeFound: boolean = false): NodeSelection[] | Node[] {
+        const isMain = !nodes;
+        if (!nodes) nodes = this.getAffectedNodes();
+        const nodesList: Node[] = [];
+        const startNode = selection.startNode.node;
+        const endNode = selection.endNode.node;
+
+        for (const node of nodes) {
+            if (node === startNode) startNodeFound = true;
+            if (startNodeFound && node.nodeType === Node.TEXT_NODE)
+                nodesList.push(node);
+            if (node.hasChildNodes()) {
+                const childrenNodes = this.getNodesToFormat(selection, Array.from(node.childNodes), startNodeFound);
+                if (startNodeFound && childrenNodes.includes(endNode)) break;
+                if (childrenNodes.length > 0 && !startNodeFound) startNodeFound = true;
+                nodesList.push(...childrenNodes);
+            }
+            if (node === endNode) break;
+        }
+
+        const nodesToApplyFormatting: NodeSelection[] = [];
+        if (isMain) {
+            for (const node of nodesList) {
+                let fullySelected = false;
+                if (selection.startNode.node === node && selection.startNode.fullySelected)
+                    fullySelected = true;
+                if (selection.endNode.node === node && selection.endNode.fullySelected)
+                    fullySelected = true;
+                if (selection.endNode.node !== node && selection.startNode.node !== node)
+                    fullySelected = true;
+
+                const start = selection.startNode.node === node ? selection.startNode.start : 0;
+                const end = selection.endNode.node === node
+                    ? selection.endNode.end
+                    : node.textContent?.length || 0;
+                nodesToApplyFormatting.push({ node, fullySelected, start, end });
+            }
+            return nodesToApplyFormatting;
+        }
+
+        return nodesList;
+    }
+
     public isNodeEmpty(node: Node): boolean {
         if (node.textContent?.trim() !== '') return false;
         if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'img')
@@ -254,4 +299,5 @@ export class NodeInspector {
 
         return false;
     }
+
 }

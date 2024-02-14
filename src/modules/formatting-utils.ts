@@ -3,6 +3,7 @@ import { ContainerProps } from '../types/container-props.type.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
 import { toolsConfig } from '../tools.config.ts';
 import { RelativeSelection } from '../types/relative-selection.type.ts';
+import { NodeSelection } from '../types/node-selection.type.ts';
 
 export class FormattingUtils {
 
@@ -201,6 +202,7 @@ export class FormattingUtils {
             result = action === 'apply'
                 ? this.setInlineFormatting(props, selection)
                 : this.removeInlineFormatting(props, selection);
+            return;
         }
 
         if (formattingMode === 'block') {
@@ -225,14 +227,7 @@ export class FormattingUtils {
 
     private setContainer(props: ContainerProps, selection: DetailedSelection, content?: DocumentFragment) {
         let makeFullBackup = false;
-        const container = document.createElement(props.tag);
-        if (props.classes)
-            container.classList.add(...props.classes);
-        if (props.styles) {
-            for (const [key, value] of Object.entries(props.styles)) {
-                container.style[key] = value;
-            }
-        }
+        const container = this.createElement(props);
         if (content) {
             if (this.clearSameGroupContainers(props, Array.from(content.childNodes)))
                 makeFullBackup = true;
@@ -247,10 +242,28 @@ export class FormattingUtils {
     }
 
     private setInlineFormatting(props: ContainerProps, selection: DetailedSelection) {
-        // TODO: Si la selección no es un rango, aplicar el formato al nodo seleccionado
-        // TODO: Obtener todos los nodos de texto dentro de la selección y envolverlos en la etiqueta requerida
-        // TODO: Envolver el texto del primer y el último nodo de la selección solo parcialmente si es necesario
-        // TODO: Devolver un array con los nodos creados (path numérico) para poder deshacer la acción
+        const nodesToFormat: NodeSelection[] = this.depreditor.node.getNodesToFormat(selection) as NodeSelection[];
+        const formattingNodes: Node[] = [];
+
+        for (const node of nodesToFormat) {
+            // TODO: No asignar a elementos que ya tengan el formato
+            const nodeToFormat = node.node;
+            const formattingNode = this.createElement(props);
+
+            if (node.fullySelected) {
+                formattingNode.appendChild(nodeToFormat.cloneNode());
+                nodeToFormat.parentNode!.replaceChild(formattingNode, nodeToFormat);
+                formattingNodes.push(formattingNode);
+            } else {
+                const text = nodeToFormat.textContent?.substring(node.start, node.end);
+                if (!text) continue;
+                nodeToFormat.textContent = nodeToFormat.textContent!.substring(0, node.start) + nodeToFormat.textContent!.substring(node.end);
+                formattingNode.textContent = text;
+                node.start === 0
+                    ? nodeToFormat.parentNode?.insertBefore(formattingNode, nodeToFormat)
+                    : nodeToFormat.parentNode?.insertBefore(formattingNode, nodeToFormat.nextSibling);
+            }
+        }
     }
 
     private removeInlineFormatting(props: ContainerProps, selection: DetailedSelection) {
@@ -308,6 +321,18 @@ export class FormattingUtils {
         }
         fragment.append(...nodesList);
         return fragment;
+    }
+
+    private createElement(props: ContainerProps): HTMLElement {
+        const container = document.createElement(props.tag);
+        if (props.classes)
+            container.classList.add(...props.classes);
+        if (props.styles) {
+            for (const [key, value] of Object.entries(props.styles)) {
+                container.style[key] = value;
+            }
+        }
+        return container;
     }
 
 }

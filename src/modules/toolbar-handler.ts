@@ -27,7 +27,11 @@ export class ToolbarHandler {
     }
 
     private readonly buttons: ToolbarButton[] = [
-        { icon: 'icon-set-bold', action: () => this.depreditor.formatter.format('bold') },
+        {
+            icon: 'icon-set-bold', action: () => this.depreditor.formatter.apply(
+                { name: 'bold', icon: 'icon-set-bold', tag: 'b' },
+            ),
+        },
         { icon: 'icon-set-italic', action: () => this.depreditor.formatter.format('italic') },
         { icon: 'icon-set-underline', action: () => this.depreditor.formatter.format('underline') },
         {
