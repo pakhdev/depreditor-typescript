@@ -4,7 +4,9 @@ import { NodeOrFalse } from '../types/node-or-false.type.ts';
 import { toolsConfig } from '../tools.config.ts';
 import { NodePath } from '../types/node-path.type.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
-import { NodeSelection } from '../types/node-selection.type.ts';
+import { NodeSelection, NodesSelection } from '../types/nodes-selection.type.ts';
+import { NodesArray } from '../types/nodes-array.type.ts';
+import { SelectedNode } from '../types/selected-node.type.ts';
 
 export class NodeInspector {
 
@@ -140,47 +142,43 @@ export class NodeInspector {
         return null;
     }
 
-    public getNodesToFormat(selection: DetailedSelection, nodes?: Node[], startNodeFound: boolean = false): NodeSelection[] | Node[] {
-        const isMain = !nodes;
+    public getNodesToFormat(selection: DetailedSelection, nodes?: Node[], startNodeFound: boolean = false): NodeSelection | Node[] {
+        console.log('CALLED');
         if (!nodes) nodes = this.getAffectedNodes();
-        const nodesList: Node[] = [];
-        const startNode = selection.startNode.node;
-        const endNode = selection.endNode.node;
+        let tempList: NodesArray = [];
+        const resultList: NodeSelection[] = [];
 
         for (const node of nodes) {
-            if (node === startNode) startNodeFound = true;
-            if (startNodeFound && node.nodeType === Node.TEXT_NODE)
-                nodesList.push(node);
-            if (node.hasChildNodes()) {
+
+            if (node === selection.startNode.node) startNodeFound = true;
+
+            if (this.isBlockNode(node) || this.nodeHasBlockChild(node) || !startNodeFound) {
+                resultList.push(...this.getSelectedNodesDetails(tempList, selection));
+                tempList = [];
+
                 const childrenNodes = this.getNodesToFormat(selection, Array.from(node.childNodes), startNodeFound);
-                if (startNodeFound && childrenNodes.includes(endNode)) break;
                 if (childrenNodes.length > 0 && !startNodeFound) startNodeFound = true;
-                nodesList.push(...childrenNodes);
+
+                resultList.push(...childrenNodes);
+                tempList = [];
+
+                if (startNodeFound && this.hasEndNode(childrenNodes, selection.endNode.node)) break;
+            } else if (node.nodeType === Node.TEXT_NODE && startNodeFound) {
+                tempList.push(node);
+            } else if (!this.isBlockNode(node) && !this.nodeHasBlockChild(node) && tempList.length !== 0) {
+                tempList.push(node);
+            } else if (!this.isBlockNode(node) && !this.nodeHasBlockChild(node) && !this.isNodeEmpty(node)) {
+                tempList.push(node);
             }
-            if (node === endNode) break;
+
+            if (node === selection.endNode.node) break;
+
         }
 
-        const nodesToApplyFormatting: NodeSelection[] = [];
-        if (isMain) {
-            for (const node of nodesList) {
-                let fullySelected = false;
-                if (selection.startNode.node === node && selection.startNode.fullySelected)
-                    fullySelected = true;
-                if (selection.endNode.node === node && selection.endNode.fullySelected)
-                    fullySelected = true;
-                if (selection.endNode.node !== node && selection.startNode.node !== node)
-                    fullySelected = true;
+        if (tempList.length > 1) resultList.push(this.getSelectedNodesDetails(tempList, selection));
+        else resultList.push(...this.getSelectedNodesDetails(tempList, selection));
 
-                const start = selection.startNode.node === node ? selection.startNode.start : 0;
-                const end = selection.endNode.node === node
-                    ? selection.endNode.end
-                    : node.textContent?.length || 0;
-                nodesToApplyFormatting.push({ node, fullySelected, start, end });
-            }
-            return nodesToApplyFormatting;
-        }
-
-        return nodesList;
+        return resultList;
     }
 
     public isNodeEmpty(node: Node): boolean {
@@ -300,4 +298,53 @@ export class NodeInspector {
         return false;
     }
 
+    public isBlockNode(node: Node): boolean {
+        if (node.nodeType === Node.TEXT_NODE) return false;
+        if (['img', 'table', 'div'].includes(node.nodeName.toLowerCase())) return true;
+        const computedStyle = getComputedStyle(node as Element);
+        return computedStyle.display === 'block';
+    }
+
+    public nodeHasBlockChild(node: Node): boolean {
+        if (!node.hasChildNodes()) return false;
+        for (const childNode of node.childNodes) {
+            if (this.isBlockNode(childNode)) return true;
+        }
+        return false;
+    }
+
+    public hasEndNode(nodes: NodesSelection, endNode: Node): boolean {
+        for (const node of nodes) {
+            if (Array.isArray(node)) {
+                if (this.hasEndNode(node, endNode)) return true;
+            } else {
+                if (node.node === endNode) return true;
+            }
+        }
+        return false;
+    }
+
+    public getSelectedNodesDetails(nodes: NodesArray, selection: DetailedSelection): NodesSelection {
+        const nodesSelection: NodesSelection = [];
+        for (const node of nodes) {
+            if (Array.isArray(node)) {
+                const childrenSelection = this.getSelectedNodesDetails(node, selection);
+                nodesSelection.push(childrenSelection);
+                continue;
+            }
+            let fullySelected = false;
+            if (selection.startNode.node === node && selection.startNode.fullySelected)
+                fullySelected = true;
+            if (selection.endNode.node === node && selection.endNode.fullySelected)
+                fullySelected = true;
+            if (selection.endNode.node !== node && selection.startNode.node !== node)
+                fullySelected = true;
+            const start = selection.startNode.node === node ? selection.startNode.start : 0;
+            const end = selection.endNode.node === node
+                ? selection.endNode.end
+                : node.textContent?.length || 0;
+            nodesSelection.push({ node, fullySelected, start, end });
+        }
+        return nodesSelection;
+    }
 }

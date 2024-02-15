@@ -3,7 +3,7 @@ import { ContainerProps } from '../types/container-props.type.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
 import { toolsConfig } from '../tools.config.ts';
 import { RelativeSelection } from '../types/relative-selection.type.ts';
-import { NodeSelection } from '../types/node-selection.type.ts';
+import { NodeSelection } from '../types/nodes-selection.type.ts';
 
 export class FormattingUtils {
 
@@ -198,6 +198,11 @@ export class FormattingUtils {
             ? 'remove'
             : 'apply';
 
+        // TODO: Obtener los elementos seleccionados
+        // TODO: Después de aplicar el formato comprobar la cantidad resultante
+        // TODO: Guardar en el historial (la selección relativa, la acción), (copia del contenido inicial y la cantidad
+        //  de nodos resultante)
+
         if (formattingMode === 'inline') {
             result = action === 'apply'
                 ? this.setInlineFormatting(props, selection)
@@ -243,6 +248,8 @@ export class FormattingUtils {
 
     private setInlineFormatting(props: ContainerProps, selection: DetailedSelection) {
         const nodesToFormat: NodeSelection[] = this.depreditor.node.getNodesToFormat(selection) as NodeSelection[];
+        console.log('Nodes to format:', nodesToFormat);
+        return;
         const formattingNodes: Node[] = [];
 
         for (const node of nodesToFormat) {

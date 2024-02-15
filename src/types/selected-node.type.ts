@@ -1,4 +1,4 @@
-export type NodeSelection = {
+export type SelectedNode = {
     node: Node;
     fullySelected: boolean;
     start: number;
