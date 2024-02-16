@@ -4,6 +4,7 @@ import { DetailedSelection } from '../types/detailed-selection.type.ts';
 import { toolsConfig } from '../tools.config.ts';
 import { RelativeSelection } from '../types/relative-selection.type.ts';
 import { NodeSelection } from '../types/nodes-selection.type.ts';
+import { InsertingOptions } from '../types/inserting-options.type.ts';
 
 export class FormattingUtils {
 
@@ -247,29 +248,18 @@ export class FormattingUtils {
     }
 
     private setInlineFormatting(props: ContainerProps, selection: DetailedSelection) {
-        const nodesToFormat: NodeSelection[] = this.depreditor.node.getNodesToFormat(selection) as NodeSelection[];
+        const nodesToFormat: NodeSelection = this.depreditor.node.getNodesToFormat(selection);
         console.log('Nodes to format:', nodesToFormat);
-        return;
-        const formattingNodes: Node[] = [];
 
         for (const node of nodesToFormat) {
-            // TODO: No asignar a elementos que ya tengan el formato
-            const nodeToFormat = node.node;
-            const formattingNode = this.createElement(props);
-
-            if (node.fullySelected) {
-                formattingNode.appendChild(nodeToFormat.cloneNode());
-                nodeToFormat.parentNode!.replaceChild(formattingNode, nodeToFormat);
-                formattingNodes.push(formattingNode);
-            } else {
-                const text = nodeToFormat.textContent?.substring(node.start, node.end);
-                if (!text) continue;
-                nodeToFormat.textContent = nodeToFormat.textContent!.substring(0, node.start) + nodeToFormat.textContent!.substring(node.end);
-                formattingNode.textContent = text;
-                node.start === 0
-                    ? nodeToFormat.parentNode?.insertBefore(formattingNode, nodeToFormat)
-                    : nodeToFormat.parentNode?.insertBefore(formattingNode, nodeToFormat.nextSibling);
-            }
+            const nodesArray = Array.isArray(node) ? node : [node];
+            this.insertNodes({
+                nodes: nodesArray,
+                position: this.depreditor.node.getNodePath(nodesArray[0].node),
+                removeNodesCount: nodesArray.length,
+                startNode: selection.startNode.node,
+                endNode: selection.endNode.node,
+            }, props);
         }
     }
 
@@ -308,7 +298,7 @@ export class FormattingUtils {
                 if (node.childNodes.length > 0)
                     this.clearSameGroupContainers(props, Array.from(node.childNodes));
 
-                const fragment = this.childNodesToFragment(node);
+                const fragment = this.makeFragment(node);
 
                 node.parentNode?.replaceChild(fragment, node);
                 containersFound = true;
@@ -318,13 +308,19 @@ export class FormattingUtils {
         return containersFound;
     }
 
-    private childNodesToFragment(node: Node): DocumentFragment {
+    private makeFragment(node: Node | Node[]): DocumentFragment {
         const fragment = document.createDocumentFragment();
         const nodesList: Node[] = [];
-        if (node.childNodes.length) {
-            for (const childNode of node.childNodes) {
-                nodesList.push(childNode);
-            }
+        let sourceNodes: Node[] = [];
+
+        if (Array.isArray(node)) {
+            sourceNodes.push(...node);
+        } else if (node.hasChildNodes()) {
+            sourceNodes.push(...Array.from(node.childNodes));
+        }
+
+        for (const childNode of sourceNodes) {
+            nodesList.push(childNode);
         }
         fragment.append(...nodesList);
         return fragment;
@@ -340,6 +336,68 @@ export class FormattingUtils {
             }
         }
         return container;
+    }
+
+    public insertNodes(insertingOptions: InsertingOptions, createContainer?: ContainerProps): void {
+
+        console.log('------------------------------------------------------------');
+        const parentNode = insertingOptions.nodes[0].node.parentNode!;
+        const startIndex = insertingOptions.position.path[0];
+        let removingStartIndex = startIndex;
+        const nodesToInsert: Node[] = [];
+        const nodesToRemove: Node[] = [];
+        let nodesToRemoveCount = insertingOptions.removeNodesCount || insertingOptions.nodes.length;
+
+        if (insertingOptions.startNode && insertingOptions.endNode) {
+            if (insertingOptions.nodes.some(node => node.node === insertingOptions.startNode && !node.fullySelected)) {
+                nodesToRemoveCount--;
+                removingStartIndex++;
+            }
+            if (insertingOptions.startNode !== insertingOptions.endNode
+                && insertingOptions.nodes.some(node => node.node === insertingOptions.endNode && !node.fullySelected)) {
+                nodesToRemoveCount--;
+            }
+        }
+
+        if (nodesToRemoveCount > 0) {
+            const removingEndIndex = removingStartIndex + nodesToRemoveCount;
+            for (let i = removingStartIndex; i < removingEndIndex; i++) {
+                nodesToRemove.push(parentNode!.childNodes[i]);
+            }
+        }
+        console.log('Nodes to remove:', nodesToRemove);
+
+        for (const element of insertingOptions.nodes) {
+            if (element.fullySelected) {
+                nodesToInsert.push(element.node.cloneNode(true));
+                continue;
+            }
+            const text = element.node.textContent?.substring(element.start, element.end);
+            if (text) {
+                const textNode = document.createTextNode(text);
+                element.node.textContent = element.node.textContent!.substring(0, element.start) + element.node.textContent!.substring(element.end);
+                nodesToInsert.push(textNode);
+            }
+        }
+
+        console.log('Nodes to insert:', nodesToInsert);
+
+        let fragmentToInsert: DocumentFragment | HTMLElement;
+
+        if (createContainer) {
+            fragmentToInsert = this.createElement(createContainer);
+            fragmentToInsert.appendChild(this.makeFragment(nodesToInsert));
+        } else {
+            fragmentToInsert = this.makeFragment(nodesToInsert);
+        }
+
+        parentNode.insertBefore(fragmentToInsert, parentNode.childNodes[removingStartIndex]);
+
+        removingStartIndex += createContainer ? 1 : nodesToInsert.length;
+        for (let i = 0; i < nodesToRemove.length - 1; i++) {
+            parentNode.removeChild(parentNode.childNodes[removingStartIndex + i]);
+        }
+
     }
 
 }

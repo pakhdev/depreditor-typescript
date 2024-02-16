@@ -97,7 +97,8 @@ export class NodeInspector {
         return nodesMapping;
     }
 
-    public getNodePath(nodeToFind: Node, parentNode: Node): NodePath {
+    public getNodePath(nodeToFind: Node, parentNode?: Node): NodePath {
+        if (!parentNode) parentNode = nodeToFind.parentNode || this.depreditor.editableDiv;
         if (nodeToFind === parentNode) return { path: [], depth: 0 };
         const innerNodes = parentNode.childNodes;
 
@@ -142,26 +143,21 @@ export class NodeInspector {
         return null;
     }
 
-    public getNodesToFormat(selection: DetailedSelection, nodes?: Node[], startNodeFound: boolean = false): NodeSelection | Node[] {
+    public getNodesToFormat(selection: DetailedSelection, nodes?: Node[], startNodeFound: boolean = false): NodeSelection {
         console.log('CALLED');
         if (!nodes) nodes = this.getAffectedNodes();
         let tempList: NodesArray = [];
         const resultList: NodeSelection[] = [];
 
         for (const node of nodes) {
-
             if (node === selection.startNode.node) startNodeFound = true;
-
             if (this.isBlockNode(node) || this.nodeHasBlockChild(node) || !startNodeFound) {
                 resultList.push(...this.getSelectedNodesDetails(tempList, selection));
                 tempList = [];
-
                 const childrenNodes = this.getNodesToFormat(selection, Array.from(node.childNodes), startNodeFound);
                 if (childrenNodes.length > 0 && !startNodeFound) startNodeFound = true;
-
                 resultList.push(...childrenNodes);
                 tempList = [];
-
                 if (startNodeFound && this.hasEndNode(childrenNodes, selection.endNode.node)) break;
             } else if (node.nodeType === Node.TEXT_NODE && startNodeFound) {
                 tempList.push(node);
@@ -170,9 +166,7 @@ export class NodeInspector {
             } else if (!this.isBlockNode(node) && !this.nodeHasBlockChild(node) && !this.isNodeEmpty(node)) {
                 tempList.push(node);
             }
-
             if (node === selection.endNode.node) break;
-
         }
 
         if (tempList.length > 1) resultList.push(this.getSelectedNodesDetails(tempList, selection));
