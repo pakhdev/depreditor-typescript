@@ -326,7 +326,7 @@ export class FormattingUtils {
         return fragment;
     }
 
-    private createElement(props: ContainerProps): HTMLElement {
+    private createElement(props: ContainerProps, content?: DocumentFragment): HTMLElement {
         const container = document.createElement(props.tag);
         if (props.classes)
             container.classList.add(...props.classes);
@@ -335,69 +335,58 @@ export class FormattingUtils {
                 container.style[key] = value;
             }
         }
+        if (content) container.appendChild(content);
         return container;
     }
 
-    public insertNodes(insertingOptions: InsertingOptions, createContainer?: ContainerProps): void {
-
-        console.log('------------------------------------------------------------');
-        const parentNode = insertingOptions.nodes[0].node.parentNode!;
-        const startIndex = insertingOptions.position.path[0];
-        let removingStartIndex = startIndex;
+    public insertNodes(insertingOptions: InsertingOptions, containerProps?: ContainerProps): void {
         const nodesToInsert: Node[] = [];
-        const nodesToRemove: Node[] = [];
+        const parentNode = insertingOptions.nodes[0].node.parentNode!;
+        const sameNode = insertingOptions.startNode === insertingOptions.endNode;
+        let startIndex = insertingOptions.position.path[0];
         let nodesToRemoveCount = insertingOptions.removeNodesCount || insertingOptions.nodes.length;
 
         if (insertingOptions.startNode && insertingOptions.endNode) {
             if (insertingOptions.nodes.some(node => node.node === insertingOptions.startNode && !node.fullySelected)) {
                 nodesToRemoveCount--;
-                removingStartIndex++;
+                startIndex++;
             }
-            if (insertingOptions.startNode !== insertingOptions.endNode
-                && insertingOptions.nodes.some(node => node.node === insertingOptions.endNode && !node.fullySelected)) {
+            if (!sameNode && insertingOptions.nodes.some(node => node.node === insertingOptions.endNode && !node.fullySelected))
                 nodesToRemoveCount--;
-            }
         }
 
-        if (nodesToRemoveCount > 0) {
-            const removingEndIndex = removingStartIndex + nodesToRemoveCount;
-            for (let i = removingStartIndex; i < removingEndIndex; i++) {
-                nodesToRemove.push(parentNode!.childNodes[i]);
-            }
-        }
-        console.log('Nodes to remove:', nodesToRemove);
+        const nodesToRemove = Array
+            .from(parentNode!.childNodes)
+            .slice(startIndex, startIndex + nodesToRemoveCount);
 
         for (const element of insertingOptions.nodes) {
             if (element.fullySelected) {
                 nodesToInsert.push(element.node.cloneNode(true));
                 continue;
             }
-            const text = element.node.textContent?.substring(element.start, element.end);
-            if (text) {
-                const textNode = document.createTextNode(text);
-                element.node.textContent = element.node.textContent!.substring(0, element.start) + element.node.textContent!.substring(element.end);
-                nodesToInsert.push(textNode);
+            const textBeforeSelection = element.node.textContent!.substring(0, element.start);
+            const selectedText = element.node.textContent!.substring(element.start, element.end);
+            const textAfterSelection = element.node.textContent!.substring(element.end);
+            nodesToInsert.push(document.createTextNode(selectedText));
+
+            if (sameNode && textAfterSelection.length)
+                startIndex--;
+
+            let textForExistingNode = textAfterSelection;
+            if (!sameNode || !textBeforeSelection.length) {
+                textForExistingNode = textBeforeSelection + textForExistingNode;
+            } else {
+                parentNode.insertBefore(document.createTextNode(textBeforeSelection), parentNode.childNodes[startIndex]);
+                startIndex++;
             }
+            element.node.textContent = textForExistingNode;
         }
 
-        console.log('Nodes to insert:', nodesToInsert);
-
-        let fragmentToInsert: DocumentFragment | HTMLElement;
-
-        if (createContainer) {
-            fragmentToInsert = this.createElement(createContainer);
-            fragmentToInsert.appendChild(this.makeFragment(nodesToInsert));
-        } else {
-            fragmentToInsert = this.makeFragment(nodesToInsert);
-        }
-
-        parentNode.insertBefore(fragmentToInsert, parentNode.childNodes[removingStartIndex]);
-
-        removingStartIndex += createContainer ? 1 : nodesToInsert.length;
-        for (let i = 0; i < nodesToRemove.length - 1; i++) {
-            parentNode.removeChild(parentNode.childNodes[removingStartIndex + i]);
-        }
-
+        const fragmentToInsert = containerProps
+            ? this.createElement(containerProps, this.makeFragment(nodesToInsert))
+            : this.makeFragment(nodesToInsert);
+        parentNode.insertBefore(fragmentToInsert, parentNode.childNodes[startIndex]);
+        nodesToRemove.forEach(node => parentNode.removeChild(node));
     }
 
 }
