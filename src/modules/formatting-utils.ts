@@ -248,7 +248,7 @@ export class FormattingUtils {
     }
 
     private setInlineFormatting(props: ContainerProps, selection: DetailedSelection) {
-        const nodesToFormat: NodeSelection = this.depreditor.node.getNodesToFormat(selection);
+        const nodesToFormat: NodeSelection = this.depreditor.node.getNodesToFormat(props.name, selection).nodeSelection;
         console.log('Nodes to format:', nodesToFormat);
 
         for (const node of nodesToFormat) {

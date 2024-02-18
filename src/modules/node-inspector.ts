@@ -143,22 +143,35 @@ export class NodeInspector {
         return null;
     }
 
-    public getNodesToFormat(selection: DetailedSelection, nodes?: Node[], startNodeFound: boolean = false): NodeSelection {
-        console.log('CALLED');
+    public getNodesToFormat(formattingName: FormattingName, selection: DetailedSelection, nodes?: Node[], startNodeFound: boolean = false): {
+        nodeSelection: NodeSelection,
+        startNodeFound: boolean,
+        endNodeFound: boolean
+    } {
         if (!nodes) nodes = this.getAffectedNodes();
         let tempList: NodesArray = [];
+        let endNodeFound = false;
         const resultList: NodeSelection[] = [];
 
         for (const node of nodes) {
             if (node === selection.startNode.node) startNodeFound = true;
-            if (this.isBlockNode(node) || this.nodeHasBlockChild(node) || !startNodeFound) {
+            if (this.isOverallFormatting(formattingName, node) && !this.isNodeEmpty(node)) {
                 resultList.push(...this.getSelectedNodesDetails(tempList, selection));
                 tempList = [];
-                const childrenNodes = this.getNodesToFormat(selection, Array.from(node.childNodes), startNodeFound);
-                if (childrenNodes.length > 0 && !startNodeFound) startNodeFound = true;
-                resultList.push(...childrenNodes);
+                if (this.containsNode(node, selection.startNode.node)) startNodeFound = true;
+                if (this.containsNode(node, selection.endNode.node)) {
+                    endNodeFound = true;
+                    break;
+                }
+                continue;
+            } else if (this.isBlockNode(node) || this.nodeHasBlockChild(node) || !startNodeFound) {
+                resultList.push(...this.getSelectedNodesDetails(tempList, selection));
                 tempList = [];
-                if (startNodeFound && this.hasEndNode(childrenNodes, selection.endNode.node)) break;
+                const childrenInfo = this.getNodesToFormat(formattingName, selection, Array.from(node.childNodes), startNodeFound);
+                if (!startNodeFound && childrenInfo.startNodeFound) startNodeFound = true;
+                resultList.push(...childrenInfo.nodeSelection);
+                tempList = [];
+                if (startNodeFound && childrenInfo.endNodeFound) break;
             } else if (node.nodeType === Node.TEXT_NODE && startNodeFound) {
                 tempList.push(node);
             } else if (!this.isBlockNode(node) && !this.nodeHasBlockChild(node) && tempList.length !== 0) {
@@ -166,13 +179,20 @@ export class NodeInspector {
             } else if (!this.isBlockNode(node) && !this.nodeHasBlockChild(node) && !this.isNodeEmpty(node)) {
                 tempList.push(node);
             }
-            if (node === selection.endNode.node) break;
+            if (node === selection.endNode.node) {
+                endNodeFound = true;
+                break;
+            }
         }
 
         if (tempList.length > 1) resultList.push(this.getSelectedNodesDetails(tempList, selection));
         else resultList.push(...this.getSelectedNodesDetails(tempList, selection));
 
-        return resultList;
+        return {
+            nodeSelection: resultList,
+            startNodeFound,
+            endNodeFound,
+        };
     }
 
     public isNodeEmpty(node: Node): boolean {
@@ -307,13 +327,10 @@ export class NodeInspector {
         return false;
     }
 
-    public hasEndNode(nodes: NodesSelection, endNode: Node): boolean {
-        for (const node of nodes) {
-            if (Array.isArray(node)) {
-                if (this.hasEndNode(node, endNode)) return true;
-            } else {
-                if (node.node === endNode) return true;
-            }
+    public containsNode(parentNode: Node, findNode: Node): boolean {
+        if (parentNode === findNode) return true;
+        for (const childNode of parentNode.childNodes) {
+            if (this.containsNode(childNode, findNode)) return true;
         }
         return false;
     }
