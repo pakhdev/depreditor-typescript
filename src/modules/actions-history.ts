@@ -2,6 +2,8 @@ import { HistoryAction } from '../types/history-action.type.ts';
 import { EditorInitializer } from './editor-Initializer.ts';
 import { NodeOrFalse } from '../types/node-or-false.type.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
+import { NodesSelection } from '../types/nodes-selection.type.ts';
+import { SelectedNode } from '../types/selected-node.type.ts';
 
 export class ActionsHistory {
     private actions: HistoryAction[] = [];
@@ -152,68 +154,14 @@ export class ActionsHistory {
         return selection!.getRangeAt(0).cloneRange();
     }
 
-    public undoContainer(config: {
-        ancestorPath: number[],
-        startPoint: number,
-        structure: NodeOrFalse[],
-        forceRemovePrevious: boolean,
-        forceRemoveNext: boolean,
-    }) {
-
-        const {
-            ancestorPath,
-            startPoint,
-            structure,
-            forceRemovePrevious,
-            forceRemoveNext,
-        } = config;
-
-        const ancestor = this.depreditor.node.getNodeByPath(ancestorPath);
-        if (!ancestor) return;
-
-        if (forceRemoveNext || structure.length > 1 && structure[structure.length - 1] !== false) {
-            const lastNodeOffset = !forceRemovePrevious ? 1 : 2;
-            ancestor.removeChild(ancestor.childNodes[startPoint + lastNodeOffset]);
-        }
-
-        if (forceRemovePrevious)
-            ancestor.removeChild(ancestor.childNodes[startPoint]);
-
-        const containerNode = this.depreditor.node.getNodeByIndex(startPoint, ancestor);
-        if (!containerNode) return;
-
-        const restoredFragment = this.restoreStructure(containerNode, structure);
-        ancestor.replaceChild(restoredFragment, containerNode);
-    }
-
-    public restoreStructure(parent: Node, structure: NodeOrFalse[]): DocumentFragment {
-        const fragment = document.createDocumentFragment();
-        const nodesList: Node[] = [];
-        const containerContent = parent.childNodes;
-
-        for (let i = 0, s = 0; s < structure.length; i++, s++) {
-            if (structure[s] === false) {
-                nodesList.push(containerContent[i]);
-                continue;
-            }
-
-            const newNode = Array.isArray(structure[s])
-                ? this.restoreStructure(containerContent[i], structure[s])
-                : structure[s] as Node;
-
-            nodesList.push(newNode);
-        }
-        fragment.append(...nodesList);
-        return fragment;
-    }
-
-    public createStructuralBackup(selection: DetailedSelection, copiedNodes: NodeListOf<ChildNode>, makeFullBackup: boolean) {
+    public createStructuralBackup(selection: DetailedSelection) {
         const affectedNodes = this.depreditor.node.getAffectedNodes();
-
-        const structure = makeFullBackup
-            ? affectedNodes.map(node => node.cloneNode(true))
-            : this.depreditor.node.getDifferenceMap(affectedNodes, Array.from(copiedNodes));
-        if (makeFullBackup) console.log(affectedNodes.length, copiedNodes.length);
+        const structure: SelectedNode[] = affectedNodes.map(node => ({
+            node: node.cloneNode(true),
+            fullySelected: true,
+            start: 0,
+            end: 0,
+        }));
 
         const commonAncestor = selection.sameNode
             ? selection.range!.commonAncestorContainer.parentNode!
@@ -228,8 +176,6 @@ export class ActionsHistory {
             ancestorPath,
             startPoint,
             structure,
-            forceRemovePrevious: !selection.startNode.startSelected,
-            forceRemoveNext: !selection.endNode.endSelected,
         };
     }
 

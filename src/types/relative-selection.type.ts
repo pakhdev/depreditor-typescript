@@ -5,4 +5,5 @@ export type RelativeSelection = {
     startOffset: number;
     endNode: NodePath;
     endOffset: number;
+    affectedNodesCount: number;
 }

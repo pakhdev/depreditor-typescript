@@ -244,11 +244,15 @@ export class CaretTracking {
     public getRelativeSelection(): RelativeSelection | void {
         const selection = this.depreditor.caret.inspectSelection();
         if (!selection) return;
+        const ancestorChildNodes = Array.from(selection.commonAncestor.childNodes);
+        const startIndex = ancestorChildNodes.findIndex(node => this.depreditor.node.containsNode(node, selection.startNode.node));
+        const endIndex = ancestorChildNodes.findIndex(node => this.depreditor.node.containsNode(node, selection.endNode.node)) + 1;
         return {
             startNode: this.depreditor.node.getNodePath(selection.startNode.node, this.editableDiv),
             startOffset: selection.startNode.start,
             endNode: this.depreditor.node.getNodePath(selection.endNode.node, this.editableDiv),
             endOffset: selection.endNode.end,
+            affectedNodesCount: endIndex - startIndex,
         };
     }
 

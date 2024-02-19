@@ -59,7 +59,7 @@ export class NodeInspector {
         let index = -1;
         for (const childNode of ancestor.childNodes) {
             index++;
-            if (this.isNodeInAncestor(node, childNode))
+            if (this.containsNode(node, childNode))
                 break;
         }
         return index;
@@ -71,30 +71,11 @@ export class NodeInspector {
         return childNodes[index];
     }
 
-    public getDifferenceMap(originalChildNodes: Node[], copyChildNodes: Node[]): NodeOrFalse[] {
-        const nodesMapping: NodeOrFalse[] = [];
-        for (let i = 0; i < originalChildNodes.length; i++) {
-
-            const originalChild = originalChildNodes[i];
-            const copyChild = copyChildNodes[i];
-
-            if (!copyChild) {
-                nodesMapping.push(originalChild.cloneNode(true));
-                continue;
-            }
-
-            if (originalChild.isEqualNode(copyChild)) {
-                nodesMapping.push(false);
-            } else if (originalChild.childNodes.length) {
-                const childNodesMapping = this.getDifferenceMap(Array.from(originalChild.childNodes), Array.from(copyChild.childNodes));
-                childNodesMapping.length === originalChild.childNodes.length
-                    ? nodesMapping.push(originalChild.cloneNode(true))
-                    : nodesMapping.push(childNodesMapping);
-            } else {
-                nodesMapping.push(originalChild.cloneNode(true));
-            }
-        }
-        return nodesMapping;
+    public getFirstParentNode(node: Node, parentNode: Node): Node | null {
+        if (node === parentNode) return null;
+        if (!node.parentNode) return node;
+        if (node.parentNode === parentNode) return node;
+        return this.getFirstParentNode(node.parentNode, parentNode);
     }
 
     public getNodePath(nodeToFind: Node, parentNode?: Node): NodePath {
@@ -329,6 +310,7 @@ export class NodeInspector {
 
     public containsNode(parentNode: Node, findNode: Node): boolean {
         if (parentNode === findNode) return true;
+        if (!parentNode.hasChildNodes()) return false;
         for (const childNode of parentNode.childNodes) {
             if (this.containsNode(childNode, findNode)) return true;
         }
