@@ -29,7 +29,7 @@ export class ToolbarHandler {
     private readonly buttons: ToolbarButton[] = [
         {
             icon: 'icon-set-bold', action: () => this.depreditor.formatter.apply(
-                { name: 'bold', icon: 'icon-set-bold', tag: 'b' },
+                { name: 'bold', icon: 'icon-set-bold', tag: 'strong' },
             ),
         },
         { icon: 'icon-set-italic', action: () => this.depreditor.formatter.format('italic') },
@@ -72,7 +72,14 @@ export class ToolbarHandler {
             }),
         },
         { icon: 'icon-insert-table', action: () => this.depreditor.popup.showTableForm() },
-        { icon: 'icon-set-hidden', action: () => this.depreditor.formatter.setHidden() },
+        {
+            icon: 'icon-set-hidden', action: () => this.depreditor.formatter.apply({
+                name: 'hidden',
+                icon: 'icon-set-hidden',
+                tag: 'span',
+                classes: ['hidden-text'],
+            }),
+        },
         { icon: 'icon-insert-link', action: () => this.depreditor.popup.showLinkForm() },
         { icon: 'icon-insert-image', action: () => this.depreditor.popup.showImageForm() },
         { icon: 'icon-set-text-color', action: () => this.depreditor.popup.showColorsForm('text') },

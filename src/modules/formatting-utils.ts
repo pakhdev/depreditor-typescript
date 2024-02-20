@@ -19,38 +19,6 @@ export class FormattingUtils {
         this.depreditor.history.saveRange();
     }
 
-    public setHidden(): void {
-        if (!this.depreditor.caret.getSelection()) return;
-        if (this.depreditor.caret.isSelectionInsideHiddenText()) {
-            this.unsetHidden();
-            return;
-        }
-        this.depreditor.caret.saveRange();
-        const selectedHtmlString = this.getSelectedHtml();
-        if (!selectedHtmlString || !selectedHtmlString!.replace(/<[^>]*>/g, '').trim().length) return;
-
-        const codeDiv = document.createElement('div');
-        codeDiv.className = 'hidden-text';
-        codeDiv.innerHTML = selectedHtmlString;
-        this.insertElement(codeDiv);
-    }
-
-    public unsetHidden(): void {
-        const selection = window.getSelection()!;
-        const range = selection.getRangeAt(0);
-        const commonAncestor = range.commonAncestorContainer as HTMLElement;
-
-        const hiddenElement = commonAncestor.parentNode as HTMLDivElement;
-        range.selectNode(hiddenElement);
-        selection.removeAllRanges();
-        selection.addRange(range);
-
-        const textElement = document.createTextNode(selection.toString());
-        range.deleteContents();
-        range.insertNode(textElement);
-        this.depreditor.caret.moveCaretToEndOfSelection();
-    }
-
     public insertList(type: string): void {
         document.execCommand(type === 'numbered'
             ? 'insertOrderedList'
@@ -160,17 +128,6 @@ export class FormattingUtils {
         node.parentNode?.removeChild(node);
     }
 
-    private getSelectedHtml(): string | undefined {
-        const selection = document.getSelection();
-        if (selection && selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            const container = document.createElement('div');
-            container.appendChild(range.cloneContents());
-            return container.innerHTML;
-        }
-        return;
-    }
-
     public apply(props: ContainerProps, saveToHistory: boolean = true): void {
         let selection = this.depreditor.caret.inspectSelection();
         if (!selection) return;
@@ -187,7 +144,7 @@ export class FormattingUtils {
         const isOverallFormatting = content
             ? this.depreditor.node.isOverallFormatting(props.name, content)
             : false;
-        const formattingMode: 'inline' | 'block' = ['a', 'b', 'u', 'i', 'span'].includes(props.tag)
+        const formattingMode: 'inline' | 'block' = ['a', 'strong', 'u', 'i', 'span'].includes(props.tag)
             ? 'inline'
             : 'block';
         const action: 'apply' | 'remove' = parentHasFormatting || isOverallFormatting
@@ -224,7 +181,7 @@ export class FormattingUtils {
         if (saveToHistory) {
             // TODO: Guardar el resultado en el historial
             // TODO: Eliminar al terminar de probar
-            console.log({ relativeSelection });
+            console.log({ relativeSelection, structuralBackup });
             this.insertNodes({
                 nodes: structuralBackup.structure,
                 ancestorPath: structuralBackup.ancestorPath,
@@ -234,7 +191,7 @@ export class FormattingUtils {
         }
     }
 
-    private setContainer(props: ContainerProps, selection: DetailedSelection, content?: DocumentFragment) {
+    private setContainer(props: ContainerProps, selection: DetailedSelection, content?: DocumentFragment): number {
         const container = this.createElement(props);
         if (content) {
             this.clearSameGroupContainers(props, Array.from(content.childNodes));
@@ -245,7 +202,7 @@ export class FormattingUtils {
         return 1;
     }
 
-    private setInlineFormatting(props: ContainerProps, selection: DetailedSelection) {
+    private setInlineFormatting(props: ContainerProps, selection: DetailedSelection): number {
         const commonAncestor = selection.commonAncestor;
         const nodesToFormat: NodeSelection = this.depreditor.node.getNodesToFormat(props.name, selection).nodeSelection;
         const updatedNodesInAncestor: Node[] = [];
@@ -253,7 +210,7 @@ export class FormattingUtils {
             const nodesArray = Array.isArray(node) ? node : [node];
             const insertedNode = this.insertNodes({
                 nodes: nodesArray,
-                position: this.depreditor.node.getContainerIndexInAncestor(nodesArray[0].node, commonAncestor),
+                position: this.depreditor.node.getContainerIndexInAncestor(nodesArray[0].node),
                 removeNodesCount: nodesArray.length,
                 startNode: selection.startNode.node,
                 endNode: selection.endNode.node,
@@ -265,12 +222,13 @@ export class FormattingUtils {
         return updatedNodesInAncestor.length;
     }
 
-    private removeInlineFormatting(props: ContainerProps, selection: DetailedSelection) {
+    private removeInlineFormatting(props: ContainerProps, selection: DetailedSelection): number {
         // TODO: Encontrar los nodos que contienen el formato dentro de la selección y eliminarlos
         // TODO: Devolver la selección (path numérico) y posición del cursor para poder deshacer la acción
+        return 0;
     }
 
-    private cleanEmptyNodes(node: Node, stopNode: Node) {
+    private cleanEmptyNodes(node: Node, stopNode: Node): void {
         if (!this.depreditor.node.isNodeEmpty(node)) {
             return;
         }
@@ -284,7 +242,7 @@ export class FormattingUtils {
         node.parentNode?.removeChild(node);
     }
 
-    private clearSameGroupContainers(props: ContainerProps, nodes: Node[]) {
+    private clearSameGroupContainers(props: ContainerProps, nodes: Node[]): boolean {
         if (!props.groups) return false;
         let containersFound = false;
 

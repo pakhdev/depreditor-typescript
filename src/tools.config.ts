@@ -4,7 +4,7 @@ export const toolsConfig: ContainerProps[] = [
     {
         name: 'bold',
         icon: 'icon-set-bold',
-        tag: 'b',
+        tag: 'strong',
     },
     {
         name: 'italic',

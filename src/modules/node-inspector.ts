@@ -55,7 +55,9 @@ export class NodeInspector {
         return node.parentNode === ancestor;
     }
 
-    public getContainerIndexInAncestor(node: Node, ancestor: Node): number {
+    public getContainerIndexInAncestor(node: Node): number {
+        const ancestor = node.parentNode;
+        if (!ancestor) return -1;
         let index = -1;
         for (const childNode of ancestor.childNodes) {
             index++;
