@@ -1,6 +1,5 @@
 import { EditorInitializer } from './editor-Initializer.ts';
 import { FormattingName } from '../types';
-import { NodeOrFalse } from '../types/node-or-false.type.ts';
 import { toolsConfig } from '../tools.config.ts';
 import { NodePath } from '../types/node-path.type.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
@@ -105,8 +104,8 @@ export class NodeInspector {
         return { path, depth: path.length };
     }
 
-    public getNodeByPath(path: number[]): Node | null {
-        let node: Node = this.depreditor.editableDiv;
+    public getNodeByPath(path: number[], node: Node): Node | null {
+        if (!node) node = this.depreditor.editableDiv;
         for (let idx of path) {
             const findNode = this.getNodeByIndex(idx, node);
             if (!findNode) return null;
@@ -122,6 +121,15 @@ export class NodeInspector {
             if (formatting && formattingList.some(tool => tool.name === formatting))
                 return { node, formatting };
             node = node.parentNode;
+        }
+        return null;
+    }
+
+    public getParentWithFormatting(node: Node, formattingName: FormattingName): Node | null {
+        while (node !== this.depreditor.editableDiv) {
+            if (this.hasStyle(formattingName, node)) return node;
+            node = node.parentNode;
+            if (!node) return null;
         }
         return null;
     }
@@ -176,6 +184,18 @@ export class NodeInspector {
             startNodeFound,
             endNodeFound,
         };
+    }
+
+    public getNodesWithFormatting(formattingName: FormattingName, nodes: Node[]): Node[] {
+        const nodesList: Node[] = [];
+        for (const node of nodes) {
+            if (this.hasStyle(formattingName, node)) nodesList.push(node);
+            if (node.hasChildNodes()) {
+                const childrenNodes = this.getNodesWithFormatting(formattingName, Array.from(node.childNodes));
+                nodesList.push(...childrenNodes);
+            }
+        }
+        return nodesList;
     }
 
     public isNodeEmpty(node: Node): boolean {

@@ -5,7 +5,6 @@ import { toolsConfig } from '../tools.config.ts';
 import { RelativeSelection } from '../types/relative-selection.type.ts';
 import { NodeSelection } from '../types/nodes-selection.type.ts';
 import { InsertingOptions } from '../types/inserting-options.type.ts';
-import { SelectedNode } from '../types/selected-node.type.ts';
 
 export class FormattingUtils {
 
@@ -162,9 +161,13 @@ export class FormattingUtils {
         }
 
         if (formattingMode === 'inline') {
-            resultNodesCount += action === 'apply'
-                ? this.setInlineFormatting(props, selection)
-                : this.removeInlineFormatting(props, selection);
+            if (action === 'remove' && selection.sameNode) {
+                this.unstyleNode(props, selection);
+            } else {
+                resultNodesCount += action === 'apply'
+                    ? this.setInlineFormatting(props, selection)
+                    : this.removeInlineFormatting(props, selection, content!);
+            }
         }
 
         if (formattingMode === 'block') {
@@ -182,12 +185,12 @@ export class FormattingUtils {
             // TODO: Guardar el resultado en el historial
             // TODO: Eliminar al terminar de probar
             console.log({ relativeSelection, structuralBackup });
-            this.insertNodes({
-                nodes: structuralBackup.structure,
-                ancestorPath: structuralBackup.ancestorPath,
-                position: structuralBackup.startPoint,
-                removeNodesCount: resultNodesCount,
-            });
+            // this.insertNodes({
+            //     nodes: structuralBackup.structure,
+            //     ancestorPath: structuralBackup.ancestorPath,
+            //     position: structuralBackup.startPoint,
+            //     removeNodesCount: resultNodesCount,
+            // });
         }
     }
 
@@ -222,10 +225,52 @@ export class FormattingUtils {
         return updatedNodesInAncestor.length;
     }
 
-    private removeInlineFormatting(props: ContainerProps, selection: DetailedSelection): number {
-        // TODO: Encontrar los nodos que contienen el formato dentro de la selección y eliminarlos
-        // TODO: Devolver la selección (path numérico) y posición del cursor para poder deshacer la acción
+    private removeInlineFormatting(props: ContainerProps, selection: DetailedSelection, content: DocumentFragment): number {
+        const formattedNodes = this.depreditor.node
+            .getNodesWithFormatting(props.name, Array.from(content.childNodes));
+        for (const node of formattedNodes) {
+            const innerFragment = this.makeFragment(Array.from(node.childNodes));
+            node.parentNode?.replaceChild(innerFragment, node);
+        }
+        selection.range!.deleteContents();
+        selection.range!.insertNode(content);
         return 0;
+    }
+
+    private unstyleNode(props: ContainerProps, selection: DetailedSelection) {
+        const node = selection.startNode.node;
+        const { start, end } = selection.startNode;
+        const nodeText = node.textContent!;
+        const nodesList: Node[] = [];
+        const parent = this.depreditor.node.getParentWithFormatting(node, props.name);
+        if (!parent) return 0;
+        const path = this.depreditor.node.getNodePath(node, parent).path;
+
+        if (start !== 0) {
+            const nodeBefore = parent.cloneNode(true);
+            this.depreditor.node.getNodeByPath(path, nodeBefore)!.textContent = nodeText.substring(0, start);
+            nodesList.push(nodeBefore);
+        }
+
+        let selectedPartOfNode = parent.cloneNode(true);
+        this.depreditor.node.getNodeByPath(path, selectedPartOfNode)!.textContent = nodeText.substring(start, end);
+        const formattedNodes = this.depreditor.node
+            .getNodesWithFormatting(props.name, [selectedPartOfNode]);
+        for (const formattedNode of formattedNodes) {
+            const innerFragment = this.makeFragment(Array.from(formattedNode.childNodes));
+            if (!formattedNode.parentNode) selectedPartOfNode = innerFragment;
+            else formattedNode.parentNode?.replaceChild(innerFragment, formattedNode);
+        }
+        nodesList.push(selectedPartOfNode);
+
+        if (end !== parent.textContent!.length) {
+            const nodeAfter = parent.cloneNode(true);
+            this.depreditor.node.getNodeByPath(path, nodeAfter)!.textContent = nodeText.substring(end);
+            nodesList.push(nodeAfter);
+        }
+
+        const fragment = this.makeFragment(nodesList);
+        parent.parentNode!.replaceChild(fragment, parent);
     }
 
     private cleanEmptyNodes(node: Node, stopNode: Node): void {
