@@ -5,7 +5,6 @@ import { NodePath } from '../types/node-path.type.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
 import { NodeSelection, NodesSelection } from '../types/nodes-selection.type.ts';
 import { NodesArray } from '../types/nodes-array.type.ts';
-import { SelectedNode } from '../types/selected-node.type.ts';
 
 export class NodeInspector {
 
@@ -81,6 +80,7 @@ export class NodeInspector {
 
     public getNodePath(nodeToFind: Node, parentNode?: Node): NodePath {
         if (!parentNode) parentNode = nodeToFind.parentNode || this.depreditor.editableDiv;
+        if (nodeToFind === this.depreditor.editableDiv) return { path: [], depth: 0 };
         if (nodeToFind === parentNode) return { path: [], depth: 0 };
         const innerNodes = parentNode.childNodes;
 
@@ -104,7 +104,7 @@ export class NodeInspector {
         return { path, depth: path.length };
     }
 
-    public getNodeByPath(path: number[], node: Node): Node | null {
+    public getNodeByPath(path: number[], node?: Node): Node | null {
         if (!node) node = this.depreditor.editableDiv;
         for (let idx of path) {
             const findNode = this.getNodeByIndex(idx, node);
@@ -137,12 +137,14 @@ export class NodeInspector {
     public getNodesToFormat(formattingName: FormattingName, selection: DetailedSelection, nodes?: Node[], startNodeFound: boolean = false): {
         nodeSelection: NodeSelection,
         startNodeFound: boolean,
-        endNodeFound: boolean
+        endNodeFound: boolean,
+        skipNodes: number
     } {
         if (!nodes) nodes = this.getAffectedNodes();
         let tempList: NodesArray = [];
         let endNodeFound = false;
         const resultList: NodeSelection[] = [];
+        let skipNodes = 0;
 
         for (const node of nodes) {
             if (node === selection.startNode.node) startNodeFound = true;
@@ -154,6 +156,7 @@ export class NodeInspector {
                     endNodeFound = true;
                     break;
                 }
+                skipNodes++;
                 continue;
             } else if (this.isBlockNode(node) || this.nodeHasBlockChild(node) || !startNodeFound) {
                 resultList.push(...this.getSelectedNodesDetails(tempList, selection));
@@ -169,6 +172,8 @@ export class NodeInspector {
                 tempList.push(node);
             } else if (!this.isBlockNode(node) && !this.nodeHasBlockChild(node) && !this.isNodeEmpty(node)) {
                 tempList.push(node);
+            } else if (startNodeFound) {
+                skipNodes++;
             }
             if (node === selection.endNode.node) {
                 endNodeFound = true;
@@ -183,6 +188,7 @@ export class NodeInspector {
             nodeSelection: resultList,
             startNodeFound,
             endNodeFound,
+            skipNodes,
         };
     }
 

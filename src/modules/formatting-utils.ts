@@ -162,7 +162,9 @@ export class FormattingUtils {
 
         if (formattingMode === 'inline') {
             if (action === 'remove' && selection.sameNode) {
-                this.unstyleNode(props, selection);
+                const rewriteBackup = this.unstyleNode(props, selection);
+                structuralBackup = { ...rewriteBackup };
+                resultNodesCount = rewriteBackup.removeNodesCount;
             } else {
                 resultNodesCount += action === 'apply'
                     ? this.setInlineFormatting(props, selection)
@@ -185,12 +187,12 @@ export class FormattingUtils {
             // TODO: Guardar el resultado en el historial
             // TODO: Eliminar al terminar de probar
             console.log({ relativeSelection, structuralBackup });
-            // this.insertNodes({
-            //     nodes: structuralBackup.structure,
-            //     ancestorPath: structuralBackup.ancestorPath,
-            //     position: structuralBackup.startPoint,
-            //     removeNodesCount: resultNodesCount,
-            // });
+            this.insertNodes({
+                nodes: structuralBackup.structure,
+                ancestorPath: structuralBackup.ancestorPath,
+                position: structuralBackup.startPoint,
+                removeNodesCount: resultNodesCount,
+            });
         }
     }
 
@@ -207,9 +209,10 @@ export class FormattingUtils {
 
     private setInlineFormatting(props: ContainerProps, selection: DetailedSelection): number {
         const commonAncestor = selection.commonAncestor;
-        const nodesToFormat: NodeSelection = this.depreditor.node.getNodesToFormat(props.name, selection).nodeSelection;
+        const nodesToFormat: NodeSelection = this.depreditor.node.getNodesToFormat(props.name, selection);
+
         const updatedNodesInAncestor: Node[] = [];
-        for (const node of nodesToFormat) {
+        for (const node of nodesToFormat.nodeSelection) {
             const nodesArray = Array.isArray(node) ? node : [node];
             const insertedNode = this.insertNodes({
                 nodes: nodesArray,
@@ -222,7 +225,7 @@ export class FormattingUtils {
             if (!updatedNode || updatedNodesInAncestor.includes(updatedNode)) continue;
             updatedNodesInAncestor.push(updatedNode);
         }
-        return updatedNodesInAncestor.length;
+        return updatedNodesInAncestor.length + nodesToFormat.skipNodes;
     }
 
     private removeInlineFormatting(props: ContainerProps, selection: DetailedSelection, content: DocumentFragment): number {
@@ -232,9 +235,10 @@ export class FormattingUtils {
             const innerFragment = this.makeFragment(Array.from(node.childNodes));
             node.parentNode?.replaceChild(innerFragment, node);
         }
+        const newElementsCount = content.childNodes.length;
         selection.range!.deleteContents();
         selection.range!.insertNode(content);
-        return 0;
+        return newElementsCount;
     }
 
     private unstyleNode(props: ContainerProps, selection: DetailedSelection) {
@@ -243,13 +247,25 @@ export class FormattingUtils {
         const nodeText = node.textContent!;
         const nodesList: Node[] = [];
         const parent = this.depreditor.node.getParentWithFormatting(node, props.name);
-        if (!parent) return 0;
         const path = this.depreditor.node.getNodePath(node, parent).path;
+
+        const history = {
+            structure: [{
+                node: parent.cloneNode(true),
+                fullySelected: true,
+                start: 0,
+                end: 0,
+            }],
+            ancestorPath: this.depreditor.node.getNodePath(parent.parentNode).path,
+            startPoint: this.depreditor.node.getContainerIndexInAncestor(parent),
+            removeNodesCount: 1,
+        };
 
         if (start !== 0) {
             const nodeBefore = parent.cloneNode(true);
             this.depreditor.node.getNodeByPath(path, nodeBefore)!.textContent = nodeText.substring(0, start);
             nodesList.push(nodeBefore);
+            history.removeNodesCount++;
         }
 
         let selectedPartOfNode = parent.cloneNode(true);
@@ -267,10 +283,15 @@ export class FormattingUtils {
             const nodeAfter = parent.cloneNode(true);
             this.depreditor.node.getNodeByPath(path, nodeAfter)!.textContent = nodeText.substring(end);
             nodesList.push(nodeAfter);
+            history.removeNodesCount++;
         }
+
+        history.removeNodesCount = nodesList.length;
 
         const fragment = this.makeFragment(nodesList);
         parent.parentNode!.replaceChild(fragment, parent);
+        console.log('history', history);
+        return history;
     }
 
     private cleanEmptyNodes(node: Node, stopNode: Node): void {
@@ -345,7 +366,7 @@ export class FormattingUtils {
     }
 
     public insertNodes(insertingOptions: InsertingOptions, containerProps?: ContainerProps) {
-        console.log(insertingOptions);
+        console.log('insertingOptions', insertingOptions);
         const nodesToInsert: Node[] = [];
         const parentNode = insertingOptions.ancestorPath
             ? this.depreditor.node.getNodeByPath(insertingOptions.ancestorPath)
