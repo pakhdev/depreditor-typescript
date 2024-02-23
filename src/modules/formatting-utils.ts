@@ -187,12 +187,12 @@ export class FormattingUtils {
             // TODO: Guardar el resultado en el historial
             // TODO: Eliminar al terminar de probar
             console.log({ relativeSelection, structuralBackup });
-            this.insertNodes({
-                nodes: structuralBackup.structure,
-                ancestorPath: structuralBackup.ancestorPath,
-                position: structuralBackup.startPoint,
-                removeNodesCount: resultNodesCount,
-            });
+            // this.insertNodes({
+            //     nodes: structuralBackup.structure,
+            //     ancestorPath: structuralBackup.ancestorPath,
+            //     position: structuralBackup.startPoint,
+            //     removeNodesCount: resultNodesCount,
+            // });
         }
     }
 
@@ -235,6 +235,7 @@ export class FormattingUtils {
             const innerFragment = this.makeFragment(Array.from(node.childNodes));
             node.parentNode?.replaceChild(innerFragment, node);
         }
+        this.joinTextNodes(content);
         const newElementsCount = content.childNodes.length;
         selection.range!.deleteContents();
         selection.range!.insertNode(content);
@@ -332,6 +333,23 @@ export class FormattingUtils {
             }
         }
         return containersFound;
+    }
+
+    private joinTextNodes(node: Node | DocumentFragment) {
+        if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return;
+        for (let i = 0; i < node.childNodes.length; i++) {
+            const child = node.childNodes[i];
+            console.log(child);
+            if (child.nodeType === Node.TEXT_NODE && i > 0 && node.childNodes[i - 1].nodeType === Node.TEXT_NODE) {
+                const prevNode = node.childNodes[i - 1] as Text;
+                prevNode.textContent += child.textContent;
+                node.removeChild(child);
+                i--;
+            }
+            if (child.nodeType === Node.ELEMENT_NODE) {
+                this.joinTextNodes(child);
+            }
+        }
     }
 
     private makeFragment(node: Node | Node[]): DocumentFragment {
