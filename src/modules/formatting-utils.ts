@@ -210,6 +210,7 @@ export class FormattingUtils {
     private setInlineFormatting(props: ContainerProps, selection: DetailedSelection): number {
         const commonAncestor = selection.commonAncestor;
         const nodesToFormat: NodeSelection = this.depreditor.node.getNodesToFormat(props.name, selection);
+        console.log('nodesToFormat', nodesToFormat);
 
         const updatedNodesInAncestor: Node[] = [];
         for (const node of nodesToFormat.nodeSelection) {

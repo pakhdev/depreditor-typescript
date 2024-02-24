@@ -145,11 +145,11 @@ export class NodeInspector {
         let endNodeFound = false;
         const resultList: NodeSelection[] = [];
         let skipNodes = 0;
-
         for (const node of nodes) {
             if (node === selection.startNode.node) startNodeFound = true;
             if (this.isOverallFormatting(formattingName, node) && !this.isNodeEmpty(node)) {
-                resultList.push(...this.getSelectedNodesDetails(tempList, selection));
+                if (tempList.length > 1) resultList.push(this.getSelectedNodesDetails(tempList, selection));
+                else resultList.push(...this.getSelectedNodesDetails(tempList, selection));
                 tempList = [];
                 if (this.containsNode(node, selection.startNode.node)) startNodeFound = true;
                 if (this.containsNode(node, selection.endNode.node)) {
@@ -184,6 +184,8 @@ export class NodeInspector {
         if (tempList.length > 1) resultList.push(this.getSelectedNodesDetails(tempList, selection));
         else resultList.push(...this.getSelectedNodesDetails(tempList, selection));
 
+        console.log('SELECTED', resultList);
+
         return {
             nodeSelection: resultList,
             startNodeFound,
@@ -208,7 +210,6 @@ export class NodeInspector {
         if (node.textContent?.trim() !== '') return false;
         if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'img')
             return false;
-
         const childNodes = node.childNodes;
         for (let i = 0; i < childNodes.length; i++) {
             const childNode = childNodes[i];
