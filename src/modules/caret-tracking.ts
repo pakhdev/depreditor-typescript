@@ -63,14 +63,14 @@ export class CaretTracking {
         };
 
         // Detectar la selección de un br
-        if (range.startContainer === this.depreditor.editableDiv) {
-            const newStartNode = this.prepareBrSelection(range.startOffset);
+        if (range.startContainer === selectionDetails.commonAncestor) {
+            const newStartNode = this.prepareBrSelection(range.startOffset, selectionDetails.commonAncestor);
             if (newStartNode) selectionDetails.startNode = newStartNode;
             if (selectionDetails.isRange) selectionDetails.sameNode = false;
         }
 
-        if (range.endContainer === this.depreditor.editableDiv) {
-            const newEndNode = this.prepareBrSelection(range.endOffset);
+        if (range.endContainer === selectionDetails.commonAncestor) {
+            const newEndNode = this.prepareBrSelection(range.endOffset, selectionDetails.commonAncestor);
             if (newEndNode) selectionDetails.endNode = newEndNode;
             if (selectionDetails.isRange) selectionDetails.sameNode = false;
         }
@@ -227,8 +227,8 @@ export class CaretTracking {
         return [...new Set(formattings)];
     }
 
-    private prepareBrSelection(offset: number): Object | void {
-        const editableDivChildNode = this.editableDiv.childNodes[offset];
+    private prepareBrSelection(offset: number, parentNode: Node): Object | void {
+        const editableDivChildNode = parentNode.childNodes[offset];
         if (!editableDivChildNode) return;
         return {
             node: editableDivChildNode,

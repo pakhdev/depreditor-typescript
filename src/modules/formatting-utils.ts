@@ -340,7 +340,6 @@ export class FormattingUtils {
         if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return;
         for (let i = 0; i < node.childNodes.length; i++) {
             const child = node.childNodes[i];
-            console.log(child);
             if (child.nodeType === Node.TEXT_NODE && i > 0 && node.childNodes[i - 1].nodeType === Node.TEXT_NODE) {
                 const prevNode = node.childNodes[i - 1] as Text;
                 prevNode.textContent += child.textContent;

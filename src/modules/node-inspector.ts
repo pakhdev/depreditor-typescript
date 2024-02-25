@@ -33,12 +33,9 @@ export class NodeInspector {
 
         let startContainerFound = false;
         for (const node of commonAncestor.childNodes) {
-
             if (!startContainerFound && this.isNodeInAncestor(startContainer, node))
                 startContainerFound = true;
-
             if (startContainerFound) nodes.push(node);
-
             if (this.isNodeInAncestor(endContainer, node)) break;
         }
 
@@ -208,6 +205,7 @@ export class NodeInspector {
 
     public isNodeEmpty(node: Node): boolean {
         if (node.textContent?.trim() !== '') return false;
+        if (!this.isBlockNode(node) && !this.nodeHasBlockChild(node)) return false;
         if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'img')
             return false;
         const childNodes = node.childNodes;
