@@ -411,16 +411,18 @@ export class FormattingUtils {
                 nodesToInsert.push(element.node.cloneNode(true));
                 continue;
             }
-            const textBeforeSelection = element.node.textContent!.substring(0, element.start);
-            const selectedText = element.node.textContent!.substring(element.start, element.end);
-            const textAfterSelection = element.node.textContent!.substring(element.end);
+            const { textContent } = element.node;
+            const textBeforeSelection = textContent!.substring(0, element.start);
+            const selectedText = textContent!.substring(element.start, element.end);
+            const textAfterSelection = textContent!.substring(element.end);
+
             nodesToInsert.push(document.createTextNode(selectedText));
 
             if (sameNode && textAfterSelection.length)
                 startIndex--;
 
             let textForExistingNode = textAfterSelection;
-            if (!sameNode || !textBeforeSelection.length) {
+            if (!sameNode) {
                 textForExistingNode = textBeforeSelection + textForExistingNode;
             } else {
                 parentNode.insertBefore(document.createTextNode(textBeforeSelection), parentNode.childNodes[startIndex]);

@@ -5,6 +5,7 @@ import { NodePath } from '../types/node-path.type.ts';
 import { DetailedSelection } from '../types/detailed-selection.type.ts';
 import { NodeSelection, NodesSelection } from '../types/nodes-selection.type.ts';
 import { NodesArray } from '../types/nodes-array.type.ts';
+import { NodesTopology } from '../types/nodes-topology.type.ts';
 
 export class NodeInspector {
 
@@ -40,6 +41,25 @@ export class NodeInspector {
         }
 
         return nodes;
+    }
+
+    public getSelectedTopology(selection: DetailedSelection, nodes?: Node[], startNodeFound: boolean = false): NodesTopology[] {
+        if (!nodes) nodes = this.getAffectedNodes();
+        const startNode: Node = selection.startNode.node;
+        const endNode: Node = selection.endNode.node;
+        const resultTopology: NodesTopology[] = [];
+
+        for (const node of nodes) {
+            if (node === startNode) startNodeFound = true;
+            if (!startNodeFound && !this.containsNode(node, selection.startNode.node)) continue;
+            const children: NodesTopology[] = node.hasChildNodes()
+                ? [...this.getSelectedTopology(selection, Array.from(node.childNodes), startNodeFound)]
+                : [];
+            startNodeFound = true;
+            resultTopology.push({ node, children });
+            if (node === endNode || this.containsNode(node, selection.endNode.node)) break;
+        }
+        return resultTopology;
     }
 
     public isNodeInAncestor(node: Node, ancestor: Node): boolean {
