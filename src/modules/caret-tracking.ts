@@ -275,7 +275,6 @@ export class CaretTracking {
     public selectNode(node: Node, range: Range): DetailedSelection {
         range.selectNode(node);
         return this.inspectSelection()!;
-
     }
 
 }

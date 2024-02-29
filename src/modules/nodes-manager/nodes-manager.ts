@@ -7,9 +7,9 @@ export class NodesManager {
     // *  Carga de nodos
     // ** =========================
 
-    public setSelection(): void {}
+    public loadFromSelection(): void {
 
-    public findAffectedNodes(): void {}
+    }
 
     // ** =========================
     // *  Creación de Backup
