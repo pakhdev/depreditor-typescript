@@ -1,4 +1,4 @@
-import { SelectionDetails } from './interfaces';
+import { NodesTopology, SelectionDetails, SelectionPickArgs } from './interfaces';
 
 export class NodesManager {
 
@@ -11,8 +11,19 @@ export class NodesManager {
     // *  Selección de nodos
     // ** =========================
 
-    public pickFromSelection(selection: SelectionDetails): void {
-        if (!selection) return;
+    public pickFromSelection(options: SelectionPickArgs): void {
+        if (!options.selection) return;
+        let topology: NodesTopology = {
+            node: options.node || options.selection.commonAncestor,
+            path: options.path || this.getNodePath(options.selection.commonAncestor)!,
+            children: [],
+            start: 0,
+            end: 0,
+            length: 0,
+        };
+        this.selectedNodes = topology.node.nodeType === Node.TEXT_NODE
+            ? this.getTopologyOfTextNode(topology, options)
+            : this.getTopologyOfElementNode(topology, options);
     }
 
     public pickFromPath(path: number[]): void {
@@ -67,6 +78,32 @@ export class NodesManager {
             }
         }
         return null;
+    }
+
+    private getTopologyOfTextNode(topology: NodesTopology, options: SelectionPickArgs): NodesTopology {
+        if (options.selection.startNode.node === topology.node) {
+            return {
+                ...options.selection.startNode,
+                children: topology.children,
+                path: topology.path,
+            };
+        } else if (options.selection.endNode.node === topology.node) {
+            return {
+                ...options.selection.endNode,
+                children: topology.children,
+                path: topology.path,
+            };
+        }
+        topology.start = 0;
+        topology.end = topology.node.textContent!.length - 1;
+        topology.fullySelected = true;
+        topology.startSelected = true;
+        topology.endSelected = true;
+        return topology;
+    }
+
+    private getTopologyOfElementNode(topology: NodesTopology, options: SelectionPickArgs): NodesTopology {
+        return topology;
     }
 
     // ** =========================
