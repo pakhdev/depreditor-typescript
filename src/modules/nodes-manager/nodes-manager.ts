@@ -3,7 +3,7 @@ import { NodesTopology, SelectionDetails, SelectionPickArgs } from './interfaces
 export class NodesManager {
 
     private nodesBackup: Node[] = [];
-    private selectedNodes: Node[] | Node | null = null;
+    private selectedNodes: NodesTopology | null = null;
 
     constructor(private readonly editableDiv: HTMLDivElement) {}
 
@@ -11,19 +11,14 @@ export class NodesManager {
     // *  Selección de nodos
     // ** =========================
 
-    public pickFromSelection(options: SelectionPickArgs): void {
-        if (!options.selection) return;
-        let topology: NodesTopology = {
-            node: options.node || options.selection.commonAncestor,
-            path: options.path || this.getNodePath(options.selection.commonAncestor)!,
-            children: [],
-            start: 0,
-            end: 0,
-            length: 0,
-        };
-        this.selectedNodes = topology.node.nodeType === Node.TEXT_NODE
-            ? this.getTopologyOfTextNode(topology, options)
-            : this.getTopologyOfElementNode(topology, options);
+    public pickFromSelection(selection: SelectionDetails): void {
+        if (!selection) return;
+        const commonAncestor = selection.commonAncestor;
+        const options: SelectionPickArgs = { selection };
+        this.selectedNodes = commonAncestor.nodeType === Node.TEXT_NODE
+            ? this.getTopologyOfTextNode(commonAncestor, options)
+            : this.getTopologyOfElementNode(commonAncestor, options);
+        console.log(this.selectedNodes);
     }
 
     public pickFromPath(path: number[]): void {
@@ -80,30 +75,69 @@ export class NodesManager {
         return null;
     }
 
-    private getTopologyOfTextNode(topology: NodesTopology, options: SelectionPickArgs): NodesTopology {
-        if (options.selection.startNode.node === topology.node) {
+    private createTopology(node: Node, path?: number[]): NodesTopology {
+        return {
+            node,
+            path: path || this.getNodePath(node)!,
+            children: [],
+            start: 0,
+            end: 0,
+            length: node.nodeType === Node.TEXT_NODE
+                ? node.textContent!.length
+                : node.childNodes.length,
+        };
+    }
+
+    private getTopologyOfTextNode(node: Node, options: SelectionPickArgs): NodesTopology {
+        const topology = this.createTopology(node, options.path);
+        if (options.selection.startNode.node === topology.node || options.selection.endNode.node === topology.node) {
+            const selectedNode = options.selection.startNode.node === topology.node
+                ? options.selection.startNode
+                : options.selection.endNode;
             return {
-                ...options.selection.startNode,
-                children: topology.children,
-                path: topology.path,
-            };
-        } else if (options.selection.endNode.node === topology.node) {
-            return {
-                ...options.selection.endNode,
+                ...selectedNode,
                 children: topology.children,
                 path: topology.path,
             };
         }
-        topology.start = 0;
-        topology.end = topology.node.textContent!.length - 1;
-        topology.fullySelected = true;
-        topology.startSelected = true;
-        topology.endSelected = true;
-        return topology;
+        return {
+            ...topology,
+            startSelected: true,
+            endSelected: true,
+            fullySelected: true,
+        };
     }
 
-    private getTopologyOfElementNode(topology: NodesTopology, options: SelectionPickArgs): NodesTopology {
-        return topology;
+    private getTopologyOfElementNode(node: Node, options: SelectionPickArgs): NodesTopology {
+        const topology = this.createTopology(node, options.path);
+        const children = Array.from(topology.node.childNodes);
+        const startNode: Node = options.selection.startNode.node;
+        const endNode: Node = options.selection.endNode.node;
+
+        for (let i = 0; i < children.length; i++) {
+            const node = children[i];
+            if (!options.startFound && node !== startNode && !node.contains(startNode)) continue;
+            if (!options.startFound) topology.start = i;
+            options.path = [...topology.path, i];
+            const childTopology = node.nodeType === Node.TEXT_NODE
+                ? this.getTopologyOfTextNode(node, options)
+                : this.getTopologyOfElementNode(node, options);
+            if (node === startNode) {
+                options.startFound = true;
+                topology.start = i;
+            }
+            topology.children.push(childTopology);
+            if (node === endNode || node.contains(endNode)) {
+                topology.end = i;
+                break;
+            }
+        }
+        return {
+            ...topology,
+            startSelected: topology.start === 0,
+            endSelected: !children.length || topology.end === topology.children.length - 1,
+            fullySelected: children.length === topology.children.length,
+        };
     }
 
     // ** =========================
