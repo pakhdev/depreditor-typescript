@@ -1,8 +1,9 @@
 import { NodesTopology, SelectionDetails, SelectionPickArgs } from './interfaces';
+import { getSelection } from '../../helpers/getSelection.helper.ts';
 
 export class NodesManager {
 
-    private nodesBackup: Node[] = [];
+    private nodesBackup: NodesTopology | null = null;
     private selectedNodes: NodesTopology | null = null;
 
     constructor(private readonly editableDiv: HTMLDivElement) {}
@@ -11,14 +12,15 @@ export class NodesManager {
     // *  Selección de nodos
     // ** =========================
 
-    public pickFromSelection(selection: SelectionDetails): void {
-        if (!selection) return;
+    public pickFromSelection(): NodesManager {
+        const selection = getSelection(this.editableDiv);
+        if (!selection) return this;
         const commonAncestor = selection.commonAncestor;
         const options: SelectionPickArgs = { selection };
         this.selectedNodes = commonAncestor.nodeType === Node.TEXT_NODE
             ? this.getTopologyOfTextNode(commonAncestor, options)
             : this.getTopologyOfElementNode(commonAncestor, options);
-        console.log(this.selectedNodes);
+        return this;
     }
 
     public pickFromPath(path: number[]): void {
@@ -30,9 +32,19 @@ export class NodesManager {
     // *  Creación de Backup
     // ** =========================
 
-    public makeBackup(activate: boolean): void {
-        if (!activate) return;
-        // Взять все ноды первого уровня
+    public makeBackup(activate: boolean): NodesManager {
+        if (!activate || !this.selectedNodes) return this;
+        this.nodesBackup = { ...this.selectedNodes };
+        this.nodesBackup.children.map(child => {
+            const topology = this.createTopology(child.node, child.path);
+            child.node = child.node.cloneNode(true);
+            child.end = topology.length;
+            child.startSelected = true;
+            child.endSelected = true;
+            child.fullySelected = true;
+        });
+        console.log(this.nodesBackup);
+        return this;
     }
 
     // ** =========================
@@ -150,7 +162,11 @@ export class NodesManager {
 
     public removeFormat(): void {}
 
-    public insertNodes(): void {}
+    public insertNodes(offset: number, fragment: DocumentFragment | Node): void {
+        if (typeof this.selectedNodes !== 'object' || this.selectedNodes === null) return;
+        const referenceNode = this.selectedNodes.node.childNodes[offset + 1];
+        this.selectedNodes.node.insertBefore(fragment, referenceNode);
+    }
 
     public removeNodes(offset: number, limit: number): void {
         if (typeof this.selectedNodes !== 'object' || this.selectedNodes === null)
