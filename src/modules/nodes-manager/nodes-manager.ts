@@ -183,6 +183,49 @@ export class NodesManager {
             return;
     }
 
+    private splitNode(parent: Node, node: Node, ranges: number[]): Node[] {
+        if (node.nodeType !== Node.TEXT_NODE || ranges.length === 0) return [node.cloneNode(true)];
+        const textContent = node.textContent || '';
+        const length = textContent.length;
+        if (ranges.some(offset => offset > length - 1)) return [node.cloneNode(true)];
+        if (!ranges.includes(length - 1)) ranges.push(length - 1);
+
+        const clonedNodes: Node[] = [];
+        let start = 0;
+        ranges.forEach(offset => {
+            const end = offset;
+            if (end === 0) return;
+            const clonedNode = parent.cloneNode(true);
+            const target = clonedNode.nodeType === Node.TEXT_NODE
+                ? clonedNode
+                : Array.from((clonedNode as HTMLElement).children).find(child => child.isEqualNode(node));
+            if (!target) return;
+            clonedNode.textContent = textContent.substring(start, end);
+            if (start !== 0) this.removeNodesInDirection(parent, target, 'before');
+            if (end !== length - 1) this.removeNodesInDirection(parent, target, 'after');
+            clonedNodes.push(clonedNode);
+            start = end;
+        });
+        return clonedNodes;
+    }
+
+    private removeNodesInDirection(parent: Node, target: Node, direction: 'before' | 'after'): void {
+        let container = target;
+        while (container !== parent) {
+            container = target.parentNode!;
+            const childNodes = Array.from(container.childNodes);
+            let nodeFound = false;
+            for (let node of childNodes) {
+                if (node.contains(target)) {
+                    nodeFound = true;
+                    if (direction === 'before') break;
+                    if (direction === 'after') continue;
+                }
+                if (direction === 'before' || nodeFound) container.removeChild(node);
+            }
+        }
+    }
+
     // ** =========================
     // *  Retorno de datos
     // ** =========================
