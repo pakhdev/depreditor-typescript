@@ -5,6 +5,7 @@ import { toolsConfig } from '../tools.config.ts';
 import { RelativeSelection } from '../types/relative-selection.type.ts';
 import { NodeSelection } from '../types/nodes-selection.type.ts';
 import { InsertingOptions } from '../types/inserting-options.type.ts';
+import { NodesManager } from './nodes-manager/nodes-manager.ts';
 
 export class FormattingUtils {
 
@@ -128,72 +129,73 @@ export class FormattingUtils {
     }
 
     public apply(props: ContainerProps, saveToHistory: boolean = true): void {
-        let selection = this.depreditor.caret.inspectSelection();
-        if (!selection) return;
-        if (!selection.isRange) {
-            if (props.groups) {
-                const parentFromGroups = this.depreditor.node.getParentFromGroups(selection.startNode.node, props.groups);
-                if (parentFromGroups) selection = this.depreditor.caret.selectNode(parentFromGroups.node, selection.range);
-            }
-        }
-
-        const content = selection.range?.cloneContents();
-        const parentFormatting = this.depreditor.node.getParentsFormatting(selection.commonAncestor);
-        const parentHasFormatting = parentFormatting.includes(props.name);
-        const isOverallFormatting = content
-            ? this.depreditor.node.isOverallFormatting(props.name, content)
-            : false;
-        const formattingMode: 'inline' | 'block' = ['a', 'strong', 'u', 'i', 'span'].includes(props.tag)
-            ? 'inline'
-            : 'block';
-        const action: 'apply' | 'remove' = parentHasFormatting || isOverallFormatting
-            ? 'remove'
-            : 'apply';
-        let resultNodesCount: number = 0;
-        let relativeSelection: RelativeSelection | undefined;
-        let structuralBackup;
-
-        if (saveToHistory) {
-            relativeSelection = this.depreditor.caret.getRelativeSelection()!;
-            structuralBackup = this.depreditor.history.createStructuralBackup(selection);
-            if (!selection.startNode.startSelected) resultNodesCount++;
-            if (!selection.endNode.endSelected) resultNodesCount++;
-        }
-
-        if (formattingMode === 'inline') {
-            if (action === 'remove' && selection.sameNode) {
-                const rewriteBackup = this.unstyleNode(props, selection);
-                structuralBackup = { ...rewriteBackup };
-                resultNodesCount = rewriteBackup.removeNodesCount;
-            } else {
-                resultNodesCount += action === 'apply'
-                    ? this.setInlineFormatting(props, selection)
-                    : this.removeInlineFormatting(props, selection, content!);
-            }
-        }
-
-        if (formattingMode === 'block') {
-            if (action === 'remove') return;
-            resultNodesCount += this.setContainer(props, selection, content);
-        }
-
-        // TODO: Comprobar que no da problema al revertir los cambios
-        if (selection.startNode.node !== selection.endNode.node)
-            this.cleanEmptyNodes(selection.endNode.node, selection.commonAncestor);
-
-        this.cleanEmptyNodes(selection.startNode.node, selection.commonAncestor);
-
-        if (saveToHistory) {
-            // TODO: Guardar el resultado en el historial
-            // TODO: Eliminar al terminar de probar
-            console.log({ relativeSelection, structuralBackup });
-            // this.insertNodes({
-            //     nodes: structuralBackup.structure,
-            //     ancestorPath: structuralBackup.ancestorPath,
-            //     position: structuralBackup.startPoint,
-            //     removeNodesCount: resultNodesCount,
-            // });
-        }
+        new NodesManager(this.depreditor.editableDiv).pickFromSelection().detachSelectedFragment(props.isBlock);
+        // let selection = this.depreditor.caret.inspectSelection();
+        // if (!selection) return;
+        // if (!selection.isRange) {
+        //     if (props.groups) {
+        //         const parentFromGroups = this.depreditor.node.getParentFromGroups(selection.startNode.node, props.groups);
+        //         if (parentFromGroups) selection = this.depreditor.caret.selectNode(parentFromGroups.node, selection.range);
+        //     }
+        // }
+        //
+        // const content = selection.range?.cloneContents();
+        // const parentFormatting = this.depreditor.node.getParentsFormatting(selection.commonAncestor);
+        // const parentHasFormatting = parentFormatting.includes(props.name);
+        // const isOverallFormatting = content
+        //     ? this.depreditor.node.isOverallFormatting(props.name, content)
+        //     : false;
+        // const formattingMode: 'inline' | 'block' = ['a', 'strong', 'u', 'i', 'span'].includes(props.tag)
+        //     ? 'inline'
+        //     : 'block';
+        // const action: 'apply' | 'remove' = parentHasFormatting || isOverallFormatting
+        //     ? 'remove'
+        //     : 'apply';
+        // let resultNodesCount: number = 0;
+        // let relativeSelection: RelativeSelection | undefined;
+        // let structuralBackup;
+        //
+        // if (saveToHistory) {
+        //     relativeSelection = this.depreditor.caret.getRelativeSelection()!;
+        //     structuralBackup = this.depreditor.history.createStructuralBackup(selection);
+        //     if (!selection.startNode.startSelected) resultNodesCount++;
+        //     if (!selection.endNode.endSelected) resultNodesCount++;
+        // }
+        //
+        // if (formattingMode === 'inline') {
+        //     if (action === 'remove' && selection.sameNode) {
+        //         const rewriteBackup = this.unstyleNode(props, selection);
+        //         structuralBackup = { ...rewriteBackup };
+        //         resultNodesCount = rewriteBackup.removeNodesCount;
+        //     } else {
+        //         resultNodesCount += action === 'apply'
+        //             ? this.setInlineFormatting(props, selection)
+        //             : this.removeInlineFormatting(props, selection, content!);
+        //     }
+        // }
+        //
+        // if (formattingMode === 'block') {
+        //     if (action === 'remove') return;
+        //     resultNodesCount += this.setContainer(props, selection, content);
+        // }
+        //
+        // // TODO: Comprobar que no da problema al revertir los cambios
+        // if (selection.startNode.node !== selection.endNode.node)
+        //     this.cleanEmptyNodes(selection.endNode.node, selection.commonAncestor);
+        //
+        // this.cleanEmptyNodes(selection.startNode.node, selection.commonAncestor);
+        //
+        // if (saveToHistory) {
+        //     // TODO: Guardar el resultado en el historial
+        //     // TODO: Eliminar al terminar de probar
+        //     console.log({ relativeSelection, structuralBackup });
+        //     // this.insertNodes({
+        //     //     nodes: structuralBackup.structure,
+        //     //     ancestorPath: structuralBackup.ancestorPath,
+        //     //     position: structuralBackup.startPoint,
+        //     //     removeNodesCount: resultNodesCount,
+        //     // });
+        // }
     }
 
     private setContainer(props: ContainerProps, selection: DetailedSelection, content?: DocumentFragment): number {

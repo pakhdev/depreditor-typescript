@@ -29,7 +29,7 @@ export class ToolbarHandler {
     private readonly buttons: ToolbarButton[] = [
         {
             icon: 'icon-set-bold', action: () => this.depreditor.formatter.apply(
-                { name: 'bold', icon: 'icon-set-bold', tag: 'strong' },
+                { name: 'bold', icon: 'icon-set-bold', tag: 'strong', isBlock: false },
             ),
         },
         { icon: 'icon-set-italic', action: () => this.depreditor.formatter.format('italic') },
@@ -39,6 +39,7 @@ export class ToolbarHandler {
                 name: 'code',
                 icon: 'icon-set-code',
                 tag: 'div',
+                isBlock: true,
                 classes: ['code-text'],
             }),
         },
@@ -49,6 +50,7 @@ export class ToolbarHandler {
                 name: 'paragraph-left',
                 icon: 'icon-set-paragraph-left',
                 tag: 'div',
+                isBlock: true,
                 styles: { textAlign: 'left' },
                 groups: ['alignments'],
             }),
@@ -58,6 +60,7 @@ export class ToolbarHandler {
                 name: 'paragraph-center',
                 icon: 'icon-set-paragraph-center',
                 tag: 'div',
+                isBlock: true,
                 styles: { textAlign: 'center' },
                 groups: ['alignments'],
             }),
@@ -67,6 +70,7 @@ export class ToolbarHandler {
                 name: 'paragraph-right',
                 icon: 'icon-set-paragraph-right',
                 tag: 'div',
+                isBlock: true,
                 styles: { textAlign: 'right' },
                 groups: ['alignments'],
             }),
@@ -77,6 +81,7 @@ export class ToolbarHandler {
                 name: 'hidden',
                 icon: 'icon-set-hidden',
                 tag: 'span',
+                isBlock: false,
                 classes: ['hidden-text'],
             }),
         },

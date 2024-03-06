@@ -1,5 +1,7 @@
 import { NodesTopology, SelectionDetails, SelectionPickArgs } from './interfaces';
 import { getSelection } from '../../helpers/getSelection.helper.ts';
+import { toolsConfig } from '../../tools.config.ts';
+import { FormattingName } from '../../types';
 
 export class NodesManager {
 
@@ -153,10 +155,85 @@ export class NodesManager {
     }
 
     // ** =========================
+    // *  Utilidades de búsqueda de nodos
+    // ** =========================
+
+    private findTopParentWithFormatting(node: Node, formattingNames: FormattingName[]): Node | null {
+        let topParent: Node | null = null;
+        while (node !== this.editableDiv) {
+            for (const formattingName of formattingNames)
+                if (this.hasStyle(formattingName, node)) topParent = node;
+            if (node.parentNode) node = node.parentNode;
+            else return null;
+        }
+        return topParent;
+    }
+
+    private findEqualNode(node: Node, parent: Node = this.editableDiv): Node | null {
+        if (parent.isEqualNode(node)) return parent;
+        const children = Array.from(parent.childNodes);
+        for (let child of children) {
+            if (child.isEqualNode(node)) return child;
+            if (child.nodeType === Node.ELEMENT_NODE) {
+                const found = this.findEqualNode(node, child);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
+    private hasStyle(formattingName: FormattingName, node: Node): boolean {
+        if (node.nodeType === Node.TEXT_NODE) return false;
+        const element = node as HTMLElement;
+        const tool = toolsConfig.find(tool => tool.name === formattingName);
+        if (!tool) return false;
+
+        if (element.tagName.toLowerCase() !== tool.tag) return false;
+        if (tool.classes) {
+            for (const className of tool.classes) {
+                if (!element.classList.contains(className))
+                    return false;
+            }
+        }
+        if (tool.styles) {
+            for (const styleName in tool.styles) {
+                if (!element.style[styleName])
+                    return false;
+
+                if (tool.styles[styleName] !== '' && element.style[styleName] !== tool.styles[styleName])
+                    return false;
+            }
+        }
+        if (tool.attributes) {
+            for (const attributeName in tool.attributes) {
+                if (!element.hasAttribute(attributeName))
+                    return false;
+                if (tool.attributes[attributeName] !== '' && element.getAttribute(attributeName) !== tool.attributes[attributeName])
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    // ** =========================
     // *  Modificación de nodos
     // ** =========================
 
-    public detachSelectedFragment(): void {}
+    public detachSelectedFragment(isBlock: boolean, topology: NodesTopology = this.selectedNodes): void {
+        if (!topology) return;
+        if (topology.node.nodeType === Node.TEXT_NODE && !topology.fullySelected) {
+            const inlineFormattings: FormattingName[] = toolsConfig
+                .filter(tool => !tool.isBlock)
+                .map(tool => tool.name);
+            const parentWithFormatting = this.findTopParentWithFormatting(topology.node, inlineFormattings);
+            const splittedNodes = this.splitNode(parentWithFormatting || topology.node, topology.node, [topology.start, topology.end]);
+            // TODO: Añadir nodos divididos a la selección
+            // TODO: Eliminar nodo antiguo de la selección
+            // TODO: Modificar la selección
+        }
+        for (let child of topology.children)
+            this.detachSelectedFragment(isBlock, child);
+    }
 
     public applyFormat(): void {}
 
@@ -187,8 +264,8 @@ export class NodesManager {
         if (node.nodeType !== Node.TEXT_NODE || ranges.length === 0) return [node.cloneNode(true)];
         const textContent = node.textContent || '';
         const length = textContent.length;
-        if (ranges.some(offset => offset > length - 1)) return [node.cloneNode(true)];
-        if (!ranges.includes(length - 1)) ranges.push(length - 1);
+        if (ranges.some(offset => offset > length)) return [node.cloneNode(true)];
+        if (!ranges.includes(length)) ranges.push(length);
 
         const clonedNodes: Node[] = [];
         let start = 0;
@@ -198,11 +275,11 @@ export class NodesManager {
             const clonedNode = parent.cloneNode(true);
             const target = clonedNode.nodeType === Node.TEXT_NODE
                 ? clonedNode
-                : Array.from((clonedNode as HTMLElement).children).find(child => child.isEqualNode(node));
+                : this.findEqualNode(node, clonedNode);
             if (!target) return;
-            clonedNode.textContent = textContent.substring(start, end);
+            target.textContent = textContent.substring(start, end);
             if (start !== 0) this.removeNodesInDirection(parent, target, 'before');
-            if (end !== length - 1) this.removeNodesInDirection(parent, target, 'after');
+            if (end !== length) this.removeNodesInDirection(parent, target, 'after');
             clonedNodes.push(clonedNode);
             start = end;
         });
@@ -212,7 +289,8 @@ export class NodesManager {
     private removeNodesInDirection(parent: Node, target: Node, direction: 'before' | 'after'): void {
         let container = target;
         while (container !== parent) {
-            container = target.parentNode!;
+            if (container.parentNode) container = container.parentNode;
+            else return;
             const childNodes = Array.from(container.childNodes);
             let nodeFound = false;
             for (let node of childNodes) {
