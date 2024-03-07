@@ -6,6 +6,7 @@ import { RelativeSelection } from '../types/relative-selection.type.ts';
 import { NodeSelection } from '../types/nodes-selection.type.ts';
 import { InsertingOptions } from '../types/inserting-options.type.ts';
 import { NodesManager } from './nodes-manager/nodes-manager.ts';
+import { getSelection } from '../helpers/getSelection.helper.ts';
 
 export class FormattingUtils {
 
@@ -129,7 +130,10 @@ export class FormattingUtils {
     }
 
     public apply(props: ContainerProps, saveToHistory: boolean = true): void {
-        new NodesManager(this.depreditor.editableDiv).pickFromSelection().detachSelectedFragment(props.isBlock);
+        console.log(getSelection(this.depreditor.editableDiv, false));
+        console.log(getSelection(this.depreditor.editableDiv, true));
+        // new NodesManager(this.depreditor.editableDiv).pickFromSelection().detachSelectedFragment(props.isBlock);
+
         // let selection = this.depreditor.caret.inspectSelection();
         // if (!selection) return;
         // if (!selection.isRange) {

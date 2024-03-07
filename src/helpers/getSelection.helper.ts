@@ -1,6 +1,9 @@
 import { NodeSelection, SelectionDetails } from '../modules/nodes-manager/interfaces/';
+import { FormattingName } from '../types';
+import { hasStyle } from './hasStyle.helper.ts';
+import { toolsConfig } from '../tools.config.ts';
 
-export const getSelection = (editableDiv: HTMLDivElement): SelectionDetails | null => {
+export const getSelection = (editableDiv: HTMLDivElement, extendToInlineParent: boolean): SelectionDetails | null => {
     const selection = window.getSelection();
     if (!selection || !selection.focusNode || !editableDiv.contains(selection.anchorNode))
         return null;
@@ -51,6 +54,22 @@ export const getSelection = (editableDiv: HTMLDivElement): SelectionDetails | nu
         };
     }
 
+    if (extendToInlineParent) {
+        const inlineFormattings: FormattingName[] = toolsConfig
+            .filter(tool => !tool.isBlock)
+            .map(tool => tool.name);
+        const newStartNode = findTopParentWithFormatting(editableDiv, selectionDetails.startNode.node, inlineFormattings);
+        if (newStartNode) selectionDetails.startNode.node = newStartNode;
+        const newEndNode = findTopParentWithFormatting(editableDiv, selectionDetails.startNode.node, inlineFormattings);
+        if (newEndNode) selectionDetails.endNode.node = newEndNode;
+
+        if (newStartNode || newEndNode) {
+            const newCommonAncestor = findCommonAncestor(selectionDetails.startNode.node, selectionDetails.endNode.node);
+            if (newCommonAncestor) selectionDetails.commonAncestor = newCommonAncestor;
+            else console.error('No common ancestor found');
+        }
+    }
+
     return selectionDetails;
 };
 
@@ -65,4 +84,27 @@ const prepareSelection = (node: Node): NodeSelection => {
         end: 0,
         length: node.textContent?.length || 0,
     };
+};
+
+const findTopParentWithFormatting = (editableDiv: HTMLDivElement, node: Node, formattingNames: FormattingName[]): Node | null => {
+    let topParent: Node | null = null;
+    while (node !== editableDiv) {
+        for (const formattingName of formattingNames)
+            if (hasStyle(formattingName, node)) topParent = node;
+        if (node.parentNode) node = node.parentNode;
+        else return null;
+    }
+    return topParent;
+};
+
+const findCommonAncestor = (startNode: Node, endNode: Node): Node | null => {
+    let startParent: Node | null = null;
+    let endParent: Node | null = null;
+    while (true) {
+        startParent = startNode.parentNode;
+        endParent = endNode.parentNode;
+        if (!startParent || !endParent) return null;
+        if (startParent.contains(endNode)) return startParent;
+        if (endParent.contains(startNode)) return endParent;
+    }
 };

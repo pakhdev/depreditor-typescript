@@ -158,17 +158,6 @@ export class NodesManager {
     // *  Utilidades de búsqueda de nodos
     // ** =========================
 
-    private findTopParentWithFormatting(node: Node, formattingNames: FormattingName[]): Node | null {
-        let topParent: Node | null = null;
-        while (node !== this.editableDiv) {
-            for (const formattingName of formattingNames)
-                if (this.hasStyle(formattingName, node)) topParent = node;
-            if (node.parentNode) node = node.parentNode;
-            else return null;
-        }
-        return topParent;
-    }
-
     private findEqualNode(node: Node, parent: Node = this.editableDiv): Node | null {
         if (parent.isEqualNode(node)) return parent;
         const children = Array.from(parent.childNodes);
@@ -182,54 +171,40 @@ export class NodesManager {
         return null;
     }
 
-    private hasStyle(formattingName: FormattingName, node: Node): boolean {
-        if (node.nodeType === Node.TEXT_NODE) return false;
-        const element = node as HTMLElement;
-        const tool = toolsConfig.find(tool => tool.name === formattingName);
-        if (!tool) return false;
+    // ** =========================
+    // *  Otras utilidades
+    // ** =========================
 
-        if (element.tagName.toLowerCase() !== tool.tag) return false;
-        if (tool.classes) {
-            for (const className of tool.classes) {
-                if (!element.classList.contains(className))
-                    return false;
-            }
-        }
-        if (tool.styles) {
-            for (const styleName in tool.styles) {
-                if (!element.style[styleName])
-                    return false;
+    private makeFragment(node: Node | Node[]): DocumentFragment {
+        const fragment = document.createDocumentFragment();
+        const nodesList: Node[] = [];
+        let sourceNodes: Node[] = [];
 
-                if (tool.styles[styleName] !== '' && element.style[styleName] !== tool.styles[styleName])
-                    return false;
-            }
+        if (Array.isArray(node)) {
+            sourceNodes.push(...node);
+        } else if (node.hasChildNodes()) {
+            sourceNodes.push(...Array.from(node.childNodes));
         }
-        if (tool.attributes) {
-            for (const attributeName in tool.attributes) {
-                if (!element.hasAttribute(attributeName))
-                    return false;
-                if (tool.attributes[attributeName] !== '' && element.getAttribute(attributeName) !== tool.attributes[attributeName])
-                    return false;
-            }
+
+        for (const childNode of sourceNodes) {
+            nodesList.push(childNode);
         }
-        return true;
+        fragment.append(...nodesList);
+        return fragment;
     }
 
     // ** =========================
     // *  Modificación de nodos
     // ** =========================
 
-    public detachSelectedFragment(isBlock: boolean, topology: NodesTopology = this.selectedNodes): void {
+    public detachSelectedFragment(isBlock: boolean, topology: NodesTopology | null = this.selectedNodes): void {
         if (!topology) return;
         if (topology.node.nodeType === Node.TEXT_NODE && !topology.fullySelected) {
-            const inlineFormattings: FormattingName[] = toolsConfig
-                .filter(tool => !tool.isBlock)
-                .map(tool => tool.name);
-            const parentWithFormatting = this.findTopParentWithFormatting(topology.node, inlineFormattings);
-            const splittedNodes = this.splitNode(parentWithFormatting || topology.node, topology.node, [topology.start, topology.end]);
-            // TODO: Añadir nodos divididos a la selección
-            // TODO: Eliminar nodo antiguo de la selección
-            // TODO: Modificar la selección
+            const splittedNodes = this.splitNode(topology.node, topology.node, [topology.start, topology.end]);
+            const newFragment = this.makeFragment(splittedNodes);
+            // TODO: Insertar antes o después del nodo
+            topology.node.parentNode!.removeChild(topology.node);
+
         }
         for (let child of topology.children)
             this.detachSelectedFragment(isBlock, child);
