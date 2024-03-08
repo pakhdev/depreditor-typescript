@@ -18,6 +18,7 @@ export const getSelection = (editableDiv: HTMLDivElement, extendToInlineParent: 
     const sameNode = startNode === endNode;
 
     const selectionDetails = {
+        editableDiv,
         isRange: !range.collapsed,
         sameNode,
         commonAncestor: range.commonAncestorContainer,
