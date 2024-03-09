@@ -87,7 +87,7 @@ const prepareSelection = (node: Node): NodeSelection => {
     };
 };
 
-const findTopParentWithFormatting = (editableDiv: HTMLDivElement, node: Node, formattingNames: FormattingName[]): Node | null => {
+export const findTopParentWithFormatting = (editableDiv: HTMLDivElement, node: Node, formattingNames: FormattingName[]): Node | null => {
     let topParent: Node | null = null;
     while (node !== editableDiv) {
         for (const formattingName of formattingNames)

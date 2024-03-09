@@ -1,6 +1,8 @@
-import { getSelection } from '../../helpers/getSelection.helper.ts';
+import { findTopParentWithFormatting, getSelection } from '../../helpers/getSelection.helper.ts';
 import { findNodeByPath } from '../../helpers/nodeRouter.helper.ts';
 import { Topology } from '../topology/topology.ts';
+import { FormattingName } from '../../types';
+import { toolsConfig } from '../../tools.config.ts';
 
 export class NodesManager {
 
@@ -94,16 +96,23 @@ export class NodesManager {
     // ** =========================
 
     public detachSelectedFragment(isBlock: boolean, topology: Topology | null = this.selectedNodes): void {
-        if (!topology || !topology.node) return;
-        if (topology.node.nodeType === Node.TEXT_NODE && !topology.fullySelected) {
-            const splittedNodes = this.splitNode(topology.node, topology.node, [topology.start, topology.end]);
-            const newFragment = this.makeFragment(splittedNodes);
-            // TODO: Insertar antes o después del nodo
-            topology.node.parentNode!.removeChild(topology.node);
-
+        if (!topology?.node) return;
+        if (topology.node.nodeType !== Node.TEXT_NODE) {
+            for (let child of topology.children)
+                this.detachSelectedFragment(isBlock, child);
+            return;
         }
-        for (let child of topology.children)
-            this.detachSelectedFragment(isBlock, child);
+        if (topology.fullySelected) return;
+        const inlineFormattings: FormattingName[] = toolsConfig
+            .filter(tool => !tool.isBlock)
+            .map(tool => tool.name);
+        const parentWithFormatting = findTopParentWithFormatting(this.editableDiv, topology.node, inlineFormattings) || topology.node;
+        const splittedNodes = this.splitNode(parentWithFormatting, topology.node, [topology.start, topology.end]);
+        const newTopologies = splittedNodes.map((node) => new Topology().fromNode(node));
+        const topologyToReplace = this.selectedNodes?.findByNode(parentWithFormatting);
+        if (!topologyToReplace) throw new Error('No se encontró el nodo a reemplazar');
+        topologyToReplace.replaceWith([...newTopologies]);
+        parentWithFormatting.parentNode!.replaceChild(this.makeFragment(splittedNodes), parentWithFormatting);
     }
 
     public applyFormat(): void {}

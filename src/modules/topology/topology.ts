@@ -1,5 +1,6 @@
 import { SelectionDetails } from '../nodes-manager/interfaces';
 import { getNodePath } from '../../helpers/nodeRouter.helper.ts';
+import { SelectionArgs } from './interfaces/selection-args.interface.ts';
 
 export class Topology {
     public node: Node | null = null;
@@ -36,9 +37,9 @@ export class Topology {
         if (!ancestorPath) throw new Error('No se encontró el ancestro común');
 
         this.fromNode(selection.commonAncestor).setPath(ancestorPath);
-        const startFound: { value: boolean } = { value: false };
-        if (this.node!.nodeType === Node.TEXT_NODE) this.scanTextNode(selection);
-        else this.scanElementNode(selection, startFound);
+        const selectionArgs: SelectionArgs = { selection, startFound: { value: false } };
+        if (this.node!.nodeType === Node.TEXT_NODE) this.scanTextNode(selectionArgs);
+        else this.scanElementNode(selectionArgs);
         return this;
     }
 
@@ -62,7 +63,9 @@ export class Topology {
         return this;
     }
 
-    public scanTextNode(selection: SelectionDetails): void {
+    public scanTextNode(selectionArgs?: SelectionArgs): void {
+        if (!selectionArgs) return;
+        const { selection } = selectionArgs;
         if (selection.startNode.node === this.node || selection.endNode.node === this.node) {
             const selectedNode = selection.startNode.node === this.node
                 ? selection.startNode
@@ -71,10 +74,17 @@ export class Topology {
         }
     }
 
-    public scanElementNode(selection: SelectionDetails, startFound: { value: boolean }): void {
+    public scanElementNode(selectionArgs?: SelectionArgs): void {
+        let startNode: Node | null = null;
+        let endNode: Node | null = null;
+        let startFound = { value: true };
+        if (selectionArgs) {
+            const { selection } = selectionArgs;
+            startFound = selectionArgs.startFound;
+            startNode = selection.startNode.node;
+            endNode = selection.endNode.node;
+        }
         const children = Array.from(this.node!.childNodes);
-        const startNode: Node = selection.startNode.node;
-        const endNode: Node = selection.endNode.node;
 
         for (let i = 0; i < children.length; i++) {
             const node = children[i];
@@ -87,8 +97,8 @@ export class Topology {
                 .setParent(this);
 
             node.nodeType === Node.TEXT_NODE
-                ? topology.scanTextNode(selection)
-                : topology.scanElementNode(selection, startFound);
+                ? topology.scanTextNode(selectionArgs)
+                : topology.scanElementNode(selectionArgs);
 
             if (node === startNode) {
                 startFound.value = true;
@@ -101,5 +111,41 @@ export class Topology {
                 break;
             }
         }
+    }
+
+    public retrieveAllChildren(): Topology {
+        this.children = [];
+        if (this.node!.nodeType === Node.ELEMENT_NODE) this.scanElementNode();
+        return this;
+    }
+
+    public replaceWith(topologies: Topology[]): void {
+        if (!this.parent) throw new Error('No se encontró el nodo padre');
+        let domPosition: number = this.path.pop()!;
+        const arrayPosition: number = this.parent.children.indexOf(this) + 1;
+        for (let topology of topologies) {
+            topology
+                .setParent(this.parent)
+                .setPath([...this.parent.path, domPosition++]);
+        }
+        this.parent.children.splice(arrayPosition, 1, ...topologies);
+        topologies.forEach((topology) => {
+            topology.retrieveAllChildren();
+        });
+        for (let i = arrayPosition - 1 + topologies.length; i < this.parent.children.length; i++) {
+            const nodePath = getNodePath(this.parent.children[i].node!, this.parent.node!);
+            if (!nodePath) throw new Error('No se encontró el nodo');
+            this.parent.children[i].setPath([...this.path, ...nodePath]);
+        }
+    }
+
+    public findByNode(nodeToFind: Node, topology?: Topology): Topology | null {
+        topology = topology || this;
+        if (topology.node === nodeToFind) return topology;
+        for (let child of topology.children) {
+            const found = this.findByNode(nodeToFind, child);
+            if (found) return found;
+        }
+        return null;
     }
 }
