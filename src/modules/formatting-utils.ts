@@ -7,6 +7,7 @@ import { NodeSelection } from '../types/nodes-selection.type.ts';
 import { InsertingOptions } from '../types/inserting-options.type.ts';
 import { NodesManager } from './nodes-manager/nodes-manager.ts';
 import { getSelection } from '../helpers/getSelection.helper.ts';
+import { Topology } from './topology/topology.ts';
 
 export class FormattingUtils {
 
@@ -130,8 +131,12 @@ export class FormattingUtils {
     }
 
     public apply(props: ContainerProps, saveToHistory: boolean = true): void {
-        console.log(getSelection(this.depreditor.editableDiv, false));
-        console.log(getSelection(this.depreditor.editableDiv, true));
+
+        const nodesManager = new NodesManager(this.depreditor.editableDiv)
+            .pickFromSelection(props)
+            .detachSelectedFragment(props.isBlock);
+        console.log('nodesManager', nodesManager['selectedNodes']);
+
         // new NodesManager(this.depreditor.editableDiv).pickFromSelection().detachSelectedFragment(props.isBlock);
 
         // let selection = this.depreditor.caret.inspectSelection();

@@ -1,6 +1,6 @@
-import { SelectionDetails } from '../../nodes-manager/interfaces';
+import { SelectionManager } from '../../selection-manager/selection-manager.ts';
 
 export interface SelectionArgs {
-    selection: SelectionDetails,
+    selection: SelectionManager,
     startFound: { value: boolean }
 }

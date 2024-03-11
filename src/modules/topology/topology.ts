@@ -1,38 +1,24 @@
-import { SelectionDetails } from '../nodes-manager/interfaces';
 import { getNodePath } from '../../helpers/nodeRouter.helper.ts';
 import { SelectionArgs } from './interfaces/selection-args.interface.ts';
+import { NodeSelection } from '../selection-manager/node-selection.ts';
+import { SelectionManager } from '../selection-manager/selection-manager.ts';
 
-export class Topology {
-    public node: Node | null = null;
-    public start: number = 0;
-    public end: number = 0;
-    public length: number = 0;
+export class Topology extends NodeSelection {
+
     public path: number[] = [];
     public children: Topology[] = [];
     public parent: Topology | null = null;
-
-    get fullySelected(): boolean {
-        return this.start === 0 && this.end === this.length - 1;
-    }
-
-    get startSelected(): boolean {
-        return this.start === 0;
-    }
-
-    get endSelected(): boolean {
-        return this.end === this.length - 1;
-    }
 
     public fromNode(node: Node): Topology {
         this.node = node;
         this.length = node.nodeType === Node.TEXT_NODE
             ? node.textContent!.length
             : node.childNodes.length;
-        this.end = this.length - 1;
+        this.end = this.length ? this.length - 1 : 0;
         return this;
     }
 
-    public fromSelection(selection: SelectionDetails): Topology {
+    public fromSelection(selection: SelectionManager): Topology {
         const ancestorPath = getNodePath(selection.commonAncestor, selection.editableDiv);
         if (!ancestorPath) throw new Error('No se encontró el ancestro común');
 
@@ -40,16 +26,6 @@ export class Topology {
         const selectionArgs: SelectionArgs = { selection, startFound: { value: false } };
         if (this.node!.nodeType === Node.TEXT_NODE) this.scanTextNode(selectionArgs);
         else this.scanElementNode(selectionArgs);
-        return this;
-    }
-
-    public setStart(start: number): Topology {
-        this.start = start;
-        return this;
-    }
-
-    public setEnd(end: number): Topology {
-        this.end = end;
         return this;
     }
 
