@@ -1,4 +1,5 @@
 import { ContainerProps } from '../../types/container-props.type.ts';
+import { detectFormattingNode } from '../../helpers/detectFormattingNode.helper.ts';
 
 export class NodeSelection {
 
@@ -41,7 +42,11 @@ export class NodeSelection {
         if (!this.node) return;
         let parent: Node | null = this.node.parentNode;
         while (parent !== editableDiv && parent !== null) {
-            // TODO: Implementar lógica para encontrar el nodo padre a preservar.
+            const formattingNode = detectFormattingNode(parent);
+            if (formattingNode && (formattingNode.name === formatting.name
+                || formatting.isBlock && !formattingNode.isBlock
+                || formattingNode.groups?.some(value => formatting.groups?.includes(value))))
+                this.parentToPreserve = parent;
             if (!parent.parentNode) throw new Error('No se encontró el nodo padre');
             parent = parent.parentNode;
         }

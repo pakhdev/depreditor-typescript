@@ -6,7 +6,6 @@ import { RelativeSelection } from '../types/relative-selection.type.ts';
 import { NodeSelection } from '../types/nodes-selection.type.ts';
 import { InsertingOptions } from '../types/inserting-options.type.ts';
 import { NodesManager } from './nodes-manager/nodes-manager.ts';
-import { getSelection } from '../helpers/getSelection.helper.ts';
 import { Topology } from './topology/topology.ts';
 
 export class FormattingUtils {

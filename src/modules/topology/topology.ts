@@ -11,6 +11,7 @@ export class Topology extends NodeSelection {
 
     public fromNode(node: Node): Topology {
         this.node = node;
+        this.parentToPreserve = node.parentNode;
         this.length = node.nodeType === Node.TEXT_NODE
             ? node.textContent!.length
             : node.childNodes.length;
@@ -21,7 +22,6 @@ export class Topology extends NodeSelection {
     public fromSelection(selection: SelectionManager): Topology {
         const ancestorPath = getNodePath(selection.commonAncestor, selection.editableDiv);
         if (!ancestorPath) throw new Error('No se encontró el ancestro común');
-
         this.fromNode(selection.commonAncestor).setPath(ancestorPath);
         const selectionArgs: SelectionArgs = { selection, startFound: { value: false } };
         if (this.node!.nodeType === Node.TEXT_NODE) this.scanTextNode(selectionArgs);

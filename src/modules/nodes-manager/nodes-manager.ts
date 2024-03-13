@@ -1,4 +1,3 @@
-import { findTopParentWithFormatting, getSelection } from '../../helpers/getSelection.helper.ts';
 import { findNodeByPath } from '../../helpers/nodeRouter.helper.ts';
 import { Topology } from '../topology/topology.ts';
 import { FormattingName } from '../../types';
@@ -109,19 +108,16 @@ export class NodesManager {
             return this;
         }
         if (topology.fullySelected) return this;
-        const inlineFormattings: FormattingName[] = toolsConfig
-            .filter(tool => !tool.isBlock)
-            .map(tool => tool.name);
-        const parentWithFormatting = findTopParentWithFormatting(this.editableDiv, topology.node, inlineFormattings) || topology.node;
-        console.log('nodeAsParent', parentWithFormatting);
+        const parentToPreserve = topology.parentToPreserve || topology.node;
+        console.log('nodeAsParent', parentToPreserve);
         console.log('nodeToSplit', topology.node);
-        const splittedNodes = this.splitNode(parentWithFormatting, topology.node, [topology.start, topology.end]);
+        const splittedNodes = this.splitNode(parentToPreserve, topology.node, [topology.start, topology.end]);
         console.log('splittedNodes', splittedNodes);
         const newTopologies = splittedNodes.map((node) => new Topology().fromNode(node));
-        const topologyToReplace = this.selectedNodes?.findByNode(parentWithFormatting);
+        const topologyToReplace = this.selectedNodes?.findByNode(parentToPreserve);
         if (!topologyToReplace) throw new Error('No se encontró el nodo a reemplazar');
         topologyToReplace.replaceWith([...newTopologies]);
-        parentWithFormatting.parentNode!.replaceChild(this.makeFragment(splittedNodes), parentWithFormatting);
+        parentToPreserve.parentNode!.replaceChild(this.makeFragment(splittedNodes), parentToPreserve);
         return this;
     }
 
