@@ -133,8 +133,7 @@ export class FormattingUtils {
 
         const nodesManager = new NodesManager(this.depreditor.editableDiv)
             .pickFromSelection(props)
-            .detachSelectedFragment(props.isBlock);
-        console.log('nodesManager', nodesManager['selectedNodes']);
+            .detachSelectedFragment();
 
         // new NodesManager(this.depreditor.editableDiv).pickFromSelection().detachSelectedFragment(props.isBlock);
 

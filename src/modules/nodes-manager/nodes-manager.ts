@@ -1,7 +1,5 @@
 import { findNodeByPath } from '../../helpers/nodeRouter.helper.ts';
 import { Topology } from '../topology/topology.ts';
-import { FormattingName } from '../../types';
-import { toolsConfig } from '../../tools.config.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
 import { SelectionManager } from '../selection-manager/selection-manager.ts';
 
@@ -23,6 +21,7 @@ export class NodesManager {
             .adjustForFormatting(formatting);
         if (!selection.isOnEditableDiv) return this;
         this.selectedNodes = new Topology().fromSelection(selection);
+        console.log('selected', this.selectedNodes);
         return this;
     }
 
@@ -99,25 +98,20 @@ export class NodesManager {
     // *  Modificación de nodos
     // ** =========================
 
-    public detachSelectedFragment(isBlock: boolean, topology: Topology | null = this.selectedNodes): NodesManager {
-        if (!topology?.node) return this;
-        console.log('detachSelectedFragment', isBlock, topology);
-        if (topology.node.nodeType !== Node.TEXT_NODE) {
-            for (let child of topology.children)
-                this.detachSelectedFragment(isBlock, child);
-            return this;
+    public detachSelectedFragment(): NodesManager {
+        if (!this.selectedNodes?.node) return this;
+        const targetTopologies = this.selectedNodes.findPartiallySelectedChildren();
+        console.log(targetTopologies);
+        for (let targetTopology of targetTopologies) {
+            if (!targetTopology.node) continue;
+            const parentToPreserve = targetTopology.parentToPreserve || targetTopology.node;
+            const splittedNodes = this.splitNode(parentToPreserve, targetTopology.node, [targetTopology.start, targetTopology.end]);
+            const newTopologies = splittedNodes.map((node) => new Topology().fromNode(node));
+            const topologyToReplace = this.selectedNodes?.findByNode(parentToPreserve);
+            if (!topologyToReplace) throw new Error('No se encontró el nodo a reemplazar');
+            parentToPreserve.parentNode!.replaceChild(this.makeFragment(splittedNodes), parentToPreserve);
+            topologyToReplace.replaceWith([...newTopologies]);
         }
-        if (topology.fullySelected) return this;
-        const parentToPreserve = topology.parentToPreserve || topology.node;
-        console.log('nodeAsParent', parentToPreserve);
-        console.log('nodeToSplit', topology.node);
-        const splittedNodes = this.splitNode(parentToPreserve, topology.node, [topology.start, topology.end]);
-        console.log('splittedNodes', splittedNodes);
-        const newTopologies = splittedNodes.map((node) => new Topology().fromNode(node));
-        const topologyToReplace = this.selectedNodes?.findByNode(parentToPreserve);
-        if (!topologyToReplace) throw new Error('No se encontró el nodo a reemplazar');
-        topologyToReplace.replaceWith([...newTopologies]);
-        parentToPreserve.parentNode!.replaceChild(this.makeFragment(splittedNodes), parentToPreserve);
         return this;
     }
 

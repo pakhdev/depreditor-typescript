@@ -76,7 +76,7 @@ export class Topology extends NodeSelection {
                 ? topology.scanTextNode(selectionArgs)
                 : topology.scanElementNode(selectionArgs);
 
-            if (node === startNode) {
+            if (node === startNode && node.nodeType !== Node.TEXT_NODE) {
                 startFound.value = true;
                 topology.start = i;
             }
@@ -98,7 +98,7 @@ export class Topology extends NodeSelection {
     public replaceWith(topologies: Topology[]): void {
         if (!this.parent) throw new Error('No se encontró el nodo padre');
         let domPosition: number = this.path.pop()!;
-        const arrayPosition: number = this.parent.children.indexOf(this) + 1;
+        const arrayPosition: number = this.parent.children.indexOf(this);
         for (let topology of topologies) {
             topology
                 .setParent(this.parent)
@@ -108,7 +108,7 @@ export class Topology extends NodeSelection {
         topologies.forEach((topology) => {
             topology.retrieveAllChildren();
         });
-        for (let i = arrayPosition - 1 + topologies.length; i < this.parent.children.length; i++) {
+        for (let i = arrayPosition; i < this.parent.children.length; i++) {
             const nodePath = getNodePath(this.parent.children[i].node!, this.parent.node!);
             if (!nodePath) throw new Error('No se encontró el nodo');
             this.parent.children[i].setPath([...this.path, ...nodePath]);
@@ -123,5 +123,14 @@ export class Topology extends NodeSelection {
             if (found) return found;
         }
         return null;
+    }
+
+    public findPartiallySelectedChildren(topology: Topology = this): Topology[] {
+        const foundTopologies: Topology[] = [];
+        if (topology.node!.nodeType === Node.TEXT_NODE && !topology.fullySelected)
+            foundTopologies.push(topology);
+        else for (let child of topology.children)
+            foundTopologies.push(...this.findPartiallySelectedChildren(child));
+        return foundTopologies;
     }
 }
