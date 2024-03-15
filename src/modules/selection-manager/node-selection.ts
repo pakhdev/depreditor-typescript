@@ -13,7 +13,7 @@ export class NodeSelection {
         if (!node) return;
         this.node = node;
         this.length = node.nodeType === Node.TEXT_NODE ? (node as Text).length : 0;
-        this.end = this.length ? this.length - 1 : 0;
+        this.end = this.length ? this.length : 0;
     }
 
     public get fullySelected(): boolean {

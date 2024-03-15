@@ -145,7 +145,7 @@ export class NodesManager {
         const textContent = node.textContent || '';
         const length = textContent.length;
         if (ranges.some(offset => offset > length)) return [node.cloneNode(true)];
-        if (!ranges.includes(length)) ranges.push(length);
+        if (!ranges.includes(length)) ranges.push(length + 1);
 
         const clonedNodes: Node[] = [];
         let start = 0;
