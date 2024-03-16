@@ -39,6 +39,11 @@ export class Topology extends NodeSelection {
         return this;
     }
 
+    public setParentToPreserve(parentToPreserve: Node): Topology {
+        this.parentToPreserve = parentToPreserve;
+        return this;
+    }
+
     public scanTextNode(selectionArgs?: SelectionArgs): void {
         if (!selectionArgs) return;
         const { selection } = selectionArgs;
@@ -47,6 +52,7 @@ export class Topology extends NodeSelection {
                 ? selection.startNode
                 : selection.endNode;
             this.setStart(selectedNode.start).setEnd(selectedNode.end);
+            if (selectedNode.parentToPreserve) this.setParentToPreserve(selectedNode.parentToPreserve);
         }
     }
 

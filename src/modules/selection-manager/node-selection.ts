@@ -25,7 +25,7 @@ export class NodeSelection {
     }
 
     public get endSelected(): boolean {
-        return !this.length || this.end === this.length - 1;
+        return !this.length || this.end === this.length;
     }
 
     public setStart(start: number): NodeSelection {
