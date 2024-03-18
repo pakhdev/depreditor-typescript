@@ -2,6 +2,7 @@ import { findNodeByPath } from '../../helpers/nodeRouter.helper.ts';
 import { Topology } from '../topology/topology.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
 import { SelectionManager } from '../selection-manager/selection-manager.ts';
+import { NodeSplittingArgs } from './interfaces';
 
 export class NodesManager {
 
@@ -21,7 +22,7 @@ export class NodesManager {
             .adjustForFormatting(formatting);
         if (!selection.isOnEditableDiv) return this;
         this.selectedNodes = new Topology().fromSelection(selection);
-        console.log('selected', this.selectedNodes);
+        console.log('selectedNodes', this.selectedNodes);
         return this;
     }
 
@@ -100,18 +101,26 @@ export class NodesManager {
 
     public detachSelectedFragment(): NodesManager {
         if (!this.selectedNodes?.node) return this;
-        const targetTopologies = this.selectedNodes.findPartiallySelectedChildren();
-        console.log(targetTopologies);
-        for (let targetTopology of targetTopologies) {
-            if (!targetTopology.node) continue;
-            const parentToPreserve = targetTopology.parentToPreserve || targetTopology.node;
-            const splittedNodes = this.splitNode(parentToPreserve, targetTopology.node, [targetTopology.start, targetTopology.end]);
-            const newTopologies = splittedNodes.map((node) => new Topology().fromNode(node));
-            const topologyToReplace = this.selectedNodes?.findByNode(parentToPreserve);
-            if (!topologyToReplace) throw new Error('No se encontró el nodo a reemplazar');
-            parentToPreserve.parentNode!.replaceChild(this.makeFragment(splittedNodes), parentToPreserve);
-            topologyToReplace.replaceWith([...newTopologies]);
+        let partiallySelectedTopologies = this.selectedNodes.findPartiallySelectedChildren();
+        console.log('partiallySelectedTopologies', partiallySelectedTopologies);
+        while (partiallySelectedTopologies.length) {
+            const topology = partiallySelectedTopologies.shift();
+
+            if (!topology?.node) throw new Error('No se encontró el nodo en la topología');
+            const topologyToPreserve = topology.topologyToPreserve || topology;
+            this.splitNode({
+                parent: topologyToPreserve,
+                topology,
+                ranges: [topology.start, topology.end],
+                partiallySelectedTopologies,
+            });
+
+            partiallySelectedTopologies = this.selectedNodes.findPartiallySelectedChildren();
+            console.log('partiallySelectedTopologies', partiallySelectedTopologies);
+            // throw new Error('TEST');
+
         }
+        console.log('selectedNodes', this.selectedNodes);
         return this;
     }
 
@@ -140,30 +149,52 @@ export class NodesManager {
             return;
     }
 
-    private splitNode(parent: Node, node: Node, ranges: number[]): Node[] {
-        if (node.nodeType !== Node.TEXT_NODE || ranges.length === 0) return [node.cloneNode(true)];
+    private splitNode(nodeSplittingArgs: NodeSplittingArgs): void {
+        const { topology, parent, ranges, partiallySelectedTopologies } = nodeSplittingArgs;
+        const { node } = topology;
+        if (!node || node.nodeType !== Node.TEXT_NODE || ranges.length === 0)
+            throw new Error('No se puede dividir el nodo');
+
+        let clonedTopology: Topology | null = null;
+        let idxForTopology = ranges[0] === 0 && (
+            parent === topology || parent.children[0].node?.contains(node)
+        ) ? 0 : 1;
+        let partIdx = 0;
+
         const textContent = node.textContent || '';
         const length = textContent.length;
         if (ranges.some(offset => offset > length)) return [node.cloneNode(true)];
-        if (!ranges.includes(length)) ranges.push(length + 1);
+        if (!ranges.includes(length)) ranges.push(length + 1); // TODO: Check and remove if necessary
 
         const clonedNodes: Node[] = [];
         let start = 0;
         ranges.forEach(offset => {
             const end = offset;
             if (end === 0) return;
-            const clonedNode = parent.cloneNode(true);
+
+            let clonedNode: Node | null = null;
+            if (partIdx === idxForTopology) {
+                clonedTopology = parent.deepClone(partiallySelectedTopologies);
+                clonedNode = clonedTopology.node;
+            }
+            if (!clonedNode) clonedNode = parent.node!.cloneNode(true);
+
             const target = clonedNode.nodeType === Node.TEXT_NODE
                 ? clonedNode
                 : this.findEqualNode(node, clonedNode);
-            if (!target) return;
+            if (!target) throw new Error('No se encontró el nodo clonado');
+
             target.textContent = textContent.substring(start, end);
-            if (start !== 0) this.removeNodesInDirection(parent, target, 'before');
-            if (end !== length) this.removeNodesInDirection(parent, target, 'after');
+            if (start !== 0) this.removeNodesInDirection(parent.node!, target, 'before');
+            if (end !== length) this.removeNodesInDirection(parent.node!, target, 'after');
             clonedNodes.push(clonedNode);
+
+            partIdx++;
             start = end;
         });
-        return clonedNodes;
+
+        parent.node!.parentNode!.replaceChild(this.makeFragment(clonedNodes), parent.node!);
+        if (clonedTopology) parent.replaceWith(clonedTopology);
     }
 
     private removeNodesInDirection(parent: Node, target: Node, direction: 'before' | 'after'): void {

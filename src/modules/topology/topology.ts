@@ -16,7 +16,7 @@ export class Topology extends NodeSelection {
         this.length = node.nodeType === Node.TEXT_NODE
             ? node.textContent!.length
             : node.childNodes.length;
-        this.end = this.length ? this.length - 1 : 0;
+        this.end = this.length ? this.length : 0;
         return this;
     }
 
@@ -30,6 +30,11 @@ export class Topology extends NodeSelection {
         return this;
     }
 
+    public setNode(node: Node): Topology {
+        this.node = node;
+        return this;
+    }
+
     public setPath(path: number[]): Topology {
         this.path = path;
         return this;
@@ -40,8 +45,15 @@ export class Topology extends NodeSelection {
         return this;
     }
 
-    public setTopologyToPreserve(parentToPreserve: Node): Topology {
-        this.topologyToPreserve = this.findByNode(parentToPreserve);
+    public setChildren(children: Topology[]): Topology {
+        this.children = children;
+        return this;
+    }
+
+    public setTopologyToPreserve(parentToPreserve: Node | Topology): Topology {
+        this.topologyToPreserve = parentToPreserve instanceof Node
+            ? this.findByNode(parentToPreserve)
+            : parentToPreserve;
         return this;
     }
 
@@ -54,6 +66,7 @@ export class Topology extends NodeSelection {
                 : selection.endNode;
             this.setStart(selectedNode.start).setEnd(selectedNode.end);
             if (selectedNode.parentToPreserve) this.setTopologyToPreserve(selectedNode.parentToPreserve);
+            selectionArgs.startFound.value = true;
         }
     }
 
@@ -71,8 +84,8 @@ export class Topology extends NodeSelection {
 
         for (let i = 0; i < children.length; i++) {
             const node = children[i];
-            if (!startFound && node !== startNode && !node.contains(startNode)) continue;
-            if (!startFound) this.setStart(i);
+            if (!startFound.value && node !== startNode && !node.contains(startNode)) continue;
+            if (!startFound.value) this.setStart(i);
 
             const topology = new Topology()
                 .fromNode(node)
@@ -96,30 +109,11 @@ export class Topology extends NodeSelection {
         }
     }
 
-    public retrieveAllChildren(): Topology {
-        this.children = [];
-        if (this.node!.nodeType === Node.ELEMENT_NODE) this.scanElementNode();
-        return this;
-    }
-
-    public replaceWith(topologies: Topology[]): void {
-        if (!this.parent) throw new Error('No se encontró el nodo padre');
-        let domPosition: number = this.path.pop()!;
-        const arrayPosition: number = this.parent.children.indexOf(this);
-        for (let topology of topologies) {
-            topology
-                .setParent(this.parent)
-                .setPath([...this.parent.path, domPosition++]);
-        }
-        this.parent.children.splice(arrayPosition, 1, ...topologies);
-        topologies.forEach((topology) => {
-            topology.retrieveAllChildren();
-        });
-        for (let i = arrayPosition; i < this.parent.children.length; i++) {
-            const nodePath = getNodePath(this.parent.children[i].node!, this.parent.node!);
-            if (!nodePath) throw new Error('No se encontró el nodo');
-            this.parent.children[i].setPath([...this.path, ...nodePath]);
-        }
+    public replaceWith(topology: Topology): void {
+        this.setNode(topology.node!)
+            .setChildren(topology.children)
+            .setStart(topology.start)
+            .setEnd(topology.end);
     }
 
     public findByNode(nodeToFind: Node, topology?: Topology): Topology | null {
@@ -135,14 +129,13 @@ export class Topology extends NodeSelection {
         return null;
     }
 
-    public findPartiallySelectedChild(topology: Topology = this): Topology | null {
+    public findPartiallySelectedChildren(topology: Topology = this): Topology[] {
+        const foundTopologies: Topology[] = [];
         if (topology.node!.nodeType === Node.TEXT_NODE && !topology.fullySelected)
-            return topology;
-        else for (let child of topology.children) {
-            const found = this.findPartiallySelectedChild(child);
-            if (found) return found;
-        }
-        return null;
+            foundTopologies.push(topology);
+        else for (let child of topology.children)
+            foundTopologies.push(...this.findPartiallySelectedChildren(child));
+        return foundTopologies;
     }
 
     public deepClone(partialTopologies: Topology[], topologiesMaps: { old: Topology, new: Topology }[] = []): Topology {
@@ -164,7 +157,8 @@ export class Topology extends NodeSelection {
             if (this.topologyToPreserve) {
                 const topologyToPreserve = topologiesMaps.find((map) => map.old === this.topologyToPreserve)?.new;
                 if (!topologyToPreserve) throw new Error('No se encontró el nodo a preservar');
-                clonedTopology.setTopologyToPreserve(topologyToPreserve.node!);
+
+                clonedTopology.setTopologyToPreserve(topologyToPreserve);
             }
         }
         return clonedTopology;
