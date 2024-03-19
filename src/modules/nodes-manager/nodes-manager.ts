@@ -22,7 +22,6 @@ export class NodesManager {
             .adjustForFormatting(formatting);
         if (!selection.isOnEditableDiv) return this;
         this.selectedNodes = new Topology().fromSelection(selection);
-        console.log('selectedNodes', this.selectedNodes);
         return this;
     }
 
@@ -102,10 +101,8 @@ export class NodesManager {
     public detachSelectedFragment(): NodesManager {
         if (!this.selectedNodes?.node) return this;
         let partiallySelectedTopologies = this.selectedNodes.findPartiallySelectedChildren();
-        console.log('partiallySelectedTopologies', partiallySelectedTopologies);
-        while (partiallySelectedTopologies.length) {
+        while (partiallySelectedTopologies.length > 0) {
             const topology = partiallySelectedTopologies.shift();
-
             if (!topology?.node) throw new Error('No se encontró el nodo en la topología');
             const topologyToPreserve = topology.topologyToPreserve || topology;
             this.splitNode({
@@ -114,13 +111,8 @@ export class NodesManager {
                 ranges: [topology.start, topology.end],
                 partiallySelectedTopologies,
             });
-
             partiallySelectedTopologies = this.selectedNodes.findPartiallySelectedChildren();
-            console.log('partiallySelectedTopologies', partiallySelectedTopologies);
-            // throw new Error('TEST');
-
         }
-        console.log('selectedNodes', this.selectedNodes);
         return this;
     }
 
@@ -152,24 +144,23 @@ export class NodesManager {
     private splitNode(nodeSplittingArgs: NodeSplittingArgs): void {
         const { topology, parent, ranges, partiallySelectedTopologies } = nodeSplittingArgs;
         const { node } = topology;
-        if (!node || node.nodeType !== Node.TEXT_NODE || ranges.length === 0)
+        if (!node || node.nodeType !== Node.TEXT_NODE || !ranges.length)
             throw new Error('No se puede dividir el nodo');
 
         let clonedTopology: Topology | null = null;
-        let idxForTopology = ranges[0] === 0 && (
-            parent === topology || parent.children[0].node?.contains(node)
-        ) ? 0 : 1;
+        let idxForTopology = ranges[0] === 0 ? 0 : 1;
         let partIdx = 0;
+
+        console.log('Splitting node:', node, 'with ranges:', ranges, topology.length);
 
         const textContent = node.textContent || '';
         const length = textContent.length;
-        if (ranges.some(offset => offset > length)) return [node.cloneNode(true)];
-        if (!ranges.includes(length)) ranges.push(length + 1); // TODO: Check and remove if necessary
+        if (ranges.some(offset => offset > length)) throw new Error('El rango excede la longitud del texto');
+        if (!ranges.includes(length)) ranges.push(length);
 
         const clonedNodes: Node[] = [];
         let start = 0;
-        ranges.forEach(offset => {
-            const end = offset;
+        ranges.forEach(end => {
             if (end === 0) return;
 
             let clonedNode: Node | null = null;
@@ -194,7 +185,9 @@ export class NodesManager {
         });
 
         parent.node!.parentNode!.replaceChild(this.makeFragment(clonedNodes), parent.node!);
-        if (clonedTopology) parent.replaceWith(clonedTopology);
+        if (clonedTopology) this.selectedNodes === parent
+            ? this.selectedNodes = clonedTopology
+            : parent.replaceWith(clonedTopology);
     }
 
     private removeNodesInDirection(parent: Node, target: Node, direction: 'before' | 'after'): void {

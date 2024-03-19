@@ -6,13 +6,11 @@ export class NodeSelection {
     public node: Node | null = null;
     public start: number = 0;
     public end: number = 0;
-    public length: number = 0;
     public parentToPreserve: Node | null = null;
 
     constructor(node?: Node) {
         if (!node) return;
         this.node = node;
-        this.length = node.nodeType === Node.TEXT_NODE ? (node as Text).length : 0;
         this.end = this.length ? this.length : 0;
     }
 
@@ -26,6 +24,13 @@ export class NodeSelection {
 
     public get endSelected(): boolean {
         return !this.length || this.end === this.length;
+    }
+
+    public get length(): number {
+        if (!this.node) return 0;
+        return this.node.nodeType === Node.TEXT_NODE
+            ? this.node.textContent!.length
+            : this.node.childNodes.length;
     }
 
     public setStart(start: number): NodeSelection {

@@ -13,9 +13,6 @@ export class Topology extends NodeSelection {
     public fromNode(node: Node): Topology {
         this.node = node;
         this.parentToPreserve = node.parentNode;
-        this.length = node.nodeType === Node.TEXT_NODE
-            ? node.textContent!.length
-            : node.childNodes.length;
         this.end = this.length ? this.length : 0;
         return this;
     }
@@ -113,7 +110,7 @@ export class Topology extends NodeSelection {
         this.setNode(topology.node!)
             .setChildren(topology.children)
             .setStart(topology.start)
-            .setEnd(topology.end);
+            .setEnd(topology.end > this.length ? this.length : topology.end);
     }
 
     public findByNode(nodeToFind: Node, topology?: Topology): Topology | null {
@@ -131,9 +128,9 @@ export class Topology extends NodeSelection {
 
     public findPartiallySelectedChildren(topology: Topology = this): Topology[] {
         const foundTopologies: Topology[] = [];
-        if (topology.node!.nodeType === Node.TEXT_NODE && !topology.fullySelected)
+        if (topology.node!.nodeType === Node.TEXT_NODE && !topology.fullySelected) {
             foundTopologies.push(topology);
-        else for (let child of topology.children)
+        } else for (let child of topology.children)
             foundTopologies.push(...this.findPartiallySelectedChildren(child));
         return foundTopologies;
     }
@@ -153,7 +150,9 @@ export class Topology extends NodeSelection {
                 clonedTopology.node!.appendChild(clonedChild.node!);
             }
         } else if (partialTopologies.find((topology) => topology === this)) {
-            clonedTopology.setStart(this.start).setEnd(this.end);
+            clonedTopology
+                .setStart(this.start)
+                .setEnd(this.end > clonedTopology.length ? clonedTopology.length : this.end);
             if (this.topologyToPreserve) {
                 const topologyToPreserve = topologiesMaps.find((map) => map.old === this.topologyToPreserve)?.new;
                 if (!topologyToPreserve) throw new Error('No se encontró el nodo a preservar');
