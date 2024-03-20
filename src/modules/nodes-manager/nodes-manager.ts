@@ -151,8 +151,6 @@ export class NodesManager {
         let idxForTopology = ranges[0] === 0 ? 0 : 1;
         let partIdx = 0;
 
-        console.log('Splitting node:', node, 'with ranges:', ranges, topology.length);
-
         const textContent = node.textContent || '';
         const length = textContent.length;
         if (ranges.some(offset => offset > length)) throw new Error('El rango excede la longitud del texto');
@@ -167,6 +165,11 @@ export class NodesManager {
             if (partIdx === idxForTopology) {
                 clonedTopology = parent.deepClone(partiallySelectedTopologies);
                 clonedNode = clonedTopology.node;
+                const topologyToSplit = clonedTopology
+                    .findPartiallySelectedChildren()
+                    .find(topology => !topology.fullySelected && topology.start === start);
+                if (!topologyToSplit) throw new Error('No se encontró la topología a dividir');
+                topologyToSplit.setStart(0).setEnd(end - start);
             }
             if (!clonedNode) clonedNode = parent.node!.cloneNode(true);
 

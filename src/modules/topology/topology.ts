@@ -141,6 +141,10 @@ export class Topology extends NodeSelection {
             .fromNode(clonedNode)
             .setPath(this.path)
             .setParent(this.parent!);
+        clonedTopology
+            .setStart(this.start)
+            .setEnd(this.end);
+
         topologiesMaps.push({ old: this, new: clonedTopology });
 
         if (clonedTopology.node!.nodeType === Node.ELEMENT_NODE) {
@@ -150,16 +154,13 @@ export class Topology extends NodeSelection {
                 clonedTopology.node!.appendChild(clonedChild.node!);
             }
         } else if (partialTopologies.find((topology) => topology === this)) {
-            clonedTopology
-                .setStart(this.start)
-                .setEnd(this.end > clonedTopology.length ? clonedTopology.length : this.end);
             if (this.topologyToPreserve) {
                 const topologyToPreserve = topologiesMaps.find((map) => map.old === this.topologyToPreserve)?.new;
                 if (!topologyToPreserve) throw new Error('No se encontró el nodo a preservar');
-
                 clonedTopology.setTopologyToPreserve(topologyToPreserve);
             }
         }
+
         return clonedTopology;
     }
 }
