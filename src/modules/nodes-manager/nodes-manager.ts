@@ -170,6 +170,14 @@ export class NodesManager {
                     .find(topology => !topology.fullySelected && topology.start === start);
                 if (!topologyToSplit) throw new Error('No se encontró la topología a dividir');
                 topologyToSplit.setStart(0).setEnd(end - start);
+
+                if (clonedTopology.node instanceof Element && end === length && clonedTopology.end < clonedTopology.length) {
+                    const endNodes: Node[] = [];
+                    Array.from(parent.node!.childNodes).slice(clonedTopology.end + 1).forEach(node => {
+                        endNodes.push(node.cloneNode(true));
+                    });
+                    clonedTopology.node.append(...endNodes);
+                }
             }
             if (!clonedNode) clonedNode = parent.node!.cloneNode(true);
 
@@ -179,8 +187,8 @@ export class NodesManager {
             if (!target) throw new Error('No se encontró el nodo clonado');
 
             target.textContent = textContent.substring(start, end);
-            if (start !== 0) this.removeNodesInDirection(parent.node!, target, 'before');
-            if (end !== length) this.removeNodesInDirection(parent.node!, target, 'after');
+            if (start !== 0) this.removeNodesInDirection(target, 'before');
+            if (end !== length) this.removeNodesInDirection(target, 'after');
             clonedNodes.push(clonedNode);
 
             partIdx++;
@@ -193,11 +201,9 @@ export class NodesManager {
             : parent.replaceWith(clonedTopology);
     }
 
-    private removeNodesInDirection(parent: Node, target: Node, direction: 'before' | 'after'): void {
-        let container = target;
-        while (container !== parent) {
-            if (container.parentNode) container = container.parentNode;
-            else return;
+    private removeNodesInDirection(target: Node, direction: 'before' | 'after'): void {
+        let container: Node | null = target;
+        while (container) {
             const childNodes = Array.from(container.childNodes);
             let nodeFound = false;
             for (let node of childNodes) {
@@ -206,8 +212,11 @@ export class NodesManager {
                     if (direction === 'before') break;
                     if (direction === 'after') continue;
                 }
-                if (direction === 'before' || nodeFound) container.removeChild(node);
+                if (direction === 'before' || nodeFound) {
+                    container.removeChild(node);
+                }
             }
+            container = container.parentNode;
         }
     }
 
