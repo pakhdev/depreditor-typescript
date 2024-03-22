@@ -141,9 +141,6 @@ export class Topology extends NodeSelection {
             .fromNode(clonedNode)
             .setPath(this.path)
             .setParent(this.parent!);
-        clonedTopology
-            .setStart(this.start)
-            .setEnd(this.end);
 
         topologiesMaps.push({ old: this, new: clonedTopology });
 
@@ -153,7 +150,8 @@ export class Topology extends NodeSelection {
                 clonedTopology.children.push(clonedChild);
                 clonedTopology.node!.appendChild(clonedChild.node!);
             }
-        } else if (partialTopologies.find((topology) => topology === this)) {
+        } else if (clonedTopology.node!.nodeType === Node.TEXT_NODE && !this.fullySelected) {
+            clonedTopology.setStart(this.start).setEnd(this.end);
             if (this.topologyToPreserve) {
                 const topologyToPreserve = topologiesMaps.find((map) => map.old === this.topologyToPreserve)?.new;
                 if (!topologyToPreserve) throw new Error('No se encontró el nodo a preservar');

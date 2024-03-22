@@ -171,13 +171,14 @@ export class NodesManager {
                 if (!topologyToSplit) throw new Error('No se encontró la topología a dividir');
                 topologyToSplit.setStart(0).setEnd(end - start);
 
-                if (clonedTopology.node instanceof Element && end === length && clonedTopology.end < clonedTopology.length) {
-                    const endNodes: Node[] = [];
-                    Array.from(parent.node!.childNodes).slice(clonedTopology.end + 1).forEach(node => {
-                        endNodes.push(node.cloneNode(true));
-                    });
-                    clonedTopology.node.append(...endNodes);
-                }
+                if (clonedTopology.node instanceof Element && partiallySelectedTopologies.length)
+                    clonedTopology.setStart(parent.start).setEnd(parent.end);
+
+                if (clonedTopology.node instanceof Element && end === length && parent.end < clonedTopology.length)
+                    clonedTopology.node.append(
+                        ...Array.from(parent.node!.childNodes).slice(parent.end + 1).map(node => node.cloneNode(true)),
+                    );
+
             }
             if (!clonedNode) clonedNode = parent.node!.cloneNode(true);
 
