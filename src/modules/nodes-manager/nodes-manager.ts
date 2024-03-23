@@ -113,6 +113,7 @@ export class NodesManager {
             });
             partiallySelectedTopologies = this.selectedNodes.findPartiallySelectedChildren();
         }
+        console.log(this.selectedNodes);
         return this;
     }
 
@@ -163,7 +164,7 @@ export class NodesManager {
 
             let clonedNode: Node | null = null;
             if (partIdx === idxForTopology) {
-                clonedTopology = parent.deepClone(partiallySelectedTopologies);
+                clonedTopology = parent.deepClone(partiallySelectedTopologies, [], idxForTopology);
                 clonedNode = clonedTopology.node;
                 const topologyToSplit = clonedTopology
                     .findPartiallySelectedChildren()

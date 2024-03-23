@@ -37,7 +37,7 @@ export class Topology extends NodeSelection {
         return this;
     }
 
-    public setParent(parent: Topology): Topology {
+    public setParent(parent: Topology | null): Topology {
         this.parent = parent;
         return this;
     }
@@ -135,18 +135,30 @@ export class Topology extends NodeSelection {
         return foundTopologies;
     }
 
-    public deepClone(partialTopologies: Topology[], topologiesMaps: { old: Topology, new: Topology }[] = []): Topology {
+    public deepClone(
+        partialTopologies: Topology[],
+        topologiesMaps: { old: Topology, new: Topology }[] = [],
+        moveIndex: number = 0,
+        rewritePath: number[] | null = null,
+    ): Topology {
         const clonedNode = this.node!.cloneNode();
+        const newPath: number[] = [];
+
+        if (rewritePath) newPath.push(...rewritePath);
+        else newPath.push(...this.path);
+
+        if (moveIndex) newPath[newPath.length - 1] += moveIndex;
+
+        const newParent = topologiesMaps.find((map) => map.old === this.parent);
         const clonedTopology = new Topology()
             .fromNode(clonedNode)
-            .setPath(this.path)
-            .setParent(this.parent!);
-
+            .setPath(newPath)
+            .setParent(newParent?.new ?? null);
         topologiesMaps.push({ old: this, new: clonedTopology });
 
         if (clonedTopology.node!.nodeType === Node.ELEMENT_NODE) {
-            for (let child of this.children) {
-                const clonedChild = child.deepClone(partialTopologies, topologiesMaps);
+            for (let i = 0; i < this.children.length; i++) {
+                const clonedChild = this.children[i].deepClone(partialTopologies, topologiesMaps, 0, [...newPath, i]);
                 clonedTopology.children.push(clonedChild);
                 clonedTopology.node!.appendChild(clonedChild.node!);
             }
