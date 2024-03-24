@@ -54,6 +54,13 @@ export class Topology extends NodeSelection {
         return this;
     }
 
+    public setText(text: string): Topology {
+        if (this.node!.nodeType !== Node.TEXT_NODE) throw new Error('No se puede establecer texto en un nodo que no es de texto');
+        this.node!.textContent = text;
+        this.setStart(0).setEnd(text.length);
+        return this;
+    }
+
     public scanTextNode(selectionArgs?: SelectionArgs): void {
         if (!selectionArgs) return;
         const { selection } = selectionArgs;
@@ -163,7 +170,10 @@ export class Topology extends NodeSelection {
                 clonedTopology.node!.appendChild(clonedChild.node!);
             }
         } else if (clonedTopology.node!.nodeType === Node.TEXT_NODE && !this.fullySelected) {
-            clonedTopology.setStart(this.start).setEnd(this.end);
+
+            if (partialTopologies.includes(this)) clonedTopology.setStart(this.start).setEnd(this.end);
+            else clonedTopology.setText(this.node!.textContent!.slice(this.start, this.end));
+
             if (this.topologyToPreserve) {
                 const topologyToPreserve = topologiesMaps.find((map) => map.old === this.topologyToPreserve)?.new;
                 if (!topologyToPreserve) throw new Error('No se encontró el nodo a preservar');

@@ -148,59 +148,37 @@ export class NodesManager {
         if (!node || node.nodeType !== Node.TEXT_NODE || !ranges.length)
             throw new Error('No se puede dividir el nodo');
 
-        let clonedTopology: Topology | null = null;
-        let idxForTopology = ranges[0] === 0 ? 0 : 1;
-        let partIdx = 0;
-
+        const idxForTopology = ranges[0] === 0 ? 0 : 1;
         const textContent = node.textContent || '';
         const length = textContent.length;
         if (ranges.some(offset => offset > length)) throw new Error('El rango excede la longitud del texto');
         if (!ranges.includes(length)) ranges.push(length);
 
         const clonedNodes: Node[] = [];
-        let start = 0;
-        ranges.forEach(end => {
-            if (end === 0) return;
-
-            let clonedNode: Node | null = null;
-            if (partIdx === idxForTopology) {
-                clonedTopology = parent.deepClone(partiallySelectedTopologies, [], idxForTopology);
-                clonedNode = clonedTopology.node;
-                const topologyToSplit = clonedTopology
-                    .findPartiallySelectedChildren()
-                    .find(topology => !topology.fullySelected && topology.start === start);
-                if (!topologyToSplit) throw new Error('No se encontró la topología a dividir');
-                topologyToSplit.setStart(0).setEnd(end - start);
-
-                if (clonedTopology.node instanceof Element && partiallySelectedTopologies.length)
-                    clonedTopology.setStart(parent.start).setEnd(parent.end);
-
+        ranges.reduce((start, end) => {
+            if (end === 0) return end;
+            if (clonedNodes.length === idxForTopology) {
+                const clonedTopology = parent.deepClone(partiallySelectedTopologies, [], idxForTopology);
                 if (clonedTopology.node instanceof Element && end === length && parent.end < clonedTopology.length)
                     clonedTopology.node.append(
                         ...Array.from(parent.node!.childNodes).slice(parent.end + 1).map(node => node.cloneNode(true)),
                     );
-
+                clonedNodes.push(clonedTopology.node!);
+                this.selectedNodes === parent ? this.selectedNodes = clonedTopology : parent.replaceWith(clonedTopology);
+            } else {
+                const clonedNode = parent.node!.cloneNode(true);
+                const target = clonedNode.nodeType === Node.TEXT_NODE
+                    ? clonedNode
+                    : this.findEqualNode(node, clonedNode);
+                if (!target) throw new Error('No se encontró el nodo clonado');
+                target.textContent = textContent.substring(start, end);
+                if (start !== 0) this.removeNodesInDirection(target, 'before');
+                if (end !== length) this.removeNodesInDirection(target, 'after');
+                clonedNodes.push(clonedNode);
             }
-            if (!clonedNode) clonedNode = parent.node!.cloneNode(true);
-
-            const target = clonedNode.nodeType === Node.TEXT_NODE
-                ? clonedNode
-                : this.findEqualNode(node, clonedNode);
-            if (!target) throw new Error('No se encontró el nodo clonado');
-
-            target.textContent = textContent.substring(start, end);
-            if (start !== 0) this.removeNodesInDirection(target, 'before');
-            if (end !== length) this.removeNodesInDirection(target, 'after');
-            clonedNodes.push(clonedNode);
-
-            partIdx++;
-            start = end;
-        });
-
+            return end;
+        }, 0);
         parent.node!.parentNode!.replaceChild(this.makeFragment(clonedNodes), parent.node!);
-        if (clonedTopology) this.selectedNodes === parent
-            ? this.selectedNodes = clonedTopology
-            : parent.replaceWith(clonedTopology);
     }
 
     private removeNodesInDirection(target: Node, direction: 'before' | 'after'): void {
