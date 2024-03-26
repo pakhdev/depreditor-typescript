@@ -18,6 +18,7 @@ export class EventHooks {
             'onDragStart': [],
             'onInternalDrop': [],
             'onExternalDrop': [],
+            'afterAny': [],
         };
         this.setupEventListeners();
         this.setupInternalHooks();
@@ -97,12 +98,8 @@ export class EventHooks {
     }
 
     private executeHooks(eventName: string, event?: Event): void {
-        const hooks = this.hooks[eventName];
-        if (hooks) {
-            hooks.forEach(hook => {
-                hook(event);
-            });
-        }
+        if (this.hooks[eventName]) this.hooks[eventName].forEach(hook => hook(event));
+        this.hooks.afterAny.forEach(hook => hook(event));
     }
 
     public addHooks(eventNames: string[], hook: (event?: Event) => void): void {
