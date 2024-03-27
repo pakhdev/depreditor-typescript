@@ -1,9 +1,15 @@
+import { EditorInitializer } from '../editor-Initializer.ts';
+import { ActionHandler } from '../actions/interfaces/action-handler.interface.ts';
+
 export class EventHooks {
-    private readonly hooks: { [key: string]: ((event?: Event) => void)[] };
+    private readonly hooks: { [key: string]: ActionHandler[] };
     private domChangeObserver: MutationObserver | null = null;
     private isDragDetected = false;
 
-    constructor(private readonly editableDiv: HTMLDivElement) {
+    constructor(
+        private readonly depreditor: EditorInitializer,
+        private readonly editableDiv: HTMLDivElement,
+    ) {
         this.hooks = {
             'onEnter': [],
             'onUndo': [],
@@ -98,14 +104,14 @@ export class EventHooks {
     }
 
     private executeHooks(eventName: string, event?: Event): void {
-        if (this.hooks[eventName]) this.hooks[eventName].forEach(hook => hook(event));
-        this.hooks.afterAny.forEach(hook => hook(event));
+        if (this.hooks[eventName]) this.hooks[eventName].forEach(hook => hook(this.depreditor.selectedNodes, event));
+        this.hooks.afterAny.forEach(hook => hook(this.depreditor.selectedNodes, event));
     }
 
-    public addHooks(eventNames: string[], hook: (event?: Event) => void): void {
+    public addHooks(eventNames: string[], method: ActionHandler): void {
         eventNames.forEach(eventName => {
             if (this.hooks[eventName]) {
-                this.hooks[eventName].push(hook);
+                this.hooks[eventName].push(method);
             }
         });
     }
