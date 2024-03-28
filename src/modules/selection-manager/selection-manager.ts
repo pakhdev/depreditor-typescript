@@ -11,10 +11,11 @@ export class SelectionManager {
 
     constructor(public readonly editableDiv: HTMLDivElement) {
         const selection = window.getSelection();
-        if (!selection?.focusNode || !this.editableDiv.contains(selection.anchorNode)) {
+        if (!selection?.focusNode || !this.editableDiv.contains(selection.anchorNode) || !selection.rangeCount) {
             this.commonAncestor = this.editableDiv;
             this.startNode = new NodeSelection(this.editableDiv);
             this.endNode = this.startNode;
+            return;
         }
         const range = selection!.getRangeAt(0);
         const { startOffset, endOffset } = range;
@@ -22,10 +23,15 @@ export class SelectionManager {
         this.isOnEditableDiv = true;
         this.startNode = range.startContainer.nodeType === Node.TEXT_NODE
             ? new NodeSelection(range.startContainer)
-            : new NodeSelection(range.startContainer.childNodes[range.startOffset]);
+            : range.startContainer.childNodes.length
+                ? new NodeSelection(range.startContainer.childNodes[range.startOffset])
+                : new NodeSelection(range.startContainer);
         this.endNode = range.endContainer.nodeType === Node.TEXT_NODE
             ? new NodeSelection(range.endContainer)
-            : new NodeSelection(range.endContainer.childNodes[range.endOffset - 1]);
+            : range.endContainer.childNodes.length
+                ? new NodeSelection(range.endContainer.childNodes[range.endOffset])
+                : new NodeSelection(range.endContainer);
+
         this.commonAncestor = range.commonAncestorContainer;
         this.isRange = !range.collapsed;
 
