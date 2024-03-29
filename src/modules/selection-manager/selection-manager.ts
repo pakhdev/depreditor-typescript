@@ -3,7 +3,6 @@ import { ContainerProps } from '../../types/container-props.type.ts';
 
 export class SelectionManager {
 
-    public isOnEditableDiv: boolean = false;
     public isRange: boolean = false;
     public commonAncestor: Node;
     public startNode: NodeSelection;
@@ -12,15 +11,15 @@ export class SelectionManager {
     constructor(public readonly editableDiv: HTMLDivElement) {
         const selection = window.getSelection();
         if (!selection?.focusNode || !this.editableDiv.contains(selection.anchorNode) || !selection.rangeCount) {
-            this.commonAncestor = this.editableDiv;
-            this.startNode = new NodeSelection(this.editableDiv);
-            this.endNode = this.startNode;
+            const firstNode = this.findFirstTextNode(this.editableDiv) || this.editableDiv;
+            this.commonAncestor = firstNode;
+            this.startNode = new NodeSelection(firstNode).setEnd(0);
+            this.endNode = new NodeSelection(firstNode).setEnd(0);
             return;
         }
         const range = selection!.getRangeAt(0);
         const { startOffset, endOffset } = range;
 
-        this.isOnEditableDiv = true;
         this.startNode = range.startContainer.nodeType === Node.TEXT_NODE
             ? new NodeSelection(range.startContainer)
             : range.startContainer.childNodes.length
@@ -54,7 +53,7 @@ export class SelectionManager {
     }
 
     public adjustForFormatting(formatting: ContainerProps): SelectionManager {
-        if (!this.isOnEditableDiv || !this.startNode.node || !this.endNode.node) return this;
+        if (!this.startNode.node || !this.endNode.node) return this;
         this.startNode.findParentToPreserve(formatting, this.editableDiv);
         this.endNode.findParentToPreserve(formatting, this.editableDiv);
         if (this.startNode.parentToPreserve || this.endNode.parentToPreserve)
@@ -85,6 +84,16 @@ export class SelectionManager {
                 break;
             }
         }
+    }
+
+    private findFirstTextNode(node: Node): Node | null {
+        if (node.nodeType === Node.TEXT_NODE) return node;
+        const children = Array.from(node.childNodes);
+        for (let child of children) {
+            const found = this.findFirstTextNode(child);
+            if (found) return found;
+        }
+        return null;
     }
 
 }
