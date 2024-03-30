@@ -105,7 +105,7 @@ export class Topology extends NodeSelection {
                 topology.start = i;
             }
 
-            this.children.push(topology);
+            if (selectionArgs?.selection.isRange) this.children.push(topology);
             if (node === endNode || node.contains(endNode)) {
                 this.setEnd(i);
                 break;
