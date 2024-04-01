@@ -1,6 +1,9 @@
 import { ContainerProps } from '../../types/container-props.type.ts';
 import { detectFormattingNode } from '../../helpers/detectFormattingNode.helper.ts';
 
+/**
+ * Clase que representa un nodo seleccionado en el editor.
+ */
 export class NodeSelection {
 
     public node: Node | null = null;
@@ -43,6 +46,14 @@ export class NodeSelection {
         return this;
     }
 
+    /**
+     * Busca y selecciona el nodo padre más adecuado para preservar en un contexto específico, útil cuando se
+     * requiere dividir el nodo en partes.
+     * Recorre los nodos padres desde el nodo actual hasta el contenedor editable, buscando un nodo que coincida
+     * con el formato especificado o con el grupo de formatos especificado.
+     * Si el formato buscado es un bloque, se selecciona el nodo padre que no sea un bloque, ya que colocar bloques
+     * dentro de elementos inline no es una práctica recomendada.
+     */
     public findParentToPreserve(formatting: ContainerProps, editableDiv: HTMLDivElement): void {
         if (!this.node) return;
         let parent: Node | null = this.node.parentNode;
