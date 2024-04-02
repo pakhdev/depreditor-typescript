@@ -1,6 +1,13 @@
-import { NodeSelection } from './node-selection.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
+import { NodeSelection } from './node-selection.ts';
 
+/**
+ * Clase para gestionar la selección de nodos en el editor.
+ * Si no hay selección, se toma el primer nodo de texto del editor.
+ * Permite ajustar la selección y el nodo padre general para el tipo de contenedor que se le pase como parámetro,
+ * evitando un posible doble contenedor del mismo tipo y asegurando que las etiquetas de bloque no se posicionen
+ * dentro de etiquetas inline.
+ */
 export class SelectionManager {
 
     public isRange: boolean = false;
