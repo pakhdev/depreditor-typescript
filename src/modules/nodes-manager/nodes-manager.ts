@@ -1,4 +1,4 @@
-import { findNodeByPath } from '../../helpers/nodeRouter.helper.ts';
+import { findNodeByPath, getNodePosition } from '../../helpers/nodeRouter.helper.ts';
 import { Topology } from '../topology/topology.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
 import { SelectionManager } from '../selection-manager/selection-manager.ts';
@@ -17,10 +17,9 @@ export class NodesManager {
     // *  Selección de nodos
     // ** =========================
 
-    public pickFromSelection(formatting: ContainerProps): NodesManager {
-        const selection = new SelectionManager(this.editableDiv)
-            .adjustForFormatting(formatting);
-        if (!selection.isOnEditableDiv) return this;
+    public pickFromSelection(formatting?: ContainerProps): NodesManager {
+        const selection = new SelectionManager(this.editableDiv);
+        if (formatting) selection.adjustForFormatting(formatting);
         this.selectedNodes = new Topology().fromSelection(selection);
         return this;
     }
@@ -105,15 +104,30 @@ export class NodesManager {
             const topology = partiallySelectedTopologies.shift();
             if (!topology?.node) throw new Error('No se encontró el nodo en la topología');
             const topologyToPreserve = topology.topologyToPreserve || topology;
+
+            if (topology.start === topology.end) {
+                const nodePosition = getNodePosition(topology.node!, topology.node!.parentNode!);
+                const newPosition = topology.start === 0 ? nodePosition : nodePosition + 1;
+                if (!topology.parent) {
+                    const parent = new Topology().fromNode(topology.node!.parentNode!);
+                    topology.setParent(parent);
+                    this.selectedNodes = parent;
+                } else {
+                    topology.parent.removeChild(topology);
+                }
+                topology.parent!.setStart(newPosition).setEnd(newPosition);
+                if ([0, topology.length].includes(topology.start)) continue;
+            }
+
             this.splitNode({
                 parent: topologyToPreserve,
                 topology,
                 ranges: [topology.start, topology.end],
                 partiallySelectedTopologies,
             });
+
             partiallySelectedTopologies = this.selectedNodes.findPartiallySelectedChildren();
         }
-        console.log(this.selectedNodes);
         return this;
     }
 
@@ -121,10 +135,8 @@ export class NodesManager {
 
     public removeFormat(): void {}
 
-    public insertNodes(offset: number, fragment: DocumentFragment | Node): void {
+    public insertNodes(fragment: DocumentFragment | Node): void {
         if (typeof this.selectedNodes !== 'object' || this.selectedNodes === null) return;
-        const referenceNode = this.selectedNodes.node.childNodes[offset + 1];
-        this.selectedNodes.node.insertBefore(fragment, referenceNode);
     }
 
     public removeNodes(offset: number, limit: number): void {
@@ -132,9 +144,24 @@ export class NodesManager {
             return;
     }
 
-    public insertText(offset: number, text: string): void {
+    public insertText(text: string): void {
         if (typeof this.selectedNodes !== 'object' || this.selectedNodes === null)
             return;
+        if (this.selectedNodes.node!.nodeType === Node.TEXT_NODE) {
+            // Insert at offset
+        } else {
+            const textNode = document.createTextNode(text);
+            const textFragment = this.makeFragment(textNode);
+            this.insertNodes(textFragment);
+        }
+
+        // else if (this.selectedNodes.children.length === 1 && this.selectedNodes.children[0].node!.nodeName === 'BR') {
+        //     // Create text node and insert before BR insertNodes
+        // } else if (this.selectedNodes.children.length === 0) {
+        //     // Create text node and append to node insertNodes
+        // } else {
+        //     // Create text node and replace nodes insertNodes
+        // }
     }
 
     public removeText(offset: number, limit: number): void {
@@ -145,10 +172,12 @@ export class NodesManager {
     private splitNode(nodeSplittingArgs: NodeSplittingArgs): void {
         const { topology, parent, ranges, partiallySelectedTopologies } = nodeSplittingArgs;
         const { node } = topology;
+
+        const isRange = [...new Set(ranges)].length > 1;
         if (!node || node.nodeType !== Node.TEXT_NODE || !ranges.length)
             throw new Error('No se puede dividir el nodo');
 
-        const idxForTopology = ranges[0] === 0 ? 0 : 1;
+        const idxForTopology = !isRange ? -1 : ranges[0] === 0 ? 0 : 1;
         const textContent = node.textContent || '';
         const length = textContent.length;
         if (ranges.some(offset => offset > length)) throw new Error('El rango excede la longitud del texto');
@@ -156,7 +185,7 @@ export class NodesManager {
 
         const clonedNodes: Node[] = [];
         ranges.reduce((start, end) => {
-            if (end === 0) return end;
+            if (end === 0 || start === end) return end;
             if (clonedNodes.length === idxForTopology) {
                 const clonedTopology = parent.deepClone(partiallySelectedTopologies, [], idxForTopology);
                 if (clonedTopology.node instanceof Element && end === length && parent.end < clonedTopology.length)
@@ -178,7 +207,16 @@ export class NodesManager {
             }
             return end;
         }, 0);
-        parent.node!.parentNode!.replaceChild(this.makeFragment(clonedNodes), parent.node!);
+
+        let parentToUpdate = parent.parent?.node;
+        let nodeToReplace = node;
+
+        if (!parentToUpdate) {
+            parentToUpdate = parent.node!.parentNode;
+            nodeToReplace = parent.node!;
+        }
+
+        parentToUpdate!.replaceChild(this.makeFragment(clonedNodes), nodeToReplace);
     }
 
     private removeNodesInDirection(target: Node, direction: 'before' | 'after'): void {
@@ -206,7 +244,9 @@ export class NodesManager {
 
     public getBackup(): void {}
 
-    public getNodes(): void {}
+    public getNodes(): Topology | null {
+        return this.selectedNodes;
+    }
 
     public getPreviousNode(): void {}
 
