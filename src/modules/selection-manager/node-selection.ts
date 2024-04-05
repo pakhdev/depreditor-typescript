@@ -3,6 +3,19 @@ import { detectFormattingNode } from '../../helpers/detectFormattingNode.helper.
 
 /**
  * Clase que representa un nodo seleccionado en el editor.
+ * Se utiliza para almacenar información sobre la selección actual y facilitar la manipulación de nodos.
+ * @property node Nodo seleccionado.
+ * @property start Índice de inicio de la selección. Para un nodo de texto, representa el índice del primer
+ * carácter seleccionado. Para un nodo de elemento, representa el índice del primer nodo hijo seleccionado.
+ * @property end Índice de fin de la selección. Para un nodo de texto, representa el índice hasta(!) el cual se ha
+ * seleccionado (inclusivo). Para un nodo de elemento, representa el índice hasta(!) el cual se ha seleccionado (inclusivo).
+ * Ejemplos de selecciones:
+ * Selección del segundo carácter en un texto: start = 1, end = 2
+ * Cursor después del primer carácter en un texto: start = 1, end = 1
+ * Selección del primer y segundo elemento: start = 0, end = 2 (seleccionados los elementos en los índices 0 y 1)
+ * Cursor después del segundo elemento: start = 2, end = 2
+ * @property parentToPreserve Nodo padre que se debe preservar en un contexto específico. Para más información, ver
+ * el método findParentToPreserve.
  */
 export class NodeSelection {
 
@@ -17,18 +30,23 @@ export class NodeSelection {
         this.end = this.length ? this.length : 0;
     }
 
+    // Indica si el nodo está completamente seleccionado.
     public get fullySelected(): boolean {
         return this.startSelected && this.endSelected;
     }
 
+    // Indica si hay selección en el inicio de nodo.
     public get startSelected(): boolean {
         return this.start === 0;
     }
 
+    // Indica si hay selección en el final de nodo.
     public get endSelected(): boolean {
         return !this.length || this.end === this.length;
     }
 
+    // Longitud del nodo seleccionado. Para un nodo de texto, representa la longitud del texto. Para un
+    // nodo de elemento, representa la cantidad de nodos hijos.
     public get length(): number {
         if (!this.node) return 0;
         return this.node.nodeType === Node.TEXT_NODE
@@ -36,11 +54,13 @@ export class NodeSelection {
             : this.node.childNodes.length;
     }
 
+    // Asigna el índice del primer carácter o nodo seleccionado.
     public setStart(start: number): NodeSelection {
         this.start = start;
         return this;
     }
 
+    // Asigna el índice del carácter o nodo hasta el cual se ha seleccionado.
     public setEnd(end: number): NodeSelection {
         this.end = end;
         return this;
