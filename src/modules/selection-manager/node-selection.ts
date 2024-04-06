@@ -30,6 +30,11 @@ export class NodeSelection {
         this.end = this.length ? this.length : 0;
     }
 
+    // Indica si la selección es un rango.
+    public get isRange(): boolean {
+        return this.start !== this.end;
+    }
+
     // Indica si el nodo está completamente seleccionado.
     public get fullySelected(): boolean {
         return this.startSelected && this.endSelected;
