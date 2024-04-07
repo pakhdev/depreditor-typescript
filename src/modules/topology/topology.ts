@@ -12,7 +12,7 @@ export class Topology extends NodeSelection {
 
     public fromNode(node: Node): Topology {
         this.node = node;
-        this.parentToPreserve = node.parentNode;
+        this.parentToPreserve = node.parentNode; // ??
         this.end = this.length ? this.length : 0;
         return this;
     }
@@ -25,6 +25,12 @@ export class Topology extends NodeSelection {
         if (this.node!.nodeType === Node.TEXT_NODE) this.scanTextNode(selectionArgs);
         else this.scanElementNode(selectionArgs);
         return this;
+    }
+
+    public getTextInRange(start?: number, end?: number): string {
+        if (!this.node || this.node.nodeType !== Node.TEXT_NODE || start === undefined)
+            return '';
+        return this.node.textContent?.slice(start, end) || '';
     }
 
     public setNode(node: Node): Topology {
@@ -59,6 +65,10 @@ export class Topology extends NodeSelection {
         this.node!.textContent = text;
         this.setStart(0).setEnd(text.length);
         return this;
+    }
+
+    public removeChild(child: Topology): void {
+        this.children = this.children.filter((topology) => topology !== child);
     }
 
     public scanTextNode(selectionArgs?: SelectionArgs): void {
@@ -105,7 +115,8 @@ export class Topology extends NodeSelection {
                 topology.start = i;
             }
 
-            if (selectionArgs?.selection.isRange) this.children.push(topology);
+            if (selectionArgs?.selection.isRange || topology.node !== startNode || node.nodeType === Node.TEXT_NODE)
+                this.children.push(topology);
             if (node === endNode || node.contains(endNode)) {
                 this.setEnd(i);
                 break;
@@ -133,17 +144,21 @@ export class Topology extends NodeSelection {
         return null;
     }
 
-    public findPartiallySelectedChildren(topology: Topology = this): Topology[] {
+    public findTopologiesToSplit(topology: Topology = this): Topology[] {
         const foundTopologies: Topology[] = [];
         if (topology.node!.nodeType === Node.TEXT_NODE && !topology.fullySelected) {
             foundTopologies.push(topology);
         } else for (let child of topology.children)
-            foundTopologies.push(...this.findPartiallySelectedChildren(child));
+            foundTopologies.push(...this.findTopologiesToSplit(child));
         return foundTopologies;
     }
 
+    /**
+     * Clona la topología y todas sus subtopologías con los nodos
+     * y reemplaza la topología original por la clonada.
+     */
     public deepClone(
-        partialTopologies: Topology[],
+        topologyToSplit: Topology,
         topologiesMaps: { old: Topology, new: Topology }[] = [],
         moveIndex: number = 0,
         rewritePath: number[] | null = null,
@@ -160,19 +175,21 @@ export class Topology extends NodeSelection {
         const clonedTopology = new Topology()
             .fromNode(clonedNode)
             .setPath(newPath)
-            .setParent(newParent?.new ?? null);
+            .setParent(newParent?.new || this.parent);
         topologiesMaps.push({ old: this, new: clonedTopology });
 
         if (clonedTopology.node!.nodeType === Node.ELEMENT_NODE) {
             for (let i = 0; i < this.children.length; i++) {
-                const clonedChild = this.children[i].deepClone(partialTopologies, topologiesMaps, 0, [...newPath, i]);
+                const clonedChild = this.children[i].deepClone(topologyToSplit, topologiesMaps, 0, [...newPath, i]);
                 clonedTopology.children.push(clonedChild);
                 clonedTopology.node!.appendChild(clonedChild.node!);
             }
         } else if (clonedTopology.node!.nodeType === Node.TEXT_NODE && !this.fullySelected) {
 
-            if (partialTopologies.includes(this)) clonedTopology.setStart(this.start).setEnd(this.end);
-            else clonedTopology.setText(this.node!.textContent!.slice(this.start, this.end));
+            if (topologyToSplit === this)
+                clonedTopology.setText(this.getTextInRange(this.start, this.end));
+            else
+                clonedTopology.setStart(this.start).setEnd(this.end);
 
             if (this.topologyToPreserve) {
                 const topologyToPreserve = topologiesMaps.find((map) => map.old === this.topologyToPreserve)?.new;
