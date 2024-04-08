@@ -2,6 +2,7 @@ import { getNodePath } from '../../helpers/nodeRouter.helper.ts';
 import { SelectionArgs } from './interfaces/selection-args.interface.ts';
 import { NodeSelection } from '../selection-manager/node-selection.ts';
 import { SelectionManager } from '../selection-manager/selection-manager.ts';
+import { TopologyCloningResult } from './interfaces/topology-cloning-result.interface.ts';
 
 export class Topology extends NodeSelection {
 
@@ -28,8 +29,10 @@ export class Topology extends NodeSelection {
     }
 
     public getTextInRange(start?: number, end?: number): string {
-        if (!this.node || this.node.nodeType !== Node.TEXT_NODE || start === undefined)
+        if (!this.node || this.node.nodeType !== Node.TEXT_NODE)
             return '';
+        if (start === undefined || end === undefined)
+            return this.node.textContent || '';
         return this.node.textContent?.slice(start, end) || '';
     }
 
@@ -129,6 +132,7 @@ export class Topology extends NodeSelection {
             .setChildren(topology.children)
             .setStart(topology.start)
             .setEnd(topology.end > this.length ? this.length : topology.end);
+        // TODO: Es necesario reemplazar path y parent?
     }
 
     public findByNode(nodeToFind: Node, topology?: Topology): Topology | null {
@@ -154,50 +158,42 @@ export class Topology extends NodeSelection {
     }
 
     /**
-     * Clona la topología y todas sus subtopologías con los nodos
-     * y reemplaza la topología original por la clonada.
+     * Clona la topología y todas sus subtopologías con los nodos correspondientes.
+     * Solo se clonarán los nodos que estén seleccionados.
+     * No se asigna la propiedad path(ruta) a las topologías clonadas. Será asignada al usar el método
+     * recalculatePaths después de insertar los nodos clonados en el DOM.
      */
-    public deepClone(
-        topologyToSplit: Topology,
-        topologiesMaps: { old: Topology, new: Topology }[] = [],
-        moveIndex: number = 0,
-        rewritePath: number[] | null = null,
-    ): Topology {
-        const clonedNode = this.node!.cloneNode();
-        const newPath: number[] = [];
-
-        if (rewritePath) newPath.push(...rewritePath);
-        else newPath.push(...this.path);
-
-        if (moveIndex) newPath[newPath.length - 1] += moveIndex;
-
-        const newParent = topologiesMaps.find((map) => map.old === this.parent);
+    public deepClone(retrieveCloneOf: Topology, topologyToPreserve: Topology | null = null, setParent: Topology | null = null): TopologyCloningResult {
+        if (!this.node) throw new Error('No se puede clonar una topología sin nodo');
+        let retrievedTopology: Topology | null = null;
+        const clonedNode = this.node.cloneNode();
+        const { nodeType } = clonedNode;
         const clonedTopology = new Topology()
             .fromNode(clonedNode)
-            .setPath(newPath)
-            .setParent(newParent?.new || this.parent);
-        topologiesMaps.push({ old: this, new: clonedTopology });
+            .setParent(setParent || this.parent);
+        if (nodeType === Node.TEXT_NODE && !this.fullySelected)
+            clonedTopology
+                .setTopologyToPreserve(topologyToPreserve!)
+                .setStart(this.start)
+                .setEnd(this.end);
 
-        if (clonedTopology.node!.nodeType === Node.ELEMENT_NODE) {
-            for (let i = 0; i < this.children.length; i++) {
-                const clonedChild = this.children[i].deepClone(topologyToSplit, topologiesMaps, 0, [...newPath, i]);
+        if (nodeType === Node.ELEMENT_NODE) {
+            for (const childTopology of this.children) {
+
+                if (!topologyToPreserve) topologyToPreserve = this;
+                if (!setParent) setParent = clonedTopology;
+                clonedTopology.setEnd(this.children.length);
+
+                const cloningResult = childTopology.deepClone(retrieveCloneOf, topologyToPreserve, setParent);
+                const { clonedTopology: clonedChild } = cloningResult;
+                if (cloningResult.retrievedTopology) retrievedTopology = cloningResult.retrievedTopology;
+
                 clonedTopology.children.push(clonedChild);
                 clonedTopology.node!.appendChild(clonedChild.node!);
             }
-        } else if (clonedTopology.node!.nodeType === Node.TEXT_NODE && !this.fullySelected) {
-
-            if (topologyToSplit === this)
-                clonedTopology.setText(this.getTextInRange(this.start, this.end));
-            else
-                clonedTopology.setStart(this.start).setEnd(this.end);
-
-            if (this.topologyToPreserve) {
-                const topologyToPreserve = topologiesMaps.find((map) => map.old === this.topologyToPreserve)?.new;
-                if (!topologyToPreserve) throw new Error('No se encontró el nodo a preservar');
-                clonedTopology.setTopologyToPreserve(topologyToPreserve);
-            }
         }
 
-        return clonedTopology;
+        if (this === retrieveCloneOf) retrievedTopology = clonedTopology;
+        return { clonedTopology, retrievedTopology };
     }
 }
