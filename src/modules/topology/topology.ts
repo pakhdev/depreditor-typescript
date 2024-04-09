@@ -70,7 +70,7 @@ export class Topology extends NodeSelection {
         return this;
     }
 
-    public removeChild(child: Topology): void {
+    public removeChild(child: Topology): void { // TODO: Mejorar el nombre del método
         this.children = this.children.filter((topology) => topology !== child);
     }
 
@@ -195,5 +195,32 @@ export class Topology extends NodeSelection {
 
         if (this === retrieveCloneOf) retrievedTopology = clonedTopology;
         return { clonedTopology, retrievedTopology };
+    }
+
+    /**
+     * Elimina el contenido no seleccionado de la topología y todas sus subtopologías.
+     * Se eliminarán los nodos y el contenido de texto que no estén seleccionados.
+     * Se reasignarán los índices de inicio y fin de las topologías.
+     */
+    public purgeUnselectedContent(): Topology {
+        if (!this.node) throw new Error('No se puede purgar una topología sin nodo');
+
+        if (this.node.nodeType === Node.TEXT_NODE) {
+            this.setText(this.getTextInRange().slice(this.start, this.end));
+        } else for (const childNode of this.node.childNodes) {
+            const childNodes = Array.from(this.node.childNodes);
+            const selectedNodes = this.children.map(child => child.node);
+            for (const childNode of childNodes) {
+                if (!selectedNodes.includes(childNode))
+                    this.node.removeChild(childNode);
+            }
+            for (const topology of this.children)
+                topology.purgeUnselectedContent();
+        }
+
+        // TODO: Recalcular la ruta si existe una topología padre ó si tiene un path asignado
+        this.setStart(0).setEnd(this.length);
+
+        return this;
     }
 }
