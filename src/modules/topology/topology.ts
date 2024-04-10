@@ -223,4 +223,38 @@ export class Topology extends NodeSelection {
 
         return this;
     }
+
+    // Recalcula las rutas de la topología y todas sus subtopologías.
+    public calculatePaths(setParent?: Topology, setPath?: number[]): void {
+        if (!this.isPlacedInDom || !this.node)
+            throw new Error('No se puede calcular las rutas de una topología que no ha sido insertada en el DOM');
+        if (this.parent && !this.parent.node)
+            throw new Error('No se puede calcular las rutas al no encontrar el nodo en la topología-padre');
+
+        if (setParent && setPath)
+            this.setParent(setParent).setPath(setPath);
+        else if (this.parent)
+            this.setPath([...this.parent.path, this.parent.children.indexOf(this)]);
+        else
+            this.setPath([]);
+
+        if (this.node.nodeType !== Node.ELEMENT_NODE) return;
+
+        const childNodes = Array.from(this.node.childNodes);
+        for (let i = 0; i < childNodes.length; i++) {
+            const childNode = childNodes[i];
+            const correspondingTopology = this.children.find(child => child.node === childNode);
+            if (correspondingTopology)
+                correspondingTopology.calculatePaths(this, [...this.path, i]
+        }
+
+    }
+
+    /**
+     * Comprueba si la topología ha sido insertada en el DOM.
+     * Se considera que una topología ha sido insertada en el DOM si tiene una ruta asignada o si su topología padre la tiene.
+     */
+    public get isPlacedInDom(): boolean {
+        return this.path.length > 0 || (this.parent ? this.parent.isPlacedInDom : false);
+    }
 }
