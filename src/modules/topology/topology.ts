@@ -225,7 +225,7 @@ export class Topology extends NodeSelection {
     }
 
     // Recalcula las rutas de la topología y todas sus subtopologías.
-    public calculatePaths(setParent?: Topology, setPath?: number[]): void {
+    public calculatePaths(setParent?: Topology, setPath?: number[]): Topology {
         if (!this.isPlacedInDom || !this.node)
             throw new Error('No se puede calcular las rutas de una topología que no ha sido insertada en el DOM');
         if (this.parent && !this.parent.node)
@@ -247,7 +247,28 @@ export class Topology extends NodeSelection {
             if (correspondingTopology)
                 correspondingTopology.calculatePaths(this, [...this.path, i]
         }
+        return this;
+    }
 
+    /**
+     * Recalcula el rango de nodos-hijos seleccionados de la topología.
+     * Solo afecta a las topologías que tengan nodos-hijos seleccionados.
+     * Se reasignarán los índices de inicio y fin de las topologías.
+     * No se tocarán las topologías-hijas.
+     */
+    public recalculateSelection(): Topology {
+        if (!this.node) throw new Error('No se puede recalcular la selección de una topología sin nodo');
+        if (this.children.length > 0 && this.node.nodeType === Node.ELEMENT_NODE) {
+            const childNodes = Array.from(this.node.childNodes);
+            const firstSelectedChild = this.children[0];
+            if (!firstSelectedChild.node)
+                throw new Error('No se encontró el nodo en la topología');
+            const startIndex = childNodes.indexOf(firstSelectedChild.node);
+            if (startIndex === -1)
+                throw new Error('No se encontró el nodo seleccionado en la topología');
+            this.setStart(startIndex).setEnd(startIndex + this.children.length);
+        }
+        return this;
     }
 
     /**
