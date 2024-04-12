@@ -11,20 +11,37 @@ export class Topology extends NodeSelection {
     public parent: Topology | null = null;
     public topologyToPreserve: Topology | null = null;
 
+    /**
+     * Crea una topología. Solo se asigna el nodo y el final de la selección.
+     * El resto de propiedades se tiene que asignar fuera de este método.
+     */
     public fromNode(node: Node): Topology {
-        this.node = node;
-        this.parentToPreserve = node.parentNode; // ??
-        this.end = this.length ? this.length : 0;
+        this.setNode(node).setEnd(this.length ? this.length : 0);
         return this;
     }
 
+    /**
+     * Crea una topología a partir de una selección.
+     * Adicionalmente, se crea y se asigna una topología del nodo padre del nodo común.
+     */
     public fromSelection(selection: SelectionManager): Topology {
         const ancestorPath = getNodePath(selection.commonAncestor, selection.editableDiv);
         if (!ancestorPath) throw new Error('No se encontró el ancestro común');
+
         this.fromNode(selection.commonAncestor).setPath(ancestorPath);
+
         const selectionArgs: SelectionArgs = { selection, startFound: { value: false } };
         if (this.node!.nodeType === Node.TEXT_NODE) this.scanTextNode(selectionArgs);
         else this.scanElementNode(selectionArgs);
+
+        if (ancestorPath.length > 0 && this.node?.parentNode) {
+            const parentTopology = new Topology()
+                .fromNode(this.node.parentNode)
+                .setPath(ancestorPath.slice(0, -1))
+                .recalculateSelection();
+            this.setParent(parentTopology);
+        }
+
         return this;
     }
 
@@ -245,7 +262,7 @@ export class Topology extends NodeSelection {
             const childNode = childNodes[i];
             const correspondingTopology = this.children.find(child => child.node === childNode);
             if (correspondingTopology)
-                correspondingTopology.calculatePaths(this, [...this.path, i]
+                correspondingTopology.calculatePaths(this, [...this.path, i]);
         }
         return this;
     }
