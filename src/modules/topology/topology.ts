@@ -175,6 +175,25 @@ export class Topology extends NodeSelection {
     }
 
     /**
+     * Inserta la topología después de la topología de referencia(this).
+     * Se actualizarán los índices de inicio y fin y las rutas de las topologías afectadas.
+     */
+    public mountBefore(topologyToInsert: Topology): void {
+        if (!this.node || !this.parent?.node || !topologyToInsert.node)
+            throw new Error('No se encontró el nodo de referencia, su nodo padre o el nodo a insertar');
+        if (topologyToInsert.isPlacedInDom)
+            throw new Error('No se puede montar una topología que ya ha sido insertada en el DOM');
+
+        const topologyChildIdx = this.parent.children.indexOf(this);
+        if (topologyChildIdx === -1)
+            throw new Error('No se encontró la topología de referencia en su nodo padre');
+
+        this.parent.node.insertBefore(topologyToInsert.node, this.node);
+        this.parent.children.splice(topologyChildIdx, 0, topologyToInsert);
+        this.parent.recalculateSelection().calculatePaths(this.parent, [topologyChildIdx]);
+    }
+
+    /**
      * Clona la topología y todas sus subtopologías con los nodos correspondientes.
      * Solo se clonarán los nodos que estén seleccionados.
      * No se asigna la propiedad path(ruta) a las topologías clonadas. Será asignada al usar el método
@@ -255,7 +274,7 @@ export class Topology extends NodeSelection {
         else
             this.setPath([]);
 
-        if (this.node.nodeType !== Node.ELEMENT_NODE) return;
+        if (this.node.nodeType !== Node.ELEMENT_NODE) return this;
 
         const childNodes = Array.from(this.node.childNodes);
         for (let i = 0; i < childNodes.length; i++) {
