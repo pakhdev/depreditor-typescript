@@ -38,6 +38,7 @@ export class Topology extends NodeSelection {
             const parentTopology = new Topology()
                 .fromNode(this.node.parentNode)
                 .setPath(ancestorPath.slice(0, -1))
+                .setChildren([this])
                 .recalculateSelection();
             this.setParent(parentTopology);
         }
