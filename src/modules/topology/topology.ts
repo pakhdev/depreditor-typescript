@@ -179,7 +179,7 @@ export class Topology extends NodeSelection {
      * Inserta la topología después de la topología de referencia(this).
      * Se actualizarán los índices de inicio y fin y las rutas de las topologías afectadas.
      */
-    public mountBefore(topologyToInsert: Topology): void {
+    public mountBefore(topologyToInsert: Topology): Topology {
         if (!this.node || !this.parent?.node || !topologyToInsert.node)
             throw new Error('No se encontró el nodo de referencia, su nodo padre o el nodo a insertar');
         if (topologyToInsert.isPlacedInDom)
@@ -191,7 +191,28 @@ export class Topology extends NodeSelection {
 
         this.parent.node.insertBefore(topologyToInsert.node, this.node);
         this.parent.children.splice(topologyChildIdx, 0, topologyToInsert);
-        this.parent.recalculateSelection().calculatePaths(this.parent, [topologyChildIdx]);
+        this.parent.recalculateSelection().calculatePaths();
+
+        return this;
+    }
+
+    /**
+     * Desmonta el nodo del DOM y elimina la topología de su nodo padre.
+     * Se actualizarán los índices de inicio y fin y las rutas de las topologías afectadas.
+     */
+    public unmount(): void {
+        if (!this.node || !this.parent?.node || !this.node)
+            throw new Error('No se encontró el nodo de referencia, su nodo padre o el nodo a desmontar');
+        if (this.isPlacedInDom)
+            throw new Error('No se puede desmontar una topología que no se encuentra en el DOM');
+
+        const topologyChildIdx = this.parent.children.indexOf(this);
+        if (topologyChildIdx === -1)
+            throw new Error('No se encontró la topología de referencia en su nodo padre');
+
+        this.parent.children.splice(topologyChildIdx, 1);
+        this.parent.recalculateSelection().calculatePaths();
+        this.parent.node.removeChild(this.node);
     }
 
     /**
