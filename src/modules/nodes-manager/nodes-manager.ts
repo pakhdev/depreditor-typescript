@@ -28,7 +28,23 @@ export class NodesManager {
 
     private splitNode() {}
 
-    private removeNodesInDirection() {}
+    private removeNodesInDirection(container: Node, target: Node, direction: 'before' | 'after', targetFound = false): boolean {
+        if (container === target)
+            return true;
+        if (container.hasChildNodes()) {
+            const childNodes = Array.from(container.childNodes);
+            for (const childNode of childNodes) {
+                if (targetFound && direction === 'before')
+                    break;
+                if (targetFound && direction === 'after')
+                    container.removeChild(childNode);
+                targetFound = this.removeNodesInDirection(childNode, target, direction, targetFound);
+                if (!targetFound && direction === 'before')
+                    container.removeChild(childNode);
+            }
+        }
+        return targetFound;
+    }
 
     private cloneNode(node: Node, retrieveCloneOf: Node): NodeCloningResult {
         const clonedNode = node.cloneNode();
