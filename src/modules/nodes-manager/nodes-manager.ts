@@ -26,8 +26,6 @@ export class NodesManager {
 
     public detachSelectedFragment() {}
 
-    private splitNode() {}
-
     private removeNodesInDirection(container: Node, target: Node, direction: 'before' | 'after', targetFound = false): boolean {
         if (container === target)
             return true;
@@ -46,20 +44,21 @@ export class NodesManager {
         return targetFound;
     }
 
-    private cloneNode(node: Node, retrieveCloneOf: Node): NodeCloningResult {
+    private cloneNode(node: Node, retrieveClonesOf: Node[]): NodeCloningResult {
+        const nodeMappings: { originalNode: Node; clonedNode: Node }[] = [];
         const clonedNode = node.cloneNode();
-        let retrievedNode: Node | null = node === retrieveCloneOf ? clonedNode : null;
+        if (retrieveClonesOf.includes(node))
+            nodeMappings.push({ originalNode: node, clonedNode });
 
         if (node.hasChildNodes()) {
             const children = Array.from(node.childNodes);
             for (const child of children) {
-                const cloningResult = this.cloneNode(child, retrieveCloneOf);
+                const cloningResult = this.cloneNode(child, retrieveClonesOf);
                 clonedNode.appendChild(cloningResult.clonedNode);
-                if (cloningResult.retrievedNode)
-                    retrievedNode = cloningResult.clonedNode;
+                nodeMappings.push(...cloningResult.nodeMappings);
             }
         }
-        return { clonedNode, retrievedNode };
+        return { clonedNode, nodeMappings };
     }
 
 }
