@@ -3,6 +3,7 @@ import { Topology } from '../topology/topology.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
 import { SelectionManager } from '../selection-manager/selection-manager.ts';
 import { NodeCloningResult } from './node-cloning-result.interface.ts';
+import { RangeCloningArgs } from './interfaces/range-cloning-args.interface.ts';
 
 export class NodesManager {
 
@@ -59,6 +60,11 @@ export class NodesManager {
             }
         }
         return { clonedNode, nodeMappings };
+    }
+
+    private adjustTextContent(node: Node, start: number, end: number): void {
+        if (node.nodeType !== Node.TEXT_NODE || !node.textContent) return;
+        node.textContent = node.textContent.slice(start, end);
     }
 
 }
