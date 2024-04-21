@@ -62,6 +62,46 @@ export class NodesManager {
         return { clonedNode, nodeMappings };
     }
 
+    private cloneSelectedRange(args: RangeCloningArgs): Node {
+        const {
+            parentTopology: { node: parentNode },
+            firstTopology,
+            firstTopology: { node: firstNode },
+            lastTopology,
+            lastTopology: { node: lastNode },
+            position,
+        } = args;
+
+        if (!parentNode || !firstNode || !lastNode)
+            throw new Error('Error al clonar el rango seleccionado. Al menos uno de los nodos no existe');
+
+        const cloningResult = this.cloneNode(parentNode, [firstNode, lastNode]);
+        const firstClonedNode = cloningResult.nodeMappings.find(mapping => mapping.originalNode === firstNode)?.clonedNode;
+        const lastClonedNode = cloningResult.nodeMappings.find(mapping => mapping.originalNode === lastNode)?.clonedNode;
+
+        if (!firstClonedNode || !lastClonedNode)
+            throw new Error('Error al clonar el rango seleccionado. Al menos uno de los nodos no fue clonado');
+
+        switch (position) {
+            case 'before':
+                this.adjustTextContent(firstClonedNode, 0, firstTopology.start);
+                this.removeNodesInDirection(cloningResult.clonedNode, firstClonedNode, 'after');
+                break;
+            case 'within':
+                this.adjustTextContent(firstClonedNode, firstTopology.start, firstTopology.end);
+                this.adjustTextContent(lastClonedNode, lastTopology.start, lastTopology.end);
+                this.removeNodesInDirection(cloningResult.clonedNode, firstClonedNode, 'before');
+                this.removeNodesInDirection(cloningResult.clonedNode, lastClonedNode, 'after');
+                break;
+            case 'after':
+                this.adjustTextContent(lastClonedNode, lastTopology.end, lastTopology.length);
+                this.removeNodesInDirection(cloningResult.clonedNode, lastClonedNode, 'before');
+                break;
+        }
+
+        return cloningResult.clonedNode;
+    }
+
     private adjustTextContent(node: Node, start: number, end: number): void {
         if (node.nodeType !== Node.TEXT_NODE || !node.textContent) return;
         node.textContent = node.textContent.slice(start, end);
