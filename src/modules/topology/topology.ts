@@ -11,6 +11,12 @@ export class Topology extends NodeSelection {
     public parent: Topology | null = null;
     public topologyToPreserve: Topology | null = null;
 
+    get textContent(): string {
+        if (!this.node || this.node.nodeType !== Node.TEXT_NODE)
+            return '';
+        return this.node.textContent || '';
+    }
+
     /**
      * Crea una topología. Solo se asigna el nodo y el final de la selección.
      * El resto de propiedades se tiene que asignar fuera de este método.
@@ -46,14 +52,6 @@ export class Topology extends NodeSelection {
         return this;
     }
 
-    public getTextInRange(start?: number, end?: number): string {
-        if (!this.node || this.node.nodeType !== Node.TEXT_NODE)
-            return '';
-        if (start === undefined || end === undefined)
-            return this.node.textContent || '';
-        return this.node.textContent?.slice(start, end) || '';
-    }
-
     public setNode(node: Node): Topology {
         this.node = node;
         return this;
@@ -79,17 +77,6 @@ export class Topology extends NodeSelection {
             ? this.findByNode(parentToPreserve)
             : parentToPreserve;
         return this;
-    }
-
-    public setText(text: string): Topology {
-        if (this.node!.nodeType !== Node.TEXT_NODE) throw new Error('No se puede establecer texto en un nodo que no es de texto');
-        this.node!.textContent = text;
-        this.setStart(0).setEnd(text.length);
-        return this;
-    }
-
-    public removeChild(child: Topology): void { // TODO: Mejorar el nombre del método
-        this.children = this.children.filter((topology) => topology !== child);
     }
 
     public scanTextNode(selectionArgs?: SelectionArgs): void {
@@ -145,14 +132,6 @@ export class Topology extends NodeSelection {
         }
     }
 
-    public replaceWith(topology: Topology): void {
-        this.setNode(topology.node!)
-            .setChildren(topology.children)
-            .setStart(topology.start)
-            .setEnd(topology.end > this.length ? this.length : topology.end);
-        // TODO: Es necesario reemplazar path y parent?
-    }
-
     public findByNode(nodeToFind: Node, topology?: Topology): Topology | null {
         const isMain = !topology;
         topology = topology || this;
@@ -166,33 +145,10 @@ export class Topology extends NodeSelection {
         return null;
     }
 
-    public findTopologiesToSplit(topology: Topology = this): Topology[] {
-        const foundTopologies: Topology[] = [];
-        if (topology.node!.nodeType === Node.TEXT_NODE && !topology.fullySelected) {
-            foundTopologies.push(topology);
-        } else for (let child of topology.children)
-            foundTopologies.push(...this.findTopologiesToSplit(child));
-        return foundTopologies;
-    }
-
     /**
-     * Inserta la topología después de la topología de referencia(this).
-     * Se actualizarán los índices de inicio y fin y las rutas de las topologías afectadas.
+     * Inserta la topología del buffer en la posición indicada en las propiedades de la topología.
      */
-    public mountBefore(topologyToInsert: Topology): Topology {
-        if (!this.node || !this.parent?.node || !topologyToInsert.node)
-            throw new Error('No se encontró el nodo de referencia, su nodo padre o el nodo a insertar');
-        if (topologyToInsert.isPlacedInDom)
-            throw new Error('No se puede montar una topología que ya ha sido insertada en el DOM');
-
-        const topologyChildIdx = this.parent.children.indexOf(this);
-        if (topologyChildIdx === -1)
-            throw new Error('No se encontró la topología de referencia en su nodo padre');
-
-        this.parent.node.insertBefore(topologyToInsert.node, this.node);
-        this.parent.children.splice(topologyChildIdx, 0, topologyToInsert);
-        this.parent.recalculateSelection().calculatePaths();
-
+    public mount(): Topology {
         return this;
     }
 
@@ -211,7 +167,7 @@ export class Topology extends NodeSelection {
             throw new Error('No se encontró la topología de referencia en su nodo padre');
 
         this.parent.children.splice(topologyChildIdx, 1);
-        this.parent.recalculateSelection().calculatePaths();
+        this.parent.recalculateSelection().recalculatePaths();
         this.parent.node.removeChild(this.node);
     }
 
@@ -255,35 +211,8 @@ export class Topology extends NodeSelection {
         return { clonedTopology, retrievedTopology };
     }
 
-    /**
-     * Elimina el contenido no seleccionado de la topología y todas sus subtopologías.
-     * Se eliminarán los nodos y el contenido de texto que no estén seleccionados.
-     * Se reasignarán los índices de inicio y fin de las topologías.
-     */
-    public purgeUnselectedContent(): Topology {
-        if (!this.node) throw new Error('No se puede purgar una topología sin nodo');
-
-        if (this.node.nodeType === Node.TEXT_NODE) {
-            this.setText(this.getTextInRange().slice(this.start, this.end));
-        } else for (const childNode of this.node.childNodes) {
-            const childNodes = Array.from(this.node.childNodes);
-            const selectedNodes = this.children.map(child => child.node);
-            for (const childNode of childNodes) {
-                if (!selectedNodes.includes(childNode))
-                    this.node.removeChild(childNode);
-            }
-            for (const topology of this.children)
-                topology.purgeUnselectedContent();
-        }
-
-        // TODO: Recalcular la ruta si existe una topología padre ó si tiene un path asignado
-        this.setStart(0).setEnd(this.length);
-
-        return this;
-    }
-
     // Recalcula las rutas de la topología y todas sus subtopologías.
-    public calculatePaths(setParent?: Topology, setPath?: number[]): Topology {
+    public recalculatePaths(setParent?: Topology, setPath?: number[]): Topology {
         if (!this.isPlacedInDom || !this.node)
             throw new Error('No se puede calcular las rutas de una topología que no ha sido insertada en el DOM');
         if (this.parent && !this.parent.node)
@@ -303,7 +232,7 @@ export class Topology extends NodeSelection {
             const childNode = childNodes[i];
             const correspondingTopology = this.children.find(child => child.node === childNode);
             if (correspondingTopology)
-                correspondingTopology.calculatePaths(this, [...this.path, i]);
+                correspondingTopology.recalculatePaths(this, [...this.path, i]);
         }
         return this;
     }
