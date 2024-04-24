@@ -19,15 +19,21 @@ import { detectFormattingNode } from '../../helpers/detectFormattingNode.helper.
  */
 export class NodeSelection {
 
-    public node: Node | null = null;
+    private _node: Node | null = null;
     public start: number = 0;
     public end: number = 0;
     public parentToPreserve: Node | null = null;
 
     constructor(node?: Node) {
         if (!node) return;
-        this.node = node;
+        this._node = node;
         this.end = this.length ? this.length : 0;
+    }
+
+    public get node(): Node {
+        if (!this._node)
+            throw new Error('No se ha especificado un nodo');
+        return this._node;
     }
 
     // Indica si la selección es un rango.
@@ -53,7 +59,7 @@ export class NodeSelection {
     // Longitud del nodo seleccionado. Para un nodo de texto, representa la longitud del texto. Para un
     // nodo de elemento, representa la cantidad de nodos hijos.
     public get length(): number {
-        if (!this.node) return 0;
+        if (!this._node) return 0;
         return this.node.nodeType === Node.TEXT_NODE
             ? this.node.textContent!.length
             : this.node.childNodes.length;
@@ -80,7 +86,6 @@ export class NodeSelection {
      * dentro de elementos inline no es una práctica recomendada.
      */
     public findParentToPreserve(formatting: ContainerProps, editableDiv: HTMLDivElement): void {
-        if (!this.node) return;
         let parent: Node | null = this.node.parentNode;
         while (parent !== editableDiv && parent !== null) {
             const formattingNode = detectFormattingNode(parent);
