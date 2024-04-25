@@ -31,15 +31,16 @@ export class Topology extends NodeSelection {
      */
     public fromSelection(selection: SelectionManager): Topology {
         const ancestorPath = getNodePath(selection.commonAncestor, selection.editableDiv);
-        if (!ancestorPath) throw new Error('No se encontró el ancestro común');
+        if (!ancestorPath)
+            throw new Error('No se encontró el ancestro común');
 
         this.fromNode(selection.commonAncestor).setPath(ancestorPath);
 
         const selectionArgs: SelectionArgs = { selection, startFound: { value: false } };
-        if (this.node!.nodeType === Node.TEXT_NODE) this.scanTextNode(selectionArgs);
+        if (this.node.nodeType === Node.TEXT_NODE) this.scanTextNode(selectionArgs);
         else this.scanElementNode(selectionArgs);
 
-        if (ancestorPath.length > 0 && this.node?.parentNode) {
+        if (ancestorPath.length > 0 && this.node.parentNode) {
             const parentTopology = new Topology()
                 .fromNode(this.node.parentNode)
                 .setPath(ancestorPath.slice(0, -1))
@@ -52,7 +53,7 @@ export class Topology extends NodeSelection {
     }
 
     public setNode(node: Node): Topology {
-        this.node = node;
+        this._node = node;
         return this;
     }
 
@@ -156,7 +157,7 @@ export class Topology extends NodeSelection {
      * Se actualizarán los índices de inicio y fin y las rutas de las topologías afectadas.
      */
     public unmount(): void {
-        if (!this.node || !this.parent?.node || !this.node)
+        if (!this.parent?.node)
             throw new Error('No se encontró el nodo de referencia, su nodo padre o el nodo a desmontar');
         if (this.isPlacedInDom)
             throw new Error('No se puede desmontar una topología que no se encuentra en el DOM');
@@ -176,7 +177,6 @@ export class Topology extends NodeSelection {
      * Si existiera una topología a preservar, se asignará una topología clonada de la misma.
      */
     public deepClone(topologyToPreserve: Topology | null = null, setParent: Topology | null = null): Topology {
-        if (!this.node) throw new Error('No se puede clonar una topología sin nodo');
         const clonedNode = this.node.cloneNode();
         const { nodeType } = clonedNode;
 
@@ -194,7 +194,7 @@ export class Topology extends NodeSelection {
                     setParent = clonedTopology;
                 const clonedChild = childTopology.deepClone(topologyToPreserve, setParent);
                 clonedTopology.children.push(clonedChild);
-                clonedNode.appendChild(clonedChild.node!);
+                clonedNode.appendChild(clonedChild.node);
             }
         }
 
@@ -209,7 +209,7 @@ export class Topology extends NodeSelection {
 
     // Recalcula las rutas de la topología y todas sus subtopologías.
     public recalculatePaths(setParent?: Topology, setPath?: number[]): Topology {
-        if (!this.isPlacedInDom || !this.node)
+        if (!this.isPlacedInDom)
             throw new Error('No se puede calcular las rutas de una topología que no ha sido insertada en el DOM');
         if (this.parent && !this.parent.node)
             throw new Error('No se puede calcular las rutas al no encontrar el nodo en la topología-padre');
@@ -240,7 +240,6 @@ export class Topology extends NodeSelection {
      * No se tocarán las topologías-hijas.
      */
     public recalculateSelection(): Topology {
-        if (!this.node) throw new Error('No se puede recalcular la selección de una topología sin nodo');
         if (this.children.length > 0 && this.node.nodeType === Node.ELEMENT_NODE) {
             const childNodes = Array.from(this.node.childNodes);
             const firstSelectedChild = this.children[0];
