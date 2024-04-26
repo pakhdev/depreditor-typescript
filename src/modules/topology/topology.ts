@@ -260,4 +260,9 @@ export class Topology extends NodeSelection {
     public get isPlacedInDom(): boolean {
         return this.path.length > 0 || (this.parent ? this.parent.isPlacedInDom : false);
     }
+
+    public get firstSelected(): Topology {
+        if (this.children.length === 0) return this;
+        else return this.children[0].firstSelected;
+    }
 }
