@@ -19,7 +19,7 @@ import { detectFormattingNode } from '../../helpers/detectFormattingNode.helper.
  */
 export class NodeSelection {
 
-    private _node: Node | null = null;
+    public _node: Node | null = null;
     public start: number = 0;
     public end: number = 0;
     public parentToPreserve: Node | null = null;

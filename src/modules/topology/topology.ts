@@ -10,6 +10,24 @@ export class Topology extends NodeSelection {
     public parent: Topology | null = null;
     public topologyToPreserve: Topology | null = null;
 
+    /**
+     * Comprueba si la topología ha sido insertada en el DOM.
+     * Se considera que una topología ha sido insertada en el DOM si tiene una ruta asignada o si su topología padre la tiene.
+     */
+    public get isPlacedInDom(): boolean {
+        return this.path.length > 0 || (this.parent ? this.parent.isPlacedInDom : false);
+    }
+
+    public get firstSelected(): Topology {
+        if (this.children.length === 0) return this;
+        else return this.children[0].firstSelected;
+    }
+
+    public get lastSelected(): Topology {
+        if (this.children.length === 0) return this;
+        else return this.children[this.children.length - 1].lastSelected;
+    }
+
     get textContent(): string {
         if (!this.node || this.node.nodeType !== Node.TEXT_NODE)
             return '';
@@ -253,16 +271,4 @@ export class Topology extends NodeSelection {
         return this;
     }
 
-    /**
-     * Comprueba si la topología ha sido insertada en el DOM.
-     * Se considera que una topología ha sido insertada en el DOM si tiene una ruta asignada o si su topología padre la tiene.
-     */
-    public get isPlacedInDom(): boolean {
-        return this.path.length > 0 || (this.parent ? this.parent.isPlacedInDom : false);
-    }
-
-    public get firstSelected(): Topology {
-        if (this.children.length === 0) return this;
-        else return this.children[0].firstSelected;
-    }
 }
