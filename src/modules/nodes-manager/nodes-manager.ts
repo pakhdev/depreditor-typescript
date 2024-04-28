@@ -2,8 +2,8 @@ import { findNodeByPath } from '../../helpers/nodeRouter.helper.ts';
 import { Topology } from '../topology/topology.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
 import { SelectionManager } from '../selection-manager/selection-manager.ts';
-import { NodeCloningResult } from './node-cloning-result.interface.ts';
 import { RangeCloningArgs } from './interfaces/range-cloning-args.interface.ts';
+import { NodeCloningResult } from './interfaces/node-cloning-result.interface.ts';
 
 export class NodesManager {
 
@@ -25,7 +25,31 @@ export class NodesManager {
         if (node) this.selectedNodes = new Topology().fromNode(node);
     }
 
-    public detachSelectedFragment() {}
+    public detachSelectedFragment() {
+        if (!this.selectedNodes) return;
+        const { firstSelected: firstTopology, lastSelected: lastTopology, parentNode, node } = this.selectedNodes;
+        const rangePositions = Object.values(RangePosition);
+        let newSelectedNode: Node | null = null;
+
+        for (const position of rangePositions) {
+            const clonedNode = this.cloneSelectedRange({
+                parentTopology: this.selectedNodes,
+                firstTopology,
+                lastTopology,
+                position,
+            });
+            parentNode.insertBefore(clonedNode, node);
+            if (position === RangePosition.WITHIN)
+                newSelectedNode = clonedNode;
+        }
+        if (!newSelectedNode)
+            throw new Error('No se ha encontrado el nodo clonado para la selección');
+        parentNode.removeChild(node);
+        this.selectedNodes
+            .setNode(newSelectedNode)
+            .recalculateSelection()
+            .recalculatePaths();
+    }
 
     private removeNodesInDirection(container: Node, target: Node, direction: 'before' | 'after', targetFound = false): boolean {
         if (container === target)
