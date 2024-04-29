@@ -36,6 +36,12 @@ export class NodeSelection {
         return this._node;
     }
 
+    public get parentNode(): Node {
+        if (!this.node.parentNode)
+            throw new Error('El nodo no tiene un nodo padre');
+        return this.node.parentNode;
+    }
+
     // Indica si la selección es un rango.
     public get isRange(): boolean {
         return this.start !== this.end;
@@ -86,7 +92,7 @@ export class NodeSelection {
      * dentro de elementos inline no es una práctica recomendada.
      */
     public findParentToPreserve(formatting: ContainerProps, editableDiv: HTMLDivElement): void {
-        let parent: Node | null = this.node.parentNode;
+        let parent: Node | null = this.parentNode;
         while (parent !== editableDiv && parent !== null) {
             const formattingNode = detectFormattingNode(parent);
             if (formattingNode && (formattingNode.name === formatting.name

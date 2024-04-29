@@ -2,8 +2,7 @@ import { findNodeByPath } from '../../helpers/nodeRouter.helper.ts';
 import { Topology } from '../topology/topology.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
 import { SelectionManager } from '../selection-manager/selection-manager.ts';
-import { RangeCloningArgs } from './interfaces/range-cloning-args.interface.ts';
-import { NodeCloningResult } from './interfaces/node-cloning-result.interface.ts';
+import { RangeCloningArgs, NodeCloningResult } from './interfaces';
 
 export class NodesManager {
 
