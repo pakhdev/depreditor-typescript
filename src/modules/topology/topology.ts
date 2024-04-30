@@ -175,8 +175,8 @@ export class Topology extends NodeSelection {
      * Se actualizarán los índices de inicio y fin y las rutas de las topologías afectadas.
      */
     public unmount(): void {
-        if (!this.parent?.node)
-            throw new Error('No se encontró el nodo de referencia, su nodo padre o el nodo a desmontar');
+        if (!this.parent)
+            throw new Error('No se encontró el nodo padre');
         if (this.isPlacedInDom)
             throw new Error('No se puede desmontar una topología que no se encuentra en el DOM');
 
@@ -185,8 +185,8 @@ export class Topology extends NodeSelection {
             throw new Error('No se encontró la topología de referencia en su nodo padre');
 
         this.parent.children.splice(topologyChildIdx, 1);
+        this.parentNode.removeChild(this.node);
         this.parent.recalculateSelection().recalculatePaths();
-        this.parent.node.removeChild(this.node);
     }
 
     /**
