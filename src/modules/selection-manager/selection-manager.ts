@@ -24,35 +24,21 @@ export class SelectionManager {
             this.endNode = new NodeSelection(firstNode).setEnd(0);
             return;
         }
-        const range = selection!.getRangeAt(0);
-        const { startOffset, endOffset } = range;
+        const {
+            collapsed,
+            commonAncestorContainer,
+            endContainer,
+            endOffset,
+            startContainer,
+            startOffset,
+        } = selection!.getRangeAt(0);
 
-        this.startNode = range.startContainer.nodeType === Node.TEXT_NODE
-            ? new NodeSelection(range.startContainer)
-            : range.startContainer.childNodes.length
-                ? new NodeSelection(range.startContainer.childNodes[range.startOffset])
-                : new NodeSelection(range.startContainer);
-        this.endNode = range.endContainer.nodeType === Node.TEXT_NODE
-            ? new NodeSelection(range.endContainer)
-            : range.endContainer.childNodes.length
-                ? new NodeSelection(range.endContainer.childNodes[range.endOffset])
-                : new NodeSelection(range.endContainer);
-
-        this.commonAncestor = range.commonAncestorContainer;
-        this.isRange = !range.collapsed;
-
-        if (!this.startNode.node || !this.endNode.node)
-            throw new Error('No se encontró el nodo de inicio o fin de selección');
-
-        if (this.startNode.node.nodeType === Node.TEXT_NODE) {
-            this.startNode.setStart(startOffset);
-            if (this.sameNode) this.startNode.setEnd(endOffset);
-        }
-
-        if (this.endNode.node.nodeType === Node.TEXT_NODE) {
-            if (this.sameNode) this.endNode.setStart(startOffset);
-            this.endNode.setEnd(endOffset);
-        }
+        this.commonAncestor = commonAncestorContainer;
+        this.isRange = !collapsed;
+        this.startNode = this.createNodeSelection(startContainer, startOffset)
+            .determineTextSelection({ start: startOffset, end: this.sameNode ? endOffset : undefined });
+        this.endNode = this.createNodeSelection(endContainer, endOffset)
+            .determineTextSelection({ start: this.sameNode ? startOffset : undefined, end: endOffset });
     }
 
     get sameNode(): boolean {
@@ -66,6 +52,15 @@ export class SelectionManager {
         if (this.startNode.parentToPreserve || this.endNode.parentToPreserve)
             this.findCommonAncestor();
         return this;
+    }
+
+    private createNodeSelection(container: Node, offset: number): NodeSelection {
+        if (container.nodeType === Node.TEXT_NODE)
+            return new NodeSelection(container);
+        else if (container.childNodes.length)
+            return new NodeSelection(container.childNodes[offset]);
+        else
+            return new NodeSelection(container);
     }
 
     private findCommonAncestor(): void {

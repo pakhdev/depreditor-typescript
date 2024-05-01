@@ -23,6 +23,9 @@ export class NodeSelection {
     public start: number = 0;
     public end: number = 0;
     public parentToPreserve: Node | null = null;
+    public textBeforeSelection: string = '';
+    public textWithinSelection: string = '';
+    public textAfterSelection: string = '';
 
     constructor(node?: Node) {
         if (!node) return;
@@ -80,6 +83,24 @@ export class NodeSelection {
     // Asigna el índice del carácter o nodo hasta el cual se ha seleccionado.
     public setEnd(end: number): NodeSelection {
         this.end = end;
+        return this;
+    }
+
+    // Determina los fragmentos de texto antes, dentro y después de la selección.
+    public determineTextSelection({ start: selectionStart, end: selectionEnd }: {
+        start?: number;
+        end?: number
+    }): NodeSelection {
+        if (this.node.nodeType !== Node.TEXT_NODE || !this.node.textContent)
+            return this;
+
+        const textLength = this.node.textContent.length;
+        const start = selectionStart ?? 0;
+        const end = selectionEnd ?? textLength;
+
+        this.textBeforeSelection = this.node.textContent.slice(0, start);
+        this.textWithinSelection = this.node.textContent.slice(start, end);
+        this.textAfterSelection = this.node.textContent.slice(end, textLength);
         return this;
     }
 
