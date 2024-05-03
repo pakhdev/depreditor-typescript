@@ -4,10 +4,18 @@ import { Topology } from '../topology.ts';
 
 export class TopologyBuilder {
 
+    /**
+     * Crea una topología. Solo se asigna el nodo y el final de la selección.
+     * El resto de propiedades se tiene que asignar fuera de este método.
+     */
     static fromNode(node: Node): Topology {
         return new Topology(node);
     }
 
+    /**
+     * Crea una topología a partir de una selección.
+     * Adicionalmente, se crea y se asigna una topología del nodo padre del nodo común.
+     */
     static fromSelection(selection: SelectionManager): Topology {
         const topology = new Topology(selection.commonAncestor);
         const selectionArgs: SelectionArgs = { selection, startFound: { value: false } };
@@ -21,6 +29,36 @@ export class TopologyBuilder {
             topology.setParent(parentTopology);
         }
         return topology;
+    }
+
+    /**
+     * Clona las propiedades de la topología y todas sus subtopologías.
+     * Se clonan los nodos y se sobreescribe la propiedad 'node'
+     * Si existiera una topología a preservar, se asignará una topología clonada de la misma.
+     */
+    static cloneFromTopology(topology: Topology, topologyToPreserve: Topology | null = null, setParent: Topology | null = null): Topology {
+        const clonedNode = topology.node.cloneNode();
+        const { nodeType } = clonedNode;
+
+        const clonedTopology = this.fromNode(clonedNode);
+
+        if (nodeType === Node.TEXT_NODE && !topology.fullySelected)
+            clonedTopology.setTopologyToPreserve(topologyToPreserve);
+
+        if (nodeType === Node.ELEMENT_NODE) {
+            for (const childTopology of topology.children) {
+                const clonedChild = this.cloneFromTopology(
+                    childTopology,
+                    topologyToPreserve || topology,
+                    setParent || clonedTopology,
+                );
+                clonedTopology.children.push(clonedChild);
+                clonedNode.appendChild(clonedChild.node);
+            }
+        }
+
+        clonedTopology.setParent(topology.parent);
+        return clonedTopology;
     }
 
     static scanTextNode(topology: Topology, selectionArgs?: SelectionArgs): void {
@@ -55,8 +93,8 @@ export class TopologyBuilder {
                 continue;
             const childTopology = new Topology(childNode).setParent(topology);
             childTopology.node.nodeType === Node.TEXT_NODE
-                ? topology.scanTextNode(selectionArgs)
-                : topology.scanElementNode(selectionArgs);
+                ? this.scanTextNode(topology, selectionArgs)
+                : this.scanElementNode(topology, selectionArgs);
             if (childNode === startNode && childNode.nodeType !== Node.TEXT_NODE)
                 startFound.value = true;
             if (selectionArgs?.selection.isRange || childTopology.node !== startNode || childNode.nodeType === Node.TEXT_NODE)

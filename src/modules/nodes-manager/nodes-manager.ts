@@ -3,6 +3,7 @@ import { Topology } from '../topology/topology.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
 import { SelectionManager } from '../selection-manager/selection-manager.ts';
 import { RangeCloningArgs, NodeCloningResult } from './interfaces';
+import { TopologyBuilder } from '../topology/helpers/TopologyBuilder.ts';
 
 export class NodesManager {
 
@@ -15,13 +16,8 @@ export class NodesManager {
     public pickFromSelection(formatting?: ContainerProps): NodesManager {
         const selection = new SelectionManager(this.editableDiv);
         if (formatting) selection.adjustForFormatting(formatting);
-        this.selectedNodes = new Topology().fromSelection(selection);
+        this.selectedNodes = TopologyBuilder.fromSelection(selection);
         return this;
-    }
-
-    public pickFromPath(path: number[]): void {
-        const node = findNodeByPath(path, this.editableDiv);
-        if (node) this.selectedNodes = new Topology().fromNode(node);
     }
 
     public detachSelectedFragment() {
