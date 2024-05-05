@@ -35,13 +35,15 @@ export class SelectionManager {
 
         this.commonAncestor = commonAncestorContainer;
         this.isRange = !collapsed;
-        this.startNode = this.createNodeSelection(startContainer, startOffset)
-            .determineTextSelection({ start: startOffset, end: this.sameNode ? endOffset : undefined });
-        this.endNode = this.createNodeSelection(endContainer, endOffset)
-            .determineTextSelection({ start: this.sameNode ? startOffset : undefined, end: endOffset });
+        this.startNode = new NodeSelection(startContainer, startOffset)
+            .setStart(startOffset)
+            .setEnd(this.sameNode ? endOffset : undefined);
+        this.endNode = new NodeSelection(endContainer, endOffset)
+            .setStart(this.sameNode ? startOffset : 0)
+            .setEnd(endOffset);
     }
 
-    get sameNode(): boolean {
+    public get sameNode(): boolean {
         return this.startNode.node === this.endNode.node;
     }
 
@@ -52,15 +54,6 @@ export class SelectionManager {
         if (this.startNode.parentToPreserve || this.endNode.parentToPreserve)
             this.findCommonAncestor();
         return this;
-    }
-
-    private createNodeSelection(container: Node, offset: number): NodeSelection {
-        if (container.nodeType === Node.TEXT_NODE)
-            return new NodeSelection(container);
-        else if (container.childNodes.length)
-            return new NodeSelection(container.childNodes[offset]);
-        else
-            return new NodeSelection(container);
     }
 
     private findCommonAncestor(): void {

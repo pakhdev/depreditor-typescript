@@ -81,6 +81,24 @@ export class Topology {
         return this.node.textContent || '';
     }
 
+    // Determina los fragmentos de texto antes, dentro y después de la selección.
+    public determineTextSelection({ start: selectionStart, end: selectionEnd }: {
+        start?: number;
+        end?: number
+    }): Topology {
+        if (this.node.nodeType !== Node.TEXT_NODE || !this.node.textContent)
+            return this;
+
+        const textLength = this.node.textContent.length;
+        const start = selectionStart ?? 0;
+        const end = selectionEnd ?? textLength;
+
+        this.textBeforeSelection = this.node.textContent.slice(0, start);
+        this.textWithinSelection = this.node.textContent.slice(start, end);
+        this.textAfterSelection = this.node.textContent.slice(end, textLength);
+        return this;
+    }
+
     public setNode(node: Node): Topology {
         this._node = node;
         return this;

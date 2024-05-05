@@ -42,8 +42,11 @@ export class TopologyBuilder {
 
         const clonedTopology = this.fromNode(clonedNode);
 
-        if (nodeType === Node.TEXT_NODE && !topology.fullySelected)
-            clonedTopology.setTopologyToPreserve(topologyToPreserve);
+        if (nodeType === Node.TEXT_NODE && !topology.fullySelected) {
+            clonedTopology
+                .determineTextSelection({ start: topology.start, end: topology.end })
+                .setTopologyToPreserve(topologyToPreserve);
+        }
 
         if (nodeType === Node.ELEMENT_NODE) {
             for (const childTopology of topology.children) {
@@ -61,23 +64,21 @@ export class TopologyBuilder {
         return clonedTopology;
     }
 
-    static scanTextNode(topology: Topology, selectionArgs?: SelectionArgs): void {
+    private static scanTextNode(topology: Topology, selectionArgs?: SelectionArgs): void {
         if (!selectionArgs) return;
         const { selection } = selectionArgs;
         if (selection.startNode.node === topology.node || selection.endNode.node === topology.node) {
             const selectedNode = selection.startNode.node === topology.node
                 ? selection.startNode
                 : selection.endNode;
-
-            // TODO: Asignar parte del texto seleccionado
-
+            topology.determineTextSelection({ start: selectedNode.start, end: selectedNode.end });
             if (selectedNode.parentToPreserve)
                 topology.setTopologyToPreserve(selectedNode.parentToPreserve);
             selectionArgs.startFound.value = true;
         }
     }
 
-    static scanElementNode(topology: Topology, selectionArgs?: SelectionArgs): void {
+    private static scanElementNode(topology: Topology, selectionArgs?: SelectionArgs): void {
         let startNode: Node | null = null;
         let endNode: Node | null = null;
         let startFound = { value: true };
