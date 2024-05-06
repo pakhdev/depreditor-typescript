@@ -2,6 +2,7 @@ import { getNodePosition } from '../../helpers/nodeRouter.helper.ts';
 
 export class Topology {
 
+    public ownerEditor: HTMLDivElement | null = null;
     public parent: Topology | null = null;
     public children: Topology[] = [];
     public topologyToPreserve: Topology | null = null;
@@ -11,7 +12,9 @@ export class Topology {
 
     public path: number[] = [];
 
-    constructor(public node: Node) {}
+    constructor(public node: Node) {
+        this.determineOwnerEditor();
+    }
 
     public get start(): number {
         if (this.node.nodeType === Node.TEXT_NODE)
@@ -99,8 +102,32 @@ export class Topology {
         return this;
     }
 
+    // Determina el editor propietario de la topología.
+    public determineOwnerEditor(node?: HTMLDivElement): Topology {
+        let currentNode: Node | null = node || this.node;
+
+        while (currentNode) {
+            if (currentNode.nodeType === Node.ELEMENT_NODE && (currentNode as HTMLElement).id === 'editor-content') {
+                this.setOwnerEditor(currentNode as HTMLDivElement);
+                return this;
+            }
+            currentNode = currentNode.parentNode;
+        }
+
+        this.setOwnerEditor(null);
+        return this;
+    }
+
     public setNode(node: Node): Topology {
-        this._node = node;
+        this.node = node;
+        this.determineOwnerEditor();
+        return this;
+    }
+
+    public setOwnerEditor(ownerEditor: HTMLDivElement | null): Topology {
+        this.ownerEditor = ownerEditor;
+        if (this.children.length > 0)
+            this.children.forEach(child => child.setOwnerEditor(ownerEditor));
         return this;
     }
 
