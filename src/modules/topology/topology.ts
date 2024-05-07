@@ -10,8 +10,6 @@ export class Topology {
     public textWithinSelection: string = '';
     public textAfterSelection: string = '';
 
-    public path: number[] = [];
-
     constructor(public node: Node) {
         this.determineOwnerEditor();
     }
@@ -60,12 +58,29 @@ export class Topology {
         return this.node.parentNode;
     }
 
+    public get path(): number[] | null {
+        if (!this.ownerEditor)
+            return null;
+
+        const path: number[] = [];
+        let currentNode: Node | null = this.node;
+
+        while (currentNode !== this.ownerEditor && currentNode?.parentNode) {
+            const index = Array.from(currentNode.parentNode.childNodes).indexOf(currentNode);
+            if (index !== -1)
+                path.unshift(index);
+            currentNode = currentNode.parentNode;
+        }
+
+        return currentNode === this.ownerEditor ? path : null;
+    }
+
     /**
      * Comprueba si la topología ha sido insertada en el DOM.
      * Se considera que una topología ha sido insertada en el DOM si tiene una ruta asignada o si su topología padre la tiene.
      */
     public get isPlacedInDom(): boolean {
-        return this.path.length > 0 || (this.parent ? this.parent.isPlacedInDom : false);
+        return this.path !== null;
     }
 
     public get firstSelected(): Topology {
@@ -131,11 +146,6 @@ export class Topology {
         return this;
     }
 
-    public setPath(path: number[]): Topology {
-        this.path = path;
-        return this;
-    }
-
     public setParent(parent: Topology | null): Topology {
         this.parent = parent;
         return this;
@@ -189,33 +199,7 @@ export class Topology {
 
         this.parent.children.splice(topologyChildIdx, 1);
         this.parentNode.removeChild(this.node);
-        this.parent.recalculateSelection().recalculatePaths();
-    }
-
-    // Recalcula las rutas de la topología y todas sus subtopologías.
-    public recalculatePaths(setParent?: Topology, setPath?: number[]): Topology {
-        if (!this.isPlacedInDom)
-            throw new Error('No se puede calcular las rutas de una topología que no ha sido insertada en el DOM');
-        if (this.parent && !this.parent.node)
-            throw new Error('No se puede calcular las rutas al no encontrar el nodo en la topología-padre');
-
-        if (setParent && setPath)
-            this.setParent(setParent).setPath(setPath);
-        else if (this.parent)
-            this.setPath([...this.parent.path, this.parent.children.indexOf(this)]);
-        else
-            this.setPath([]);
-
-        if (this.node.nodeType !== Node.ELEMENT_NODE) return this;
-
-        const childNodes = Array.from(this.node.childNodes);
-        for (let i = 0; i < childNodes.length; i++) {
-            const childNode = childNodes[i];
-            const correspondingTopology = this.children.find(child => child.node === childNode);
-            if (correspondingTopology)
-                correspondingTopology.recalculatePaths(this, [...this.path, i]);
-        }
-        return this;
+        this.parent.recalculateSelection();
     }
 
     /**

@@ -42,8 +42,7 @@ export class NodesManager {
         parentNode.removeChild(node);
         this.selectedNodes
             .setNode(newSelectedNode)
-            .recalculateSelection()
-            .recalculatePaths();
+            .recalculateSelection();
     }
 
     private removeNodesInDirection(container: Node, target: Node, direction: 'before' | 'after', targetFound = false): boolean {
