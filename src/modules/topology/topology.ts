@@ -1,5 +1,3 @@
-import { getNodePosition } from '../../helpers/nodeRouter.helper.ts';
-
 export class Topology {
 
     public ownerEditor: HTMLDivElement | null = null;
@@ -18,7 +16,7 @@ export class Topology {
         if (this.node.nodeType === Node.TEXT_NODE)
             return this.textBeforeSelection.length;
         else if (this.children.length > 0)
-            return getNodePosition(this.children[0].node, this.node);
+            return this.children[0].position;
         return 0;
     }
 
@@ -26,7 +24,7 @@ export class Topology {
         if (this.node.nodeType === Node.TEXT_NODE)
             return this.textBeforeSelection.length + this.textWithinSelection.length;
         else if (this.children.length > 0)
-            return getNodePosition(this.children[0].node, this.node) + 1;
+            return this.children[this.children.length - 1].position + 1;
         return 0;
     }
 
@@ -34,6 +32,14 @@ export class Topology {
         return this.node.nodeType === Node.TEXT_NODE
             ? this.node.textContent!.length
             : this.node.childNodes.length;
+    }
+
+    public get position(): number {
+        if (!this.node.parentNode)
+            return 0;
+        return Array
+            .from(this.node.parentNode.childNodes)
+            .findIndex(child => child === this.node);
     }
 
     public get isRange(): boolean {
@@ -75,10 +81,6 @@ export class Topology {
         return currentNode === this.ownerEditor ? path : null;
     }
 
-    /**
-     * Comprueba si la topología ha sido insertada en el DOM.
-     * Se considera que una topología ha sido insertada en el DOM si tiene una ruta asignada o si su topología padre la tiene.
-     */
     public get isPlacedInDom(): boolean {
         return this.path !== null;
     }

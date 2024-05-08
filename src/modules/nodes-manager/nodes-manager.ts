@@ -1,4 +1,3 @@
-import { findNodeByPath } from '../../helpers/nodeRouter.helper.ts';
 import { Topology } from '../topology/topology.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
 import { SelectionManager } from '../selection-manager/selection-manager.ts';
