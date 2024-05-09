@@ -95,13 +95,6 @@ export class Topology {
         else return this.children[this.children.length - 1].lastSelected;
     }
 
-    public get textContent(): string {
-        if (!this.node || this.node.nodeType !== Node.TEXT_NODE)
-            return '';
-        return this.node.textContent || '';
-    }
-
-    // Determina los fragmentos de texto antes, dentro y después de la selección.
     public determineTextSelection({ start: selectionStart, end: selectionEnd }: {
         start?: number;
         end?: number
@@ -119,7 +112,6 @@ export class Topology {
         return this;
     }
 
-    // Determina el editor propietario de la topología.
     public determineOwnerEditor(node?: HTMLDivElement): Topology {
         let currentNode: Node | null = node || this.node;
 
@@ -165,7 +157,7 @@ export class Topology {
         return this;
     }
 
-    public findByNode(nodeToFind: Node, topology?: Topology): Topology | null {
+    private findByNode(nodeToFind: Node, topology?: Topology): Topology | null {
         const isMain = !topology;
         topology = topology || this;
         if (isMain) while (topology.parent) topology = topology.parent;
@@ -201,27 +193,6 @@ export class Topology {
 
         this.parent.children.splice(topologyChildIdx, 1);
         this.parentNode.removeChild(this.node);
-        this.parent.recalculateSelection();
-    }
-
-    /**
-     * Recalcula el rango de nodos-hijos seleccionados de la topología.
-     * Solo afecta a las topologías que tengan nodos-hijos seleccionados.
-     * Se reasignarán los índices de inicio y fin de las topologías.
-     * No se tocarán las topologías-hijas.
-     */
-    public recalculateSelection(): Topology {
-        if (this.children.length > 0 && this.node.nodeType === Node.ELEMENT_NODE) {
-            const childNodes = Array.from(this.node.childNodes);
-            const firstSelectedChild = this.children[0];
-            if (!firstSelectedChild.node)
-                throw new Error('No se encontró el nodo en la topología');
-            const startIndex = childNodes.indexOf(firstSelectedChild.node);
-            if (startIndex === -1)
-                throw new Error('No se encontró el nodo seleccionado en la topología');
-            this.setStart(startIndex).setEnd(startIndex + this.children.length);
-        }
-        return this;
     }
 
 }

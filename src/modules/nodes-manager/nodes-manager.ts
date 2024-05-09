@@ -1,7 +1,7 @@
-import { Topology } from '../topology/topology.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
-import { SelectionManager } from '../selection-manager/selection-manager.ts';
 import { RangeCloningArgs, NodeCloningResult } from './interfaces';
+import { SelectionManager } from '../selection-manager/selection-manager.ts';
+import { Topology } from '../topology/topology.ts';
 import { TopologyBuilder } from '../topology/helpers/TopologyBuilder.ts';
 
 export class NodesManager {
@@ -25,23 +25,21 @@ export class NodesManager {
         const rangePositions = Object.values(RangePosition);
         let newSelectedNode: Node | null = null;
 
-        for (const position of rangePositions) {
+        for (const rangePosition of rangePositions) {
             const clonedNode = this.cloneSelectedRange({
                 parentTopology: this.selectedNodes,
                 firstTopology,
                 lastTopology,
-                position,
+                rangePosition,
             });
             parentNode.insertBefore(clonedNode, node);
-            if (position === RangePosition.WITHIN)
+            if (rangePosition === RangePosition.WITHIN)
                 newSelectedNode = clonedNode;
         }
         if (!newSelectedNode)
             throw new Error('No se ha encontrado el nodo clonado para la selección');
         parentNode.removeChild(node);
-        this.selectedNodes
-            .setNode(newSelectedNode)
-            .recalculateSelection();
+        this.selectedNodes.setNode(newSelectedNode);
     }
 
     private removeNodesInDirection(container: Node, target: Node, direction: 'before' | 'after', targetFound = false): boolean {
@@ -86,7 +84,7 @@ export class NodesManager {
             firstTopology: { node: firstNode },
             lastTopology,
             lastTopology: { node: lastNode },
-            position,
+            rangePosition,
         } = args;
 
         if (!parentNode || !firstNode || !lastNode)
@@ -99,7 +97,7 @@ export class NodesManager {
         if (!firstClonedNode || !lastClonedNode)
             throw new Error('Error al clonar el rango seleccionado. Al menos uno de los nodos no fue clonado');
 
-        switch (position) {
+        switch (rangePosition) {
             case 'before':
                 this.adjustTextContent(firstClonedNode, 0, firstTopology.start);
                 this.removeNodesInDirection(cloningResult.clonedNode, firstClonedNode, 'after');

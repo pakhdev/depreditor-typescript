@@ -4,5 +4,5 @@ export interface RangeCloningArgs {
     parentTopology: Topology;
     firstTopology: Topology;
     lastTopology: Topology;
-    position: RangePosition;
+    rangePosition: RangePosition;
 }
