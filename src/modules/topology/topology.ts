@@ -127,12 +127,6 @@ export class Topology {
         return this;
     }
 
-    public setNode(node: Node): Topology {
-        this.node = node;
-        this.determineOwnerEditor();
-        return this;
-    }
-
     public setOwnerEditor(ownerEditor: HTMLDivElement | null): Topology {
         this.ownerEditor = ownerEditor;
         if (this.children.length > 0)

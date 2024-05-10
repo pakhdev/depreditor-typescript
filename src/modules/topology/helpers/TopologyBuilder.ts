@@ -8,8 +8,11 @@ export class TopologyBuilder {
      * Crea una topología. Solo se asigna el nodo y el final de la selección.
      * El resto de propiedades se tiene que asignar fuera de este método.
      */
-    static fromNode(node: Node): Topology {
-        return new Topology(node);
+    static fromNode(node: Node, scanChildNodes = false): Topology {
+        const topology = new Topology(node);
+        if (scanChildNodes)
+            this.scanChildNodes(topology);
+        return topology;
     }
 
     /**
@@ -19,15 +22,7 @@ export class TopologyBuilder {
     static fromSelection(selection: SelectionManager): Topology {
         const topology = new Topology(selection.commonAncestor);
         const selectionArgs: SelectionArgs = { selection, startFound: { value: false } };
-        if (topology.node.nodeType === Node.TEXT_NODE)
-            this.scanTextNode(topology, selectionArgs);
-        else
-            this.scanElementNode(topology, selectionArgs);
-
-        if (topology.length > 0 && topology.parentNode) {
-            const parentTopology = new Topology(topology.parentNode).setChildren([topology]);
-            topology.setParent(parentTopology);
-        }
+        this.scanChildNodes(topology, selectionArgs);
         return topology;
     }
 
@@ -64,6 +59,18 @@ export class TopologyBuilder {
         return clonedTopology;
     }
 
+    private static scanChildNodes(topology: Topology, selectionArgs?: SelectionArgs): void {
+        if (topology.node.nodeType === Node.TEXT_NODE)
+            this.scanTextNode(topology, selectionArgs);
+        else
+            this.scanElementNode(topology, selectionArgs);
+
+        if (topology.length > 0 && topology.parentNode) {
+            const parentTopology = new Topology(topology.parentNode).setChildren([topology]);
+            topology.setParent(parentTopology);
+        }
+    }
+
     private static scanTextNode(topology: Topology, selectionArgs?: SelectionArgs): void {
         if (!selectionArgs) return;
         const { selection } = selectionArgs;
@@ -84,9 +91,9 @@ export class TopologyBuilder {
         let startFound = { value: true };
         if (selectionArgs) {
             const { selection } = selectionArgs;
-            startFound = selectionArgs.startFound;
             startNode = selection.startNode.node;
             endNode = selection.endNode.node;
+            startFound = selectionArgs.startFound;
         }
         const children = Array.from(topology.node.childNodes);
         for (const childNode of children) {

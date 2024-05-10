@@ -39,7 +39,7 @@ export class NodesManager {
         if (!newSelectedNode)
             throw new Error('No se ha encontrado el nodo clonado para la selección');
         parentNode.removeChild(node);
-        this.selectedNodes.setNode(newSelectedNode);
+        this.selectedNodes = TopologyBuilder.fromNode(newSelectedNode, true);
     }
 
     private removeNodesInDirection(container: Node, target: Node, direction: 'before' | 'after', targetFound = false): boolean {
