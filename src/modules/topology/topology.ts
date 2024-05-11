@@ -164,29 +164,4 @@ export class Topology {
         return null;
     }
 
-    /**
-     * Inserta la topología del buffer en la posición indicada en las propiedades de la topología.
-     */
-    public mount(): Topology {
-        return this;
-    }
-
-    /**
-     * Desmonta el nodo del DOM y elimina la topología de su nodo padre.
-     * Se actualizarán los índices de inicio y fin y las rutas de las topologías afectadas.
-     */
-    public unmount(): void {
-        if (!this.parent)
-            throw new Error('No se encontró el nodo padre');
-        if (this.isPlacedInDom)
-            throw new Error('No se puede desmontar una topología que no se encuentra en el DOM');
-
-        const topologyChildIdx = this.parent.children.indexOf(this);
-        if (topologyChildIdx === -1)
-            throw new Error('No se encontró la topología de referencia en su nodo padre');
-
-        this.parent.children.splice(topologyChildIdx, 1);
-        this.parentNode.removeChild(this.node);
-    }
-
 }
