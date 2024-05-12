@@ -55,8 +55,9 @@ export class TopologyBuilder {
             }
         }
 
-        clonedTopology.setParent(topology.parent);
-        return clonedTopology;
+        return clonedTopology
+            .setParent(setParent)
+            .setOwnerEditor(topology.ownerEditor);
     }
 
     private static scanChildNodes(topology: Topology, selectionArgs?: SelectionArgs): void {
