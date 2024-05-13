@@ -13,7 +13,7 @@ export class NodesManager {
     }
 
     public pickFromSelection(formatting?: ContainerProps): NodesManager {
-        const selection = new SelectionManager(this.editableDiv);
+        const selection = new SelectionManager(this.editableDiv).getSelection();
         if (formatting) selection.adjustForFormatting(formatting);
         this.selectedNodes = TopologyBuilder.fromSelection(selection);
         return this;

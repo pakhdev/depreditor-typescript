@@ -1,5 +1,6 @@
 import { ContainerProps } from '../../types/container-props.type.ts';
-import { NodeSelection } from './node-selection.ts';
+import { SelectionReader } from './helpers/selection-reader.ts';
+import { NodeSelection } from './helpers/node-selection.ts';
 
 /**
  * Clase para gestionar la selección de nodos en el editor.
@@ -11,40 +12,20 @@ import { NodeSelection } from './node-selection.ts';
 export class SelectionManager {
 
     public isRange: boolean = false;
-    public commonAncestor: Node;
-    public startNode: NodeSelection;
-    public endNode: NodeSelection;
+    public commonAncestor: Node | null = null;
+    public startNode: NodeSelection | null = null;
+    public endNode: NodeSelection | null = null;
 
-    constructor(public readonly editableDiv: HTMLDivElement) {
-        const selection = window.getSelection();
-        if (!selection?.focusNode || !this.editableDiv.contains(selection.anchorNode) || !selection.rangeCount) {
-            const firstNode = this.findFirstTextNode(this.editableDiv) || this.editableDiv;
-            this.commonAncestor = firstNode;
-            this.startNode = new NodeSelection(firstNode).setEnd(0);
-            this.endNode = new NodeSelection(firstNode).setEnd(0);
-            return;
-        }
-        const {
-            collapsed,
-            commonAncestorContainer,
-            endContainer,
-            endOffset,
-            startContainer,
-            startOffset,
-        } = selection!.getRangeAt(0);
+    constructor(public readonly editableDiv: HTMLDivElement) {}
 
-        this.commonAncestor = commonAncestorContainer;
-        this.isRange = !collapsed;
-        this.startNode = new NodeSelection(startContainer, startOffset)
-            .setStart(startOffset)
-            .setEnd(this.sameNode ? endOffset : undefined);
-        this.endNode = new NodeSelection(endContainer, endOffset)
-            .setStart(this.sameNode ? startOffset : 0)
-            .setEnd(endOffset);
-    }
-
-    public get sameNode(): boolean {
-        return this.startNode.node === this.endNode.node;
+    public getSelection(): SelectionManager {
+        const selector = new SelectionReader(this.editableDiv);
+        const selection = selector.getSelectionDetails();
+        this.isRange = selection.isRange;
+        this.commonAncestor = selection.commonAncestor;
+        this.startNode = selection.startNode;
+        this.endNode = selection.endNode;
+        return this;
     }
 
     public adjustForFormatting(formatting: ContainerProps): SelectionManager {
@@ -79,16 +60,6 @@ export class SelectionManager {
                 break;
             }
         }
-    }
-
-    private findFirstTextNode(node: Node): Node | null {
-        if (node.nodeType === Node.TEXT_NODE) return node;
-        const children = Array.from(node.childNodes);
-        for (let child of children) {
-            const found = this.findFirstTextNode(child);
-            if (found) return found;
-        }
-        return null;
     }
 
 }
