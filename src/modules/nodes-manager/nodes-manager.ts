@@ -14,14 +14,20 @@ export class NodesManager {
 
     public pickFromSelection(formatting?: ContainerProps): NodesManager {
         const selection = new SelectionManager(this.editableDiv).getSelection();
-        if (formatting) selection.adjustForFormatting(formatting);
+        if (formatting)
+            selection.adjustForFormatting(formatting);
         this.selectedNodes = TopologyBuilder.fromSelection(selection);
         return this;
     }
 
     public detachSelectedFragment() {
         if (!this.selectedNodes) return;
-        const { firstSelected: firstTopology, lastSelected: lastTopology, parentNode, node } = this.selectedNodes;
+        const {
+            firstSelected: firstTopology,
+            lastSelected: lastTopology,
+            parentNode,
+            node,
+        } = this.selectedNodes;
         const rangePositions = Object.values(RangePosition);
         let newSelectedNode: Node | null = null;
 
