@@ -6,21 +6,18 @@ import { SelectionManager } from '../selection-manager.ts';
 export class SelectionExtender {
 
     private readonly editableDiv: HTMLDivElement;
-    private readonly startNodeSelection: NodeSelection;
-    private readonly endNodeSelection: NodeSelection;
+    private readonly startSelectionNode: NodeSelection;
+    private readonly endSelectionNode: NodeSelection;
     private readonly commonAncestor: Node;
 
     constructor(
         private readonly formatting: ContainerProps,
         private readonly selectionManager: SelectionManager,
     ) {
-        if (!selectionManager.startNode || !selectionManager.endNode || !selectionManager.commonAncestor)
-            throw new Error('No se encontraron nodos de inicio o fin.');
-
         this.editableDiv = selectionManager.editableDiv;
-        this.startNodeSelection = selectionManager.startNode;
-        this.endNodeSelection = selectionManager.endNode;
-        this.commonAncestor = selectionManager.commonAncestor;
+        this.startSelectionNode = selectionManager.startSelectionNode;
+        this.endSelectionNode = selectionManager.endSelectionNode;
+        this.commonAncestor = selectionManager.commonAncestorNode;
     }
 
     /**
@@ -28,8 +25,8 @@ export class SelectionExtender {
      * Devuelve los nodos padre a preservar y el ancestro común de los nodos seleccionados.
      */
     public extendSelection(): { startParent: Node | null, endParent: Node | null, commonAncestor: Node } {
-        const startParent = this.findParentToPreserve(this.startNodeSelection);
-        const endParent = this.findParentToPreserve(this.endNodeSelection);
+        const startParent = this.findParentToPreserve(this.startSelectionNode);
+        const endParent = this.findParentToPreserve(this.endSelectionNode);
         let commonAncestor: Node = this.commonAncestor;
 
         if (startParent || endParent) {
@@ -47,8 +44,8 @@ export class SelectionExtender {
      * Busca el ancestro común de los nodos indicados.
      */
     private findCommonAncestor(
-        startNode: Node | null = this.startNodeSelection.node,
-        endNode: Node | null = this.endNodeSelection.node,
+        startNode: Node | null = this.startSelectionNode.node,
+        endNode: Node | null = this.endSelectionNode.node,
     ): Node {
         let startParent: Node | null = startNode;
         let endParent: Node | null = endNode;

@@ -46,5 +46,3 @@ export class SelectionReader {
         return !!(selection?.focusNode && this.editableDiv.contains(selection.anchorNode) && selection.rangeCount);
     }
 }
-
-

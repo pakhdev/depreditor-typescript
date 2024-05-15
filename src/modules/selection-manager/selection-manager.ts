@@ -19,6 +19,24 @@ export class SelectionManager {
 
     constructor(public readonly editableDiv: HTMLDivElement) {}
 
+    public get startSelectionNode(): NodeSelection {
+        if (!this.startNode)
+            throw new Error('No se ha encontrado el nodo de inicio de la selección');
+        return this.startNode;
+    }
+
+    public get endSelectionNode(): NodeSelection {
+        if (!this.endNode)
+            throw new Error('No se ha encontrado el nodo de fin de la selección');
+        return this.endNode;
+    }
+
+    public get commonAncestorNode(): Node {
+        if (!this.commonAncestor)
+            throw new Error('No se ha encontrado el ancestro común de los nodos seleccionados');
+        return this.commonAncestor;
+    }
+
     // Obtiene los detalles de la selección actual y los asigna a las propiedades de la clase.
     public getSelection(): SelectionManager {
         ({
@@ -32,11 +50,9 @@ export class SelectionManager {
 
     // Ajusta la selección y el nodo padre general para el tipo de contenedor que se le pase como parámetro.
     public adjustForFormatting(formatting: ContainerProps): SelectionManager {
-        if (!this.startNode || !this.endNode)
-            throw new Error('No se ha encontrado el nodo de inicio o fin de la selección');
         ({
-            startParent: this.startNode.parentToPreserve,
-            endParent: this.endNode.parentToPreserve,
+            startParent: this.startSelectionNode.parentToPreserve,
+            endParent: this.endSelectionNode.parentToPreserve,
             commonAncestor: this.commonAncestor,
         } = new SelectionExtender(formatting, this).extendSelection());
         return this;

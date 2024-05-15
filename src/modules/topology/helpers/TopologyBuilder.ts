@@ -20,7 +20,7 @@ export class TopologyBuilder {
      * Adicionalmente, se crea y se asigna una topología del nodo padre del nodo común.
      */
     static fromSelection(selection: SelectionManager): Topology {
-        const topology = new Topology(selection.commonAncestor);
+        const topology = new Topology(selection.commonAncestorNode);
         const selectionArgs: SelectionArgs = { selection, startFound: { value: false } };
         this.scanChildNodes(topology, selectionArgs);
         return topology;
@@ -75,10 +75,12 @@ export class TopologyBuilder {
     private static scanTextNode(topology: Topology, selectionArgs?: SelectionArgs): void {
         if (!selectionArgs) return;
         const { selection } = selectionArgs;
-        if (selection.startNode.node === topology.node || selection.endNode.node === topology.node) {
-            const selectedNode = selection.startNode.node === topology.node
-                ? selection.startNode
-                : selection.endNode;
+        const { startSelectionNode, endSelectionNode } = selection;
+
+        if (startSelectionNode.node === topology.node || endSelectionNode.node === topology.node) {
+            const selectedNode = startSelectionNode.node === topology.node
+                ? startSelectionNode
+                : endSelectionNode;
             topology.determineTextSelection({ start: selectedNode.start, end: selectedNode.end });
             if (selectedNode.parentToPreserve)
                 topology.setTopologyToPreserve(selectedNode.parentToPreserve);
@@ -92,8 +94,8 @@ export class TopologyBuilder {
         let startFound = { value: true };
         if (selectionArgs) {
             const { selection } = selectionArgs;
-            startNode = selection.startNode.node;
-            endNode = selection.endNode.node;
+            startNode = selection.startSelectionNode.node;
+            endNode = selection.endSelectionNode.node;
             startFound = selectionArgs.startFound;
         }
         const children = Array.from(topology.node.childNodes);
