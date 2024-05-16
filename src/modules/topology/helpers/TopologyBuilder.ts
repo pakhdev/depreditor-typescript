@@ -31,23 +31,19 @@ export class TopologyBuilder {
      * Se clonan los nodos y se sobreescribe la propiedad 'node'
      * Si existiera una topología a preservar, se asignará una topología clonada de la misma.
      */
-    static cloneFromTopology(topology: Topology, topologyToPreserve: Topology | null = null, setParent: Topology | null = null): Topology {
+    static cloneFromTopology(topology: Topology, setParent: Topology | null = null): Topology {
         const clonedNode = topology.node.cloneNode();
         const { nodeType } = clonedNode;
 
         const clonedTopology = this.fromNode(clonedNode);
 
-        if (nodeType === Node.TEXT_NODE && !topology.fullySelected) {
-            clonedTopology
-                .determineTextSelection({ start: topology.start, end: topology.end })
-                .setTopologyToPreserve(topologyToPreserve);
-        }
+        if (nodeType === Node.TEXT_NODE && !topology.fullySelected)
+            clonedTopology.determineTextSelection({ start: topology.start, end: topology.end });
 
         if (nodeType === Node.ELEMENT_NODE) {
             for (const childTopology of topology.children) {
                 const clonedChild = this.cloneFromTopology(
                     childTopology,
-                    topologyToPreserve || topology,
                     setParent || clonedTopology,
                 );
                 clonedTopology.children.push(clonedChild);
@@ -82,8 +78,6 @@ export class TopologyBuilder {
                 ? startSelectionNode
                 : endSelectionNode;
             topology.determineTextSelection({ start: selectedNode.start, end: selectedNode.end });
-            if (selectedNode.parentToPreserve)
-                topology.setTopologyToPreserve(selectedNode.parentToPreserve);
             selectionArgs.startFound.value = true;
         }
     }

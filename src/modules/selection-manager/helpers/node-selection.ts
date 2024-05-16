@@ -6,15 +6,12 @@
  * @property end Índice de fin de la selección. Representa el índice hasta(!) el cual se ha seleccionado (inclusivo)
  * Selección del segundo carácter en un texto: start = 1, end = 2
  * Cursor después del primer carácter en un texto: start = 1, end = 1
- * @property parentToPreserve Nodo padre que se debe preservar en un contexto específico. Para más información, ver
- * el método findParentToPreserve en la clase SelectionExtender.
  */
 export class NodeSelection {
 
     public node: Node;
     public start: number = 0;
     public end: number = 0;
-    public parentToPreserve: Node | null = null;
 
     constructor(node: Node, offset: number = 0) {
         if (node.nodeType === Node.TEXT_NODE) {

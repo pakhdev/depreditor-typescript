@@ -50,11 +50,7 @@ export class SelectionManager {
 
     // Ajusta la selección y el nodo padre general para el tipo de contenedor que se le pase como parámetro.
     public adjustForFormatting(formatting: ContainerProps): SelectionManager {
-        ({
-            startParent: this.startSelectionNode.parentToPreserve,
-            endParent: this.endSelectionNode.parentToPreserve,
-            commonAncestor: this.commonAncestor,
-        } = new SelectionExtender(formatting, this).extendSelection());
+        this.commonAncestor = new SelectionExtender(formatting, this).extendSelection();
         return this;
     }
 

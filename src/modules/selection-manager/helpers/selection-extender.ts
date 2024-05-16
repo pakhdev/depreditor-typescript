@@ -24,7 +24,7 @@ export class SelectionExtender {
      * Busca el nodo padre más adecuado para preservar en un contexto específico de los nodos seleccionados.
      * Devuelve los nodos padre a preservar y el ancestro común de los nodos seleccionados.
      */
-    public extendSelection(): { startParent: Node | null, endParent: Node | null, commonAncestor: Node } {
+    public extendSelection(): Node {
         const startParent = this.findParentToPreserve(this.startSelectionNode);
         const endParent = this.findParentToPreserve(this.endSelectionNode);
         let commonAncestor: Node = this.commonAncestor;
@@ -37,7 +37,7 @@ export class SelectionExtender {
                 throw new Error('No se encontró el ancestro común de los nodos seleccionados.');
         }
 
-        return { startParent, endParent, commonAncestor };
+        return commonAncestor;
     }
 
     /**

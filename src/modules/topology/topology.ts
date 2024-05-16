@@ -3,7 +3,6 @@ export class Topology {
     public ownerEditor: HTMLDivElement | null = null;
     public parent: Topology | null = null;
     public children: Topology[] = [];
-    public topologyToPreserve: Topology | null = null;
     public textBeforeSelection: string = '';
     public textWithinSelection: string = '';
     public textAfterSelection: string = '';
@@ -142,26 +141,6 @@ export class Topology {
     public setChildren(children: Topology[]): Topology {
         this.children = children;
         return this;
-    }
-
-    public setTopologyToPreserve(parentToPreserve: Node | Topology | null): Topology {
-        this.topologyToPreserve = parentToPreserve instanceof Node
-            ? this.findByNode(parentToPreserve)
-            : parentToPreserve;
-        return this;
-    }
-
-    private findByNode(nodeToFind: Node, topology?: Topology): Topology | null {
-        const isMain = !topology;
-        topology = topology || this;
-        if (isMain) while (topology.parent) topology = topology.parent;
-
-        if (topology.node === nodeToFind) return topology;
-        for (let child of topology.children) {
-            const found = this.findByNode(nodeToFind, child);
-            if (found) return found;
-        }
-        return null;
     }
 
 }
