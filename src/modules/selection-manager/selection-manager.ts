@@ -2,6 +2,8 @@ import { SelectionReader } from './helpers/selection-reader.ts';
 import { NodeSelection } from './helpers/node-selection.ts';
 import { ContainerProps } from '../../types/container-props.type.ts';
 import { SelectionExtender } from './helpers/selection-extender.ts';
+import { Topology } from '../topology/topology.ts';
+import { SelectionSetter } from './helpers/selection-setter.ts';
 
 /**
  * Clase para gestionar la selección de nodos en el editor.
@@ -51,6 +53,17 @@ export class SelectionManager {
     // Ajusta la selección y el nodo padre general para el tipo de contenedor que se le pase como parámetro.
     public adjustForFormatting(formatting: ContainerProps): SelectionManager {
         this.commonAncestor = new SelectionExtender(formatting, this).extendSelection();
+        return this;
+    }
+
+    // Establece la selección actual a partir de una topología de nodos.
+    public setFromTopology(topology: Topology): SelectionManager {
+        ({
+            isRange: this.isRange,
+            commonAncestor: this.commonAncestor,
+            startNode: this.startNode,
+            endNode: this.endNode,
+        } = SelectionSetter.setFromTopology(topology));
         return this;
     }
 
