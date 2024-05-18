@@ -27,11 +27,9 @@ export class SelectionSetter {
         const startSelectionNode = new NodeSelection(firstSelected.node)
             .setStart(firstSelected.start)
             .setEnd(firstSelected.end);
-        const endSelectionNode = firstSelected.node === lastSelected.node
-            ? startSelectionNode
-            : new NodeSelection(lastSelected.node)
-                .setStart(lastSelected.start)
-                .setEnd(lastSelected.end);
+        const endSelectionNode = new NodeSelection(lastSelected.node)
+            .setStart(lastSelected.start)
+            .setEnd(lastSelected.end);
 
         return {
             isRange: topology.isRange,

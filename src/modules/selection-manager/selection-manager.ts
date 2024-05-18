@@ -11,6 +11,9 @@ import { SelectionSetter } from './helpers/selection-setter.ts';
  * Permite ajustar la selección y el nodo padre general para el tipo de contenedor que se le pase como parámetro,
  * evitando un posible doble contenedor del mismo tipo y asegurando que las etiquetas de bloque no se posicionen
  * dentro de etiquetas inline.
+ * Atención: Los objetos con los detalles de la selección(startNode y endNode) serán 2 objetos distintos aunque esté
+ * seleccionado un único nodo. En caso de que sea un único nodo contendrán la misma referencia al nodo y el mismo
+ * offset.
  */
 export class SelectionManager {
 

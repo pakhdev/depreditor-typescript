@@ -110,7 +110,8 @@ export class NodesManager {
                 break;
             case 'within':
                 this.adjustTextContent(firstClonedNode, firstTopology.start, firstTopology.end);
-                this.adjustTextContent(lastClonedNode, lastTopology.start, lastTopology.end);
+                if (firstNode !== lastNode)
+                    this.adjustTextContent(lastClonedNode, lastTopology.start, lastTopology.end);
                 this.removeNodesInDirection(cloningResult.clonedNode, firstClonedNode, 'before');
                 this.removeNodesInDirection(cloningResult.clonedNode, lastClonedNode, 'after');
                 break;
