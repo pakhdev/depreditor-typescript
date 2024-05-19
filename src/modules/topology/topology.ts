@@ -71,7 +71,7 @@ export class Topology {
         let currentNode: Node | null = this.node;
 
         while (currentNode !== this.ownerEditor && currentNode?.parentNode) {
-            const index = Array.from(currentNode.parentNode.childNodes).indexOf(currentNode);
+            const index = Array.from(currentNode.parentNode.childNodes).indexOf(currentNode as ChildNode);
             if (index !== -1)
                 path.unshift(index);
             currentNode = currentNode.parentNode;

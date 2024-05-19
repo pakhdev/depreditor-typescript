@@ -19,6 +19,9 @@ export class SelectionSetter {
         const range = document.createRange();
         const { firstSelected, lastSelected } = topology;
 
+        if (!firstSelected.isPlacedInDom || !lastSelected.isPlacedInDom)
+            throw new Error('No se pudo establecer la selección porque los nodos no están en el DOM.');
+
         range.setStart(firstSelected.node, firstSelected.start);
         range.setEnd(lastSelected.node, lastSelected.end);
         selection.removeAllRanges();
