@@ -1,7 +1,8 @@
 import { ContainerProps } from '../../types/container-props.type.ts';
-import { toolsConfig } from '../../tools.config.ts';
 import { ButtonElement } from './interfaces/button-element.interface.ts';
 import { EditorInitializer } from '../editor-Initializer.ts';
+import { HtmlElementFactory } from '../tools/html-element-builder.ts';
+import { toolsConfig } from '../../tools.config.ts';
 
 export class Toolbar {
 
@@ -16,8 +17,13 @@ export class Toolbar {
 
     // Crea los botones de la barra de herramientas
     private createButtons(): void {
-        // TODO: Crear los botones de la barra de herramientas asignando el método handleToolAction a su evento
-        //  click con el parámetro correspondiente
+        this.toolsConfig.forEach(tool => {
+            const element = HtmlElementFactory.createElement('button', {
+                classes: ['editor-toolbar__icon', tool.icon],
+                onmousedown: () => this.handleToolAction(tool),
+            });
+            this.buttonElements.push({ element, toolName: tool.name, activated: false });
+        });
     }
 
     // Actualiza el estado de los botones de la barra de herramientas
