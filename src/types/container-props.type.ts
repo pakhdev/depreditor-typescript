@@ -10,4 +10,6 @@ export type ContainerProps = {
     styles?: { [key: string]: string };
     content?: string;
     groups?: string[];
+    replaceContent?: boolean;
+    requiresModal?: boolean;
 };

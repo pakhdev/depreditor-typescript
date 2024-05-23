@@ -74,6 +74,8 @@ export const toolsConfig: ContainerProps[] = [
         icon: 'icon-insert-table',
         tag: 'table',
         isBlock: true,
+        replaceContent: true,
+        requiresModal: true,
     },
     {
         name: 'link',
@@ -81,6 +83,7 @@ export const toolsConfig: ContainerProps[] = [
         tag: 'a',
         isBlock: false,
         attributes: { href: '' },
+        requiresModal: true,
     },
     {
         name: 'image',
@@ -88,6 +91,8 @@ export const toolsConfig: ContainerProps[] = [
         tag: 'img',
         isBlock: true,
         attributes: { src: '' },
+        replaceContent: true,
+        requiresModal: true,
     },
     {
         name: 'text-color',
@@ -95,6 +100,7 @@ export const toolsConfig: ContainerProps[] = [
         tag: 'span',
         isBlock: false,
         styles: { color: '' },
+        requiresModal: true,
     },
     {
         name: 'text-background-color',
@@ -102,5 +108,6 @@ export const toolsConfig: ContainerProps[] = [
         tag: 'span',
         isBlock: false,
         styles: { backgroundColor: '' },
+        requiresModal: true,
     },
 ];
