@@ -1,29 +1,42 @@
-import { Attributes, Classes, Styles } from './interfaces';
+import { Attributes, Classes, StructureSchema, Styles } from './interfaces';
 
-export class HtmlElementFactory {
+export class HtmlElementBuilder {
     public static createElement(tagName: string, attributes: Attributes): HTMLElement {
         const element = document.createElement(tagName);
 
         for (const key in attributes) {
             const value = attributes[key];
-            const attrType = HtmlElementFactory.getAttributeType(key, value);
+            const attrType = this.getAttributeType(key, value);
 
             switch (attrType) {
                 case 'classes':
-                    HtmlElementFactory.handleClasses(element, value as Classes);
+                    this.handleClasses(element, value as Classes);
                     break;
 
                 case 'styles':
-                    HtmlElementFactory.handleStyles(element, value as Styles);
+                    this.handleStyles(element, value as Styles);
                     break;
 
                 case 'event':
-                    HtmlElementFactory.handleEvent(element, key, value as EventListenerOrEventListenerObject);
+                    this.handleEvent(element, key, value as EventListenerOrEventListenerObject);
                     break;
 
                 default:
                     element.setAttribute(key, value as string);
                     break;
+            }
+        }
+
+        return element;
+    }
+
+    public static createStructure(schema: StructureSchema): HTMLElement {
+        const element = this.createElement(schema.tagName, schema.attributes);
+
+        if (schema.children) {
+            for (const childSchema of schema.children) {
+                const childElement = this.createStructure(childSchema);
+                element.appendChild(childElement);
             }
         }
 
