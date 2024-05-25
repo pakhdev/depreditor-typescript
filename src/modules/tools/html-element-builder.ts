@@ -1,5 +1,6 @@
 import { Attributes, Classes, StructureSchema, Styles } from './interfaces';
 
+// Creación de elementos y estructuras HTML con atributos y eventos
 export class HtmlElementBuilder {
     public static createElement(tagName: string, attributes: Attributes): HTMLElement {
         const element = document.createElement(tagName);
@@ -56,17 +57,17 @@ export class HtmlElementBuilder {
         }
     }
 
-    private static handleClasses(element: HTMLElement, value: Classes) {
+    private static handleClasses(element: HTMLElement, value: Classes): void {
         element.classList.add(...value);
     }
 
-    private static handleStyles(element: HTMLElement, value: Styles) {
+    private static handleStyles(element: HTMLElement, value: Styles): void {
         for (const [styleKey, styleValue] of Object.entries(value)) {
             element.style.setProperty(styleKey, styleValue);
         }
     }
 
-    private static handleEvent(element: HTMLElement, key: string, value: EventListenerOrEventListenerObject) {
+    private static handleEvent(element: HTMLElement, key: string, value: EventListenerOrEventListenerObject): void {
         const eventName = key.slice(2).toLowerCase();
         element.addEventListener(eventName, value);
     }

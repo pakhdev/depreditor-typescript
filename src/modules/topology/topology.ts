@@ -1,3 +1,4 @@
+// Clase que describe la topología de los nodos.
 export class Topology {
 
     public ownerEditor: HTMLDivElement | null = null;

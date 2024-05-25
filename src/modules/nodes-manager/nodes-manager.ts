@@ -2,8 +2,9 @@ import { ContainerProps } from '../../types/container-props.type.ts';
 import { RangeCloningArgs, NodeCloningResult } from './interfaces';
 import { SelectionManager } from '../selection-manager/selection-manager.ts';
 import { Topology } from '../topology/topology.ts';
-import { TopologyBuilder } from '../topology/helpers/TopologyBuilder.ts';
+import { TopologyBuilder } from '../topology/helpers/topology-builder.ts';
 
+// Clase que obtiene, guarda y despega los nodos seleccionados en caso de ser necesario.
 export class NodesManager {
 
     private selectedNodes: Topology | null = null;

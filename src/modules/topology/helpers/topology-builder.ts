@@ -2,6 +2,7 @@ import { SelectionManager } from '../../selection-manager/selection-manager.ts';
 import { SelectionArgs } from '../interfaces/selection-args.interface.ts';
 import { Topology } from '../topology.ts';
 
+// Clase que construye una topología a partir de un nodo o de una selección. También clona las topologías.
 export class TopologyBuilder {
 
     /**
