@@ -1,7 +1,7 @@
 import { Actions } from './actions/actions.ts';
 import { EventHooks } from './event-hooks/event-hooks.ts';
 import { SelectionManager } from './selection-manager/selection-manager.ts';
-import { Toolbar } from './ui/toolbar.ts';
+import { Toolbar } from './ui/toolbar/toolbar.ts';
 import { Topology } from './topology/topology.ts';
 import { TopologyBuilder } from './topology/helpers/topology-builder.ts';
 

@@ -1,13 +1,12 @@
-import { ContainerProps } from '../../types/container-props.type.ts';
-import { ButtonElement } from './interfaces/button-element.interface.ts';
-import { EditorInitializer } from '../editor-Initializer.ts';
-import { HtmlElementFactory } from '../tools/html-element-builder.ts';
-import { toolsConfig } from '../../tools.config.ts';
+import { EditorInitializer } from '../../editor-Initializer.ts';
+import { HtmlElementBuilder } from '../../tools/html-element-builder.ts';
+import { ToolbarButton } from './interfaces/toolbar-button.ts';
+import { ToolbarButtonState } from './interfaces/button-button-state.interface.ts';
+import { toolbarButtons } from './toolbar-buttons/toolbar-buttons.ts';
 
 export class Toolbar {
 
-    private readonly toolsConfig: ContainerProps[] = toolsConfig;
-    private readonly buttonElements: ButtonElement[] = [];
+    private readonly buttonElements: ToolbarButtonState[] = [];
 
     constructor(private readonly depreditor: EditorInitializer) {
         this.createButtons();
@@ -17,12 +16,12 @@ export class Toolbar {
 
     // Crea los botones de la barra de herramientas
     private createButtons(): void {
-        this.toolsConfig.forEach(tool => {
-            const element = HtmlElementFactory.createElement('button', {
-                classes: ['editor-toolbar__icon', tool.icon],
-                onmousedown: () => this.handleToolAction(tool),
+        toolbarButtons.forEach(button => {
+            const element = HtmlElementBuilder.createElement('button', {
+                classes: ['editor-toolbar__icon', button.icon],
+                onmousedown: () => this.handleButtonAction(button),
             });
-            this.buttonElements.push({ element, toolName: tool.name, activated: false });
+            this.buttonElements.push({ element, toolName: button.name, activated: false });
         });
     }
 
@@ -33,12 +32,16 @@ export class Toolbar {
     }
 
     // Maneja la acción de la herramienta
-    public handleToolAction(tool: ContainerProps): void {
+    public handleButtonAction(button: ToolbarButton): void {
+        if (button.requiresModal) {
+            // TODO: Abrir modal
+            return;
+        }
         // TODO: Comprobar si hay que extender la selección
         // TODO: Cortar aquí la parte seleccionada?
         // TODO: Dependiendo de la herramienta comprobar si hay que aplicar un formato o eliminarlo
         // TODO: Comprobar si hay que ignorar la acción
-        // TODO: Comprobar si hay que abrir un popup para algunos ajustes de la herramienta
+        // TODO: Llamar a la función de la herramienta
     }
 
 }

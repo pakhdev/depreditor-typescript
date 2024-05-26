@@ -1,4 +1,4 @@
-export interface ButtonElement {
+export interface ToolbarButtonState {
     activated: boolean;
     toolName: string;
     element: HTMLElement;
