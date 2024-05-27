@@ -1,7 +1,5 @@
-import { FormattingName } from './formatting-name.type.ts';
-
 export type ContainerProps = {
-    name: FormattingName;
+    name: string;
     icon: string;
     tag: string;
     isBlock: boolean;

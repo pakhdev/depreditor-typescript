@@ -7,7 +7,7 @@ import { TopologyBuilder } from './topology/helpers/topology-builder.ts';
 
 export class EditorInitializer {
 
-    public readonly eventHooks!: EventHooks;
+    public readonly eventHooks: EventHooks;
     public selectedNodes: Topology;
     private domChangeObserver!: MutationObserver;
     // TODO: Crear un módulo History
@@ -17,10 +17,10 @@ export class EditorInitializer {
         public readonly editableDiv: HTMLDivElement,
         public readonly toolbarContainer: HTMLElement,
     ) {
-        new Toolbar(this);
-        new Actions(this);
         this.eventHooks = new EventHooks(this, this.editableDiv);
         this.eventHooks.addHooks(['afterAny'], () => this.selectedNodes = this.getSelectedNodes());
+        new Toolbar(this);
+        new Actions(this);
         this
             .normalizeCode()
             .startObservingDOM();
