@@ -7,26 +7,25 @@ export class EventHooks {
 
     constructor(private readonly editableDiv: HTMLDivElement) {
         this.hooks = {
-            'onEnter': [],
-            'onUndo': [],
-            'onRedo': [],
-            'onDelete': [],
-            'onBackspace': [],
-            'onUserNavigation': [],
-            'onPaste': [],
-            'onCut': [],
-            'onWriting': [],
-            'onDestroy': [],
-            'onDragStart': [],
-            'onInternalDrop': [],
-            'onExternalDrop': [],
-            'afterAny': [],
+            'enter': [],
+            'undo': [],
+            'redo': [],
+            'delete': [],
+            'backspace': [],
+            'userNavigation': [],
+            'paste': [],
+            'cut': [],
+            'writing': [],
+            'destroy': [],
+            'dragStart': [],
+            'internalDrop': [],
+            'externalDrop': [],
         };
         this.setupEventListeners();
         this.setupInternalHooks();
     }
 
-    public subscribe(eventNames: string[], method: HookHandler): void {
+    public on(eventNames: string[], method: HookHandler): void {
         eventNames.forEach(eventName => {
             if (this.hooks[eventName]) {
                 this.hooks[eventName].push(method);
@@ -105,12 +104,12 @@ export class EventHooks {
     }
 
     private setupInternalHooks(): void {
-        this.subscribe(['onDestroy'], () => {
+        this.on(['destroy'], () => {
             this.unsubscribeAll();
             this.domChangeObserver?.disconnect();
         });
-        this.subscribe(['onDragStart'], () => this.isDragDetected = true);
-        this.subscribe(['onUserNavigation'], () => this.isDragDetected = false);
+        this.on(['dragStart'], () => this.isDragDetected = true);
+        this.on(['userNavigation'], () => this.isDragDetected = false);
     }
 
     private executeHooks(eventName: string, event?: Event): void {
