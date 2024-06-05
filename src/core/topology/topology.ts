@@ -26,7 +26,7 @@ export class Topology {
 
         if (currentNode !== this.ownerEditor)
             throw new Error('El nodo no se encuentra en el editor');
-        
+
         return path;
     }
 
@@ -76,7 +76,7 @@ export class Topology {
         let currentNode: Node | null = node;
 
         while (currentNode) {
-            if (currentNode.nodeType === Node.ELEMENT_NODE && (currentNode as HTMLElement).id === 'editor-content') {
+            if (currentNode.nodeType === Node.ELEMENT_NODE && (currentNode as HTMLElement).classList.contains('editor-content')) {
                 this.setOwnerEditor(currentNode as HTMLDivElement);
                 return this;
             }

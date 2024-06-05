@@ -41,10 +41,10 @@ export class EventHooks {
 
     private setupEventListeners(): void {
         this.editableDiv.addEventListener('paste', (event) => {
-            this.executeHooks('onPaste', event);
+            this.executeHooks('paste', event);
         });
         this.editableDiv.addEventListener('cut', (event) => {
-            this.executeHooks('onCut', event);
+            this.executeHooks('cut', event);
         });
         this.editableDiv.addEventListener('keydown', (event) => {
             if (
@@ -53,36 +53,36 @@ export class EventHooks {
                 && !event.metaKey
                 && !event.altKey
             ) {
-                this.executeHooks('onWriting', event);
+                this.executeHooks('writing', event);
             } else if (event.key === 'Enter') {
-                this.executeHooks('onEnter', event);
+                this.executeHooks('enter', event);
             } else if (event.code === 'KeyZ' && event.ctrlKey) {
-                this.executeHooks('onUndo', event);
+                this.executeHooks('undo', event);
             } else if (event.code === 'KeyY' && event.ctrlKey) {
-                this.executeHooks('onRedo', event);
+                this.executeHooks('redo', event);
             } else if (event.code === 'Delete') {
-                this.executeHooks('onDelete', event);
+                this.executeHooks('delete', event);
             } else if (event.code === 'Backspace') {
-                this.executeHooks('onBackspace', event);
+                this.executeHooks('backspace', event);
             }
         });
         this.editableDiv.addEventListener('keyup', (event) => {
             if (event.code.startsWith('Arrow')) {
-                this.executeHooks('onUserNavigation', event);
+                this.executeHooks('userNavigation', event);
             }
         });
         this.editableDiv.addEventListener('mouseup', (event) => {
-            this.executeHooks('onUserNavigation', event);
+            this.executeHooks('userNavigation', event);
         });
         this.editableDiv.addEventListener('focus', (event) => {
-            this.executeHooks('onUserNavigation', event);
+            this.executeHooks('userNavigation', event);
         });
         this.editableDiv.addEventListener('dragstart', (event) => {
-            this.executeHooks('onDragStart', event);
+            this.executeHooks('dragStart', event);
         });
         this.editableDiv.addEventListener('drop', (event) => {
             if (this.isDragDetected) this.executeHooks('onInternalDrop', event);
-            else this.executeHooks('onExternalDrop', event);
+            else this.executeHooks('externalDrop', event);
         });
         // Prevención del evento Undo y Redo en el elemento body
         document.addEventListener('keydown', (e) => {
@@ -97,7 +97,7 @@ export class EventHooks {
             mutations.forEach(mutation => {
                 if (mutation.type !== 'childList') return;
                 if (Array.from(mutation.removedNodes).includes(this.editableDiv))
-                    this.executeHooks('onDestroy');
+                    this.executeHooks('destroy');
             });
         });
         this.domChangeObserver.observe(this.editableDiv.parentNode!, { childList: true });
