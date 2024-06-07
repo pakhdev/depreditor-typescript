@@ -1,10 +1,11 @@
-import { Topology } from '../topology/topology.ts';
+import { DomSelection } from './helpers/dom-selection.ts';
 import { EventHooks } from '../event-hooks/event-hooks.ts';
+import { Topology } from '../topology/topology.ts';
 
 export class Selection {
 
-    // TODO: Add hooks class
     constructor(
+        private readonly editableDiv: HTMLDivElement,
         public readonly contentTopology: Topology,
         eventHooks: EventHooks,
     ) {
@@ -14,10 +15,6 @@ export class Selection {
     public setDOMSelection(): void {
         // TODO: Asignar la selección al DOM
         // TODO: Actualizar la topología
-    }
-
-    private getDOMSelection(): void {
-        // TODO: Obtener nodo de inicio y fin de la selección
     }
 
     // TODO: Recibir nodo de inicio y fin en los argumentos
@@ -35,7 +32,8 @@ export class Selection {
     }
 
     private syncToContentState(): void {
-        // TODO: Obtener la selección en el DOM y asignarla al estado
+        const currentSelection = DomSelection.get(this.editableDiv);
+        // TODO: Crear método estático para asignar la selección al estado
     }
 
     // TODO: Recibir nodo de inicio y fin en los argumentos
