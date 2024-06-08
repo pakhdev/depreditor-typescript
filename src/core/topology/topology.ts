@@ -1,3 +1,5 @@
+import { TopologyFinder } from './helpers/topology-finder.ts';
+
 export class Topology {
 
     public ownerEditor!: HTMLDivElement;
@@ -70,6 +72,10 @@ export class Topology {
     public get lastSelected(): Topology {
         if (this.children.length === 0) return this;
         else return this.children[this.children.length - 1].lastSelected;
+    }
+
+    public get find(): TopologyFinder {
+        return new TopologyFinder(this);
     }
 
     public determineOwnerEditor(node: Node): Topology {

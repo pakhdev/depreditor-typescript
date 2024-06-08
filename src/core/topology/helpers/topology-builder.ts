@@ -1,4 +1,4 @@
-import { Topology } from './topology.ts';
+import { Topology } from '../topology.ts';
 
 export class TopologyBuilder {
 
