@@ -4,6 +4,7 @@ export class EventHooks {
     private readonly hooks: { [key: string]: HookHandler[] };
     private domChangeObserver: MutationObserver | null = null;
     private isDragDetected = false;
+    private isFocusEvent = false;
 
     constructor(private readonly editableDiv: HTMLDivElement) {
         this.hooks = {
@@ -72,9 +73,12 @@ export class EventHooks {
             }
         });
         this.editableDiv.addEventListener('mouseup', (event) => {
-            this.executeHooks('userNavigation', event);
+            if (!this.isFocusEvent)
+                this.executeHooks('userNavigation', event);
+            this.isFocusEvent = false;
         });
         this.editableDiv.addEventListener('focus', (event) => {
+            this.isFocusEvent = true;
             this.executeHooks('userNavigation', event);
         });
         this.editableDiv.addEventListener('dragstart', (event) => {
