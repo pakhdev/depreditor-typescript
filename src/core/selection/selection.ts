@@ -1,6 +1,7 @@
 import { DomSelection } from './helpers/dom-selection.ts';
 import { EventHooks } from '../event-hooks/event-hooks.ts';
 import { Topology } from '../topology/topology.ts';
+import { StateSelection } from './helpers/state-selection.ts';
 
 export class Selection {
 
@@ -33,7 +34,7 @@ export class Selection {
 
     private syncToContentState(): void {
         const currentSelection = DomSelection.get(this.editableDiv);
-        // TODO: Crear método estático para asignar la selección al estado
+        StateSelection.set(this.contentTopology, currentSelection);
     }
 
     // TODO: Recibir nodo de inicio y fin en los argumentos
