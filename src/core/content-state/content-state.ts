@@ -1,5 +1,5 @@
 import { Topology } from '../topology/topology.ts';
-import { TopologyBuilder } from '../topology/topology-builder.ts';
+import { TopologyBuilder } from '../topology/helpers/topology-builder.ts';
 
 export class ContentState {
 
