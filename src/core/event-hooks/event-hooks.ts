@@ -88,7 +88,7 @@ export class EventHooks {
             this.executeHooks('dragStart', event);
         });
         this.editableDiv.addEventListener('drop', (event) => {
-            if (this.isDragDetected) this.executeHooks('onInternalDrop', event);
+            if (this.isDragDetected) this.executeHooks('internalDrop', event);
             else this.executeHooks('externalDrop', event);
         });
         // Prevención del evento Undo y Redo en el elemento body

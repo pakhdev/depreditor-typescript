@@ -2,6 +2,8 @@ import { DomSelection } from './helpers/dom-selection.ts';
 import { EventHooks } from '../event-hooks/event-hooks.ts';
 import { Topology } from '../topology/topology.ts';
 import { StateSelection } from './helpers/state-selection.ts';
+import { NodeSelection } from './helpers/node-selection.ts';
+import { SelectionStateType } from './enums/selection-state-type.enum.ts';
 
 export class Selection {
 
@@ -10,36 +12,28 @@ export class Selection {
         public readonly contentTopology: Topology,
         eventHooks: EventHooks,
     ) {
-        this.subscribeToUserNavigation(eventHooks);
+        this.subscribeToRelevantEvents(eventHooks);
     }
 
-    public setDOMSelection(): void {
+    public set(startNodeSelection: NodeSelection, endNodeSelection: NodeSelection): void {
         // TODO: Asignar la selección al DOM
-        // TODO: Actualizar la topología
+        // TODO: Actualizar el estado de selección
     }
 
-    // TODO: Recibir nodo de inicio y fin en los argumentos
-    private setStateSelection(): Selection {
-        this.resetStateSelection();
-        // TODO: Asignar la selección al estado
+    public get(selectionType: SelectionStateType) {
+        // TODO: Antes de devolver buscar los nodos
+        // return this.selectionState[selectionType];
     }
 
-    private resetStateSelection(topology: Topology): Selection {
-        // TODO: Resetear la selección del estado de la topología y sus topologías hijas
+    private subscribeToRelevantEvents(eventHooks: EventHooks): void {
+        eventHooks.on(['userNavigation', 'internalDrop'], this.syncToContentState.bind(this));
     }
 
-    private subscribeToUserNavigation(eventHooks: EventHooks): void {
-        eventHooks.on(['userNavigation'], this.syncToContentState.bind(this));
-    }
+    private saveNewSelection(): void {}
 
     private syncToContentState(): void {
         const currentSelection = DomSelection.get(this.editableDiv);
         StateSelection.set(this.contentTopology, currentSelection);
-    }
-
-    // TODO: Recibir nodo de inicio y fin en los argumentos
-    private findCommonAncestor(): Node {
-        // TODO: Encontrar el ancestro común de dos nodos
     }
 
 }
