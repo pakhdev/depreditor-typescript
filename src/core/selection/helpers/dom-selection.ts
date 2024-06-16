@@ -1,35 +1,46 @@
-import { NodeSelection } from './node-selection.ts';
-import { SelectionData } from '../interfaces/selection-data.interface.ts';
+import { SelectedElement } from './selected-element.ts';
+import { StoredSelection } from './stored-selection.ts';
 
 export class DomSelection {
 
-    public static get(editableDiv: HTMLDivElement): SelectionData {
+    public static get(editableDiv: HTMLDivElement): StoredSelection {
         const selection = window.getSelection();
         if (!selection || !this.isSelectionOnEditor(selection, editableDiv))
             return this.getFallbackSelection(editableDiv);
 
         const range = selection.getRangeAt(0);
         const sameNode = range.startContainer === range.endContainer;
-        return {
-            isRange: !selection.isCollapsed,
-            commonAncestor: range.commonAncestorContainer,
-            startNode: new NodeSelection(range.startContainer, range.startOffset)
-                .setStart(range.startOffset)
-                .setEnd(sameNode ? range.endOffset : undefined),
-            endNode: new NodeSelection(range.endContainer, range.endOffset)
-                .setStart(sameNode ? range.startOffset : 0)
-                .setEnd(range.endOffset),
-        };
+        const startElement = new SelectedElement(
+            editableDiv,
+            range.startContainer,
+            {
+                start: range.startOffset,
+                end: sameNode ? range.endOffset : undefined,
+            },
+        );
+        const endElement = new SelectedElement(
+            editableDiv,
+            range.endContainer,
+            {
+                start: sameNode ? range.startOffset : 0,
+                end: range.endOffset,
+            },
+        );
+        const commonAncestor = new SelectedElement(
+            editableDiv,
+            range.commonAncestorContainer,
+            { start: 0 }
+        );
+        return new StoredSelection(startElement, endElement, commonAncestor);
     }
 
-    private static getFallbackSelection(editableDiv: HTMLDivElement): SelectionData {
+    private static getFallbackSelection(editableDiv: HTMLDivElement): StoredSelection {
         const firstNode = this.findFirstTextNode(editableDiv) || editableDiv;
-        return {
-            isRange: false,
-            commonAncestor: firstNode,
-            startNode: new NodeSelection(firstNode).setEnd(0),
-            endNode: new NodeSelection(firstNode).setEnd(0),
-        };
+        const offset = { start: 0, end: 0 }
+        const startElement = new SelectedElement(editableDiv, firstNode, { ...offset });
+        const endElement = new SelectedElement(editableDiv, firstNode, { ...offset });
+        const commonAncestor = new SelectedElement(editableDiv, firstNode, { ...offset });
+        return new StoredSelection(startElement, endElement, commonAncestor);
     }
 
     private static findFirstTextNode(node: Node): Node | null {
