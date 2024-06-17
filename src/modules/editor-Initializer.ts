@@ -16,7 +16,6 @@ export class EditorInitializer {
     // public readonly history: History;
 
     // Parte nueva
-    private readonly contentState: ContentState;
     private readonly selection: Selection;
     private readonly eventHooks: EventHooks;
 
@@ -35,11 +34,9 @@ export class EditorInitializer {
         this
             .normalizeCode()
             .startObservingDOM(); // DEL
-        this.contentState = new ContentState(this.editableDiv);
         this.eventHooks = new EventHooks(this.editableDiv);
         this.selection = new Selection(
             this.editableDiv,
-            this.contentState.contentTopology,
             this.eventHooks,
         );
 

@@ -1,39 +1,43 @@
 import { DomSelection } from './helpers/dom-selection.ts';
 import { EventHooks } from '../event-hooks/event-hooks.ts';
-import { Topology } from '../topology/topology.ts';
-import { StateSelection } from './helpers/state-selection.ts';
-import { NodeSelection } from './helpers/node-selection.ts';
 import { SelectionStateType } from './enums/selection-state-type.enum.ts';
+import { StoredSelection } from './helpers/stored-selection.ts';
 
 export class Selection {
 
+    private readonly state: {
+        previous: StoredSelection,
+        current: StoredSelection,
+    };
+
     constructor(
         private readonly editableDiv: HTMLDivElement,
-        public readonly contentTopology: Topology,
         eventHooks: EventHooks,
     ) {
         this.subscribeToRelevantEvents(eventHooks);
+        this.state = {
+            previous: DomSelection.get(this.editableDiv),
+            current: DomSelection.get(this.editableDiv),
+        };
     }
 
-    public set(startNodeSelection: NodeSelection, endNodeSelection: NodeSelection): void {
+    public set(): void {
         // TODO: Asignar la selección al DOM
-        // TODO: Actualizar el estado de selección
+        this.storeSelection();
     }
 
     public get(selectionType: SelectionStateType) {
-        // TODO: Antes de devolver buscar los nodos
-        // return this.selectionState[selectionType];
+        return this.state[selectionType];
     }
 
     private subscribeToRelevantEvents(eventHooks: EventHooks): void {
-        eventHooks.on(['userNavigation', 'internalDrop'], this.syncToContentState.bind(this));
+        eventHooks.on(['userNavigation', 'internalDrop'], this.storeSelection.bind(this));
     }
 
-    private saveNewSelection(): void {}
-
-    private syncToContentState(): void {
+    private storeSelection(): void {
         const currentSelection = DomSelection.get(this.editableDiv);
-        StateSelection.set(this.contentTopology, currentSelection);
+        this.state.previous = this.state.current;
+        this.state.current = currentSelection;
     }
 
 }
