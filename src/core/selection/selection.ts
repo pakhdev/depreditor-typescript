@@ -12,17 +12,28 @@ export class Selection {
 
     constructor(
         private readonly editableDiv: HTMLDivElement,
-        eventHooks: EventHooks,
+        private readonly eventHooks: EventHooks,
     ) {
-        this.subscribeToRelevantEvents(eventHooks);
+        this.subscribeToRelevantEvents(this.eventHooks);
         this.state = {
             previous: DomSelection.get(this.editableDiv),
             current: DomSelection.get(this.editableDiv),
         };
     }
 
-    public set(): void {
-        // TODO: Asignar la selección al DOM
+    public set(storedSelection: StoredSelection): void {
+        const { startElement, endElement } = storedSelection;
+
+        const range = document.createRange();
+        range.setStart(startElement.node, startElement.offset.start);
+        range.setEnd(endElement.node, endElement.offset.end);
+
+        const selection = window.getSelection();
+        if (selection) {
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+
         this.storeSelection();
     }
 
@@ -38,6 +49,7 @@ export class Selection {
         const currentSelection = DomSelection.get(this.editableDiv);
         this.state.previous = this.state.current;
         this.state.current = currentSelection;
+        this.eventHooks.executeHooks('selectionChange');
     }
 
 }

@@ -8,19 +8,20 @@ export class EventHooks {
 
     constructor(private readonly editableDiv: HTMLDivElement) {
         this.hooks = {
-            'enter': [],
-            'undo': [],
-            'redo': [],
-            'delete': [],
             'backspace': [],
-            'userNavigation': [],
-            'paste': [],
             'cut': [],
-            'writing': [],
+            'delete': [],
             'destroy': [],
             'dragStart': [],
-            'internalDrop': [],
+            'enter': [],
             'externalDrop': [],
+            'internalDrop': [],
+            'paste': [],
+            'redo': [],
+            'selectionChange': [],
+            'undo': [],
+            'userNavigation': [],
+            'writing': [],
         };
         this.setupEventListeners();
         this.setupInternalHooks();
@@ -38,6 +39,10 @@ export class EventHooks {
         Object.keys(this.hooks).forEach(eventName => {
             this.hooks[eventName] = [];
         });
+    }
+
+    public executeHooks(eventName: string, event?: Event): void {
+        if (this.hooks[eventName]) this.hooks[eventName].forEach(handler => handler(event));
     }
 
     private setupEventListeners(): void {
@@ -117,10 +122,6 @@ export class EventHooks {
         });
         this.on(['dragStart'], () => this.isDragDetected = true);
         this.on(['userNavigation'], () => this.isDragDetected = false);
-    }
-
-    private executeHooks(eventName: string, event?: Event): void {
-        if (this.hooks[eventName]) this.hooks[eventName].forEach(handler => handler(event));
     }
 
 }
