@@ -37,7 +37,7 @@ export class Selection {
         this.storeSelection();
     }
 
-    public get(selectionType: SelectionStateType) {
+    public get(selectionType: SelectionStateType): StoredSelection {
         return this.state[selectionType];
     }
 

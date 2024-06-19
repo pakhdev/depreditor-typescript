@@ -1,11 +1,13 @@
+import { SelectionOffset } from '../interfaces/selection-offset.interface.ts';
+
 export class SelectedElement {
-    public readonly path: number[];
-    public offset: { start: number, end: number }
+    public path: number[];
+    public offset: SelectionOffset;
 
     constructor(
         public readonly ownerEditor: HTMLDivElement,
         node: Node,
-        offset: { start: number, end?: number }
+        offset: { start: number, end?: number },
     ) {
         this.path = this.calculatePath(node);
         if (offset.end === undefined)
