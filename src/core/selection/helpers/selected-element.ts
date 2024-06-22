@@ -18,13 +18,25 @@ export class SelectedElement {
     }
 
     public get node(): Node {
-        let node: Node = this.ownerEditor;
-        for (const index of this.path) {
-            if (node.childNodes.length <= index)
-                throw new Error('El índice no existe en el nodo');
-            node = node.childNodes[index];
+        return this.getNodeByPath(this.path);
+    }
+
+    public get parentNode(): Node {
+        return this.getNodeByPath(this.path.slice(0, -1));
+    }
+
+    public get exists(): boolean {
+        try {
+            return this.node !== null;
+        } catch (e) {
+            return false;
         }
-        return node;
+    }
+
+    public get position(): number {
+        if (this.path.length === 0)
+            return 0;
+        return this.path[this.path.length - 1];
     }
 
     private calculatePath(node: Node): number[] {
@@ -42,6 +54,16 @@ export class SelectedElement {
             throw new Error('El nodo no se encuentra en el editor');
 
         return path;
+    }
+
+    private getNodeByPath(path: number[]): Node {
+        let node: Node = this.ownerEditor;
+        for (const index of path) {
+            if (node.childNodes.length <= index)
+                throw new Error('El índice no existe en el nodo');
+            node = node.childNodes[index];
+        }
+        return node;
     }
 
 }
