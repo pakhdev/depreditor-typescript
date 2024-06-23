@@ -52,11 +52,25 @@ export class Operation {
     }
 
     private injectElement(): void {
+        if (!this.elementToInject)
+            throw new Error('Elemento a insertar no definido');
 
+        const parentNode = this.position.parentNode;
+
+        if (this.position.exists) {
+            parentNode.insertBefore(this.elementToInject, this.position.node);
+        } else {
+            const { position } = this.position;
+            if (parentNode.childNodes.length !== position)
+                throw new Error('Posición de inserción no válida');
+            parentNode.appendChild(this.elementToInject);
+        }
     }
 
     private removeElement(): void {
-
+        const nodeToRemove = this.position.node;
+        if (nodeToRemove.parentNode)
+            nodeToRemove.parentNode.removeChild(nodeToRemove);
     }
 
     private injectText(): void {
