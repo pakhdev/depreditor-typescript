@@ -6,6 +6,8 @@ export class Operation {
     private readonly elementToInject: Node | undefined;
     private readonly textToInject: string | undefined;
 
+    private removedText: string | undefined;
+
     constructor(
         public readonly type: OperationType,
         public position: SelectedElement,
@@ -74,9 +76,14 @@ export class Operation {
     }
 
     private injectText(): void {
-        if (this.position.offset.start !== this.position.offset.end)
+        if (this.position.offset.start !== this.position.offset.end && this.type === OperationType.TEXT_INJECTION)
             throw new Error('Offset de inserción no válido');
-        if (!this.textToInject)
+
+        const textToInject = this.type === OperationType.TEXT_INJECTION
+            ? this.textToInject
+            : this.removedText;
+
+        if (!textToInject)
             throw new Error('Texto a insertar no definido');
         if (this.position.node.nodeType !== Node.TEXT_NODE)
             throw new Error('No se puede eliminar texto de un nodo que no es de tipo texto');
@@ -88,15 +95,23 @@ export class Operation {
     }
 
     private removeText(): void {
-        if (this.position.offset.start === this.position.offset.end)
+        if (this.position.offset.start === this.position.offset.end && this.type === OperationType.TEXT_REMOVAL)
             throw new Error('Offset de eliminación no válido');
         if (this.position.node.nodeType !== Node.TEXT_NODE)
             throw new Error('No se puede eliminar texto de un nodo que no es de tipo texto');
 
+        let startOffset = this.position.offset.start;
+        let endOffset = this.type === OperationType.TEXT_REMOVAL
+            ? this.position.offset.end
+            : this.position.offset.start + this.textToInject!.length;
+
         const currentText = this.position.node.textContent || '';
-        const textBefore = currentText.slice(0, this.position.offset.start);
-        const textAfter = currentText.slice(this.position.offset.end);
+        const textBefore = currentText.slice(0, startOffset);
+        const textAfter = currentText.slice(endOffset);
         this.position.node.textContent = textBefore + textAfter;
+
+        if (this.type === OperationType.TEXT_REMOVAL)
+            this.removedText = currentText.slice(this.position.offset.start, this.position.offset.end);
     }
 
 }
