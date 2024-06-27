@@ -20,7 +20,7 @@ export class Operation {
             this.textToInject = injectable;
     }
 
-    public execute(): boolean {
+    public execute(): void {
         switch (this.type) {
             case OperationType.ELEMENT_INJECTION:
                 this.injectElement();
@@ -37,7 +37,7 @@ export class Operation {
         }
     }
 
-    public undo(): boolean {
+    public undo(): void {
         switch (this.type) {
             case OperationType.ELEMENT_INJECTION:
                 this.removeElement();

@@ -1,4 +1,4 @@
-import { ContainerProperties } from '../../interfaces';
+import { ContainerProperties } from '../interfaces/container-properties.interface.ts';
 
 export const spanTextColor: ContainerProperties = {
     tagName: 'span',
