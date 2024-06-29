@@ -10,16 +10,33 @@ export class Transaction {
         private readonly finalSelection: StoredSelection,
     ) {}
 
-    execute(selection: Selection): void {
+    public execute(selection: Selection): void {
         for (const operation of this.operations)
             operation.execute();
         selection.set(this.finalSelection);
     }
 
-    undo(selection: Selection): void {
+    public undo(selection: Selection): void {
         const reversedOperations = [...this.operations.reverse()];
         for (const operation of reversedOperations)
             operation.undo();
         selection.set(this.initialSelection);
     }
+
+    public addOperation(operation: Operation, insertAt?: number): number {
+        if (insertAt === undefined) {
+            this.operations.push(operation);
+            return this.operations.length - 1;
+        } else {
+            this.operations.splice(insertAt, 0, operation);
+            return insertAt;
+        }
+    }
+
+    public removeOperation(operation: Operation): number {
+        const index = this.operations.indexOf(operation);
+        this.operations.splice(index, 1);
+        return index;
+    }
+    
 }
