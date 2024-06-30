@@ -29,23 +29,30 @@ export class CleaningOperationsBuilder {
 
     }
 
-    private static findChildOperations(parentPath: number[], transaction: Transaction) {
+    private static findChildOperations(transaction: Transaction, parentPath: number[]) {
 
     }
 
-    private static findOperations(where: {
+    private static findOperations(transaction: Transaction, where: {
         type?: OperationType,
         parentPath?: number[],
     }): Operation[] {
+        const operations: Operation[] = [...transaction.operations];
+        if (where.type !== undefined)
+            operations.filter(operation => operation.type === where.type);
+        if (where.parentPath !== undefined)
+            operations.filter(operation => this.isDirectChild(where.parentPath, operation.path));
+        return operations;
+    }
+
+    private static willBeEmpty(transaction: Transaction, elementPath: number[]): boolean {
 
     }
 
-    private static willBeEmpty(elementPath: number[], transaction: Transaction): boolean {
-
-    }
-
-    private static willBeDeleted(elementPath: number[], transaction: Transaction): boolean {
-
+    private static willBeDeleted(transaction: Transaction, elementPath: number[]): boolean {
+        return transaction.operations.some(
+            operation => operation.type === OperationType.ELEMENT_REMOVAL && operation.position.path === elementPath,
+        );
     }
 
     private static isDirectChild(parentPath: number[], elementPath: number[]): boolean {
