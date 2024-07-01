@@ -45,8 +45,29 @@ export class CleaningOperationsBuilder {
         return operations;
     }
 
-    private static willBeEmpty(transaction: Transaction, elementPath: number[]): boolean {
+    private static willBeEmpty(transaction: Transaction, node: Node, elementPath: number[]): boolean {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const textRemovals = this.findOperations(transaction, { type: OperationType.TEXT_REMOVAL });
+            for (const textRemoval of textRemovals) {
+                if (textRemoval.position.path === elementPath) {
+                    const textLength = node.textContent?.length;
+                    return textRemoval.position.offset.end === textLength && textRemoval.position.offset.start === 0;
+                }
+            }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const childRemovals = this.findOperations(transaction, {
+                type: OperationType.ELEMENT_REMOVAL,
+                parentPath: elementPath,
+            });
+            const childInjections = this.findOperations(transaction, {
+                type: OperationType.ELEMENT_INJECTION,
+                parentPath: elementPath,
+            });
+            const originalChildrenCount = node.childNodes.length;
+            return originalChildrenCount - childRemovals.length + childInjections.length > 0;
+        }
 
+        return false;
     }
 
     private static willBeDeleted(transaction: Transaction, elementPath: number[]): boolean {
