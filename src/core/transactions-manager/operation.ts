@@ -10,7 +10,7 @@ export class Operation {
     private removedText: string | undefined;
 
     constructor(
-        public readonly type: OperationType,
+        public type: OperationType,
         public position: SelectedElement,
         injectable?: Node | string,
     ) {

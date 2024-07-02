@@ -1,36 +1,67 @@
-import { Transaction } from '../transaction.ts';
-import { OperationType } from '../enums/operation-type.enum.ts';
+import { ContainerIdentifier } from '../../containers/identifier.ts';
 import { Operation } from '../operation.ts';
+import { OperationType } from '../enums/operation-type.enum.ts';
+import { ParentWithRemovals } from '../interfaces/parent-with-removals.interface.ts';
+import { SelectedElement } from '../../selection/helpers/selected-element.ts';
+import { Transaction } from '../transaction.ts';
 
 // Clase que se encarga de limpiar los nodos vacíos y las operaciones innecesarias
 export class CleaningOperationsBuilder {
 
     public static build(transaction: Transaction): void {
-        this.convertTextToElementRemoval(transaction);
-        this.addDeletionForEmptyNodes(transaction);
+        // Eliminar los nodos de texto que se quedarán vacíos
+        const textNodesWithRemovals = this.findOperations(transaction, { type: OperationType.TEXT_REMOVAL });
+        this.convertTextToElementRemoval(transaction, textNodesWithRemovals);
+
+        // Eliminar los contenedores que se quedarán vacíos
+        const parentNodesWithRemovals = this.findParentsWithElementRemovals(transaction);
+        this.addDeletionForEmptyNodes(transaction, parentNodesWithRemovals);
+
+        // Eliminar las operaciones de eliminación de nodos hijos dentro de los nodos que ya serán eliminados
         this.cleanupChildDeletions(transaction);
     }
 
-    // Encontrar operaciones donde se elimina еl texto
-    // Si se quedan sin texto sustituir la operación por una eliminación del elemento
-    private static convertTextToElementRemoval(transaction: Transaction): void {
+    private static convertTextToElementRemoval(transaction: Transaction, textRemovals: Operation[]): void {
+        for (const textRemoval of textRemovals) {
+            if (this.willBeEmpty(transaction, textRemoval.position.node, textRemoval.position.path))
+                textRemoval.type = OperationType.ELEMENT_REMOVAL;
+        }
+    }
+
+    private static addDeletionForEmptyNodes(transaction: Transaction, parentsWithRemovals: ParentWithRemovals[]): void {
+        for (const parent of parentsWithRemovals) {
+            const containerType = ContainerIdentifier.identify(parent.node as HTMLElement);
+            if (containerType && containerType.keepIfEmpty || this.willBeDeleted(transaction, parent.path))
+                continue;
+            const newElementRemoval = new Operation(
+                OperationType.ELEMENT_REMOVAL,
+                new SelectedElement(transaction.ownerEditor, parent.node, { start: 0 }),
+            );
+            transaction.addOperation(newElementRemoval, parent.firstRemovalIdx);
+        }
 
     }
 
-    // Encontrar los nodos en los que se eliminarán todos los nodos hijos tras la transacción
-    // Si su nodo padre NO se elimina en ésta transacción y en las propiedades del contenedor
-    // no existe la propiedad keepIfEmpty - añadir la operación de eliminación del nodo
-    private static addDeletionForEmptyNodes(transaction: Transaction): void {
-
-    }
-
-    // Eliminar las operaciones de eliminación de nodos hijos dentro de los nodos que ya serán eliminados
     private static cleanupChildDeletions(transaction: Transaction): void {
 
     }
 
-    private static findChildOperations(transaction: Transaction, parentPath: number[]) {
+    private static findParentsWithElementRemovals(transaction: Transaction): ParentWithRemovals[] {
+        const parents: ParentWithRemovals[] = [];
 
+        const elementRemovals = this.findOperations(transaction, { type: OperationType.ELEMENT_REMOVAL });
+        for (const elementRemoval of elementRemovals) {
+            const parentPath = elementRemoval.position.path.slice(0, -1);
+            if (!parents.some(parent => JSON.stringify(parent.path) === JSON.stringify(parentPath))) {
+                parents.push({
+                    node: elementRemoval.position.parentNode,
+                    path: parentPath,
+                    firstRemovalIdx: elementRemovals.indexOf(elementRemoval),
+                });
+            }
+        }
+
+        return parents;
     }
 
     private static findOperations(transaction: Transaction, where: {
@@ -41,7 +72,7 @@ export class CleaningOperationsBuilder {
         if (where.type !== undefined)
             operations.filter(operation => operation.type === where.type);
         if (where.parentPath !== undefined)
-            operations.filter(operation => this.isDirectChild(where.parentPath, operation.path));
+            operations.filter(operation => this.isDirectChild(where.parentPath!, operation.position.path));
         return operations;
     }
 
@@ -81,7 +112,7 @@ export class CleaningOperationsBuilder {
             return false;
 
         for (let i = 0; i < parentPath.length; i++)
-            if (operationPath[i] !== parentPath[i])
+            if (elementPath[i] !== parentPath[i])
                 return false;
 
         return true;

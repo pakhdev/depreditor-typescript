@@ -6,6 +6,7 @@ export class Transaction {
 
     constructor(
         public operations: Operation[],
+        public readonly ownerEditor: HTMLDivElement,
         private readonly initialSelection: StoredSelection,
         private readonly finalSelection: StoredSelection,
     ) {}
@@ -38,5 +39,5 @@ export class Transaction {
         this.operations.splice(index, 1);
         return index;
     }
-    
+
 }
