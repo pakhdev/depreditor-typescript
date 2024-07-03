@@ -5,7 +5,7 @@ import { ParentWithRemovals } from '../interfaces/parent-with-removals.interface
 import { SelectedElement } from '../../selection/helpers/selected-element.ts';
 import { Transaction } from '../transaction.ts';
 
-// Clase que se encarga de limpiar los nodos vacíos y las operaciones innecesarias
+// La clase se encarga de limpiar los nodos vacíos y las operaciones innecesarias
 export class CleaningOperationsBuilder {
 
     public static build(transaction: Transaction): void {
@@ -14,11 +14,12 @@ export class CleaningOperationsBuilder {
         this.convertTextToElementRemoval(transaction, textNodesWithRemovals);
 
         // Eliminar los contenedores que se quedarán vacíos
-        const parentNodesWithRemovals = this.findParentsWithElementRemovals(transaction);
+        let parentNodesWithRemovals = this.findParentsWithElementRemovals(transaction);
         this.addDeletionForEmptyNodes(transaction, parentNodesWithRemovals);
 
         // Eliminar las operaciones de eliminación de nodos hijos dentro de los nodos que ya serán eliminados
-        this.cleanupChildDeletions(transaction);
+        parentNodesWithRemovals = this.findParentsWithElementRemovals(transaction);
+        this.cleanupChildDeletions(transaction, parentNodesWithRemovals);
     }
 
     private static convertTextToElementRemoval(transaction: Transaction, textRemovals: Operation[]): void {
@@ -42,8 +43,16 @@ export class CleaningOperationsBuilder {
 
     }
 
-    private static cleanupChildDeletions(transaction: Transaction): void {
-
+    private static cleanupChildDeletions(transaction: Transaction, parentsWithRemovals: ParentWithRemovals[]): void {
+        for (const parent of parentsWithRemovals) {
+            if (!this.willBeEmpty(transaction, parent.node, parent.path))
+                continue;
+            const removalOperations = this.findOperations(transaction, {
+                type: OperationType.ELEMENT_REMOVAL,
+                parentPath: parent.path,
+            });
+            removalOperations.forEach(operation => transaction.removeOperation(operation));
+        }
     }
 
     private static findParentsWithElementRemovals(transaction: Transaction): ParentWithRemovals[] {
