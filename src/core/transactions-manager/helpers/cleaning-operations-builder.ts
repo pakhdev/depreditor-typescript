@@ -10,7 +10,7 @@ export class CleaningOperationsBuilder {
 
     public static build(transaction: Transaction): void {
         // Eliminar los nodos de texto que se quedarán vacíos
-        const textNodesWithRemovals = this.findOperations(transaction, { type: OperationType.TEXT_REMOVAL });
+        const textNodesWithRemovals = transaction.findOperations({ type: OperationType.TEXT_REMOVAL });
         this.convertTextToElementRemoval(transaction, textNodesWithRemovals);
 
         // Eliminar los contenedores que se quedarán vacíos
@@ -47,7 +47,7 @@ export class CleaningOperationsBuilder {
         for (const parent of parentsWithRemovals) {
             if (!this.willBeEmpty(transaction, parent.node, parent.path))
                 continue;
-            const removalOperations = this.findOperations(transaction, {
+            const removalOperations = transaction.findOperations({
                 type: OperationType.ELEMENT_REMOVAL,
                 parentPath: parent.path,
             });
@@ -58,7 +58,7 @@ export class CleaningOperationsBuilder {
     private static findParentsWithElementRemovals(transaction: Transaction): ParentWithRemovals[] {
         const parents: ParentWithRemovals[] = [];
 
-        const elementRemovals = this.findOperations(transaction, { type: OperationType.ELEMENT_REMOVAL });
+        const elementRemovals = transaction.findOperations({ type: OperationType.ELEMENT_REMOVAL });
         for (const elementRemoval of elementRemovals) {
             const parentPath = elementRemoval.position.path.slice(0, -1);
             if (!parents.some(parent => JSON.stringify(parent.path) === JSON.stringify(parentPath))) {
@@ -73,21 +73,9 @@ export class CleaningOperationsBuilder {
         return parents;
     }
 
-    private static findOperations(transaction: Transaction, where: {
-        type?: OperationType,
-        parentPath?: number[],
-    }): Operation[] {
-        const operations: Operation[] = [...transaction.operations];
-        if (where.type !== undefined)
-            operations.filter(operation => operation.type === where.type);
-        if (where.parentPath !== undefined)
-            operations.filter(operation => this.isDirectChild(where.parentPath!, operation.position.path));
-        return operations;
-    }
-
     private static willBeEmpty(transaction: Transaction, node: Node, elementPath: number[]): boolean {
         if (node.nodeType === Node.TEXT_NODE) {
-            const textRemovals = this.findOperations(transaction, { type: OperationType.TEXT_REMOVAL });
+            const textRemovals = transaction.findOperations({ type: OperationType.TEXT_REMOVAL });
             for (const textRemoval of textRemovals) {
                 if (textRemoval.position.path === elementPath) {
                     const textLength = node.textContent?.length;
@@ -95,11 +83,11 @@ export class CleaningOperationsBuilder {
                 }
             }
         } else if (node.nodeType === Node.ELEMENT_NODE) {
-            const childRemovals = this.findOperations(transaction, {
+            const childRemovals = transaction.findOperations({
                 type: OperationType.ELEMENT_REMOVAL,
                 parentPath: elementPath,
             });
-            const childInjections = this.findOperations(transaction, {
+            const childInjections = transaction.findOperations({
                 type: OperationType.ELEMENT_INJECTION,
                 parentPath: elementPath,
             });
@@ -114,17 +102,6 @@ export class CleaningOperationsBuilder {
         return transaction.operations.some(
             operation => operation.type === OperationType.ELEMENT_REMOVAL && operation.position.path === elementPath,
         );
-    }
-
-    private static isDirectChild(parentPath: number[], elementPath: number[]): boolean {
-        if (elementPath.length !== parentPath.length + 1)
-            return false;
-
-        for (let i = 0; i < parentPath.length; i++)
-            if (elementPath[i] !== parentPath[i])
-                return false;
-
-        return true;
     }
 
 }

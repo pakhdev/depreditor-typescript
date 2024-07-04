@@ -1,5 +1,6 @@
-import { Selection } from '../selection/selection';
 import { Operation } from './operation.ts';
+import { OperationType } from './enums/operation-type.enum.ts';
+import { Selection } from '../selection/selection';
 import { StoredSelection } from '../selection/helpers/stored-selection.ts';
 
 export class Transaction {
@@ -38,6 +39,29 @@ export class Transaction {
         const index = this.operations.indexOf(operation);
         this.operations.splice(index, 1);
         return index;
+    }
+
+    public findOperations(where: {
+        type?: OperationType,
+        parentPath?: number[],
+    }): Operation[] {
+        const operations: Operation[] = [...this.operations];
+        if (where.type !== undefined)
+            operations.filter(operation => operation.type === where.type);
+        if (where.parentPath !== undefined)
+            operations.filter(operation => this.isDirectChild(where.parentPath!, operation.position.path));
+        return operations;
+    }
+
+    private isDirectChild(parentPath: number[], elementPath: number[]): boolean {
+        if (elementPath.length !== parentPath.length + 1)
+            return false;
+
+        for (let i = 0; i < parentPath.length; i++)
+            if (elementPath[i] !== parentPath[i])
+                return false;
+
+        return true;
     }
 
 }

@@ -5,4 +5,5 @@ export interface ContainerProperties {
     attributes?: { [key: string]: string };
     styles?: { [key: string]: string };
     keepIfEmpty?: boolean;
+    mergeable?: boolean;
 }
