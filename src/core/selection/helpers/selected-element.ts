@@ -25,6 +25,26 @@ export class SelectedElement {
         return this.getNodeByPath(this.path.slice(0, -1));
     }
 
+    public get previousSibling(): { node: Node, path: number [] } | null {
+        const index = this.position - 1;
+        if (index < 0)
+            return null;
+        return {
+            node: this.parentNode.childNodes[index],
+            path: this.path.slice(0, -1).concat(index),
+        };
+    }
+
+    public get nextSibling(): { node: Node, path: number [] } | null {
+        const index = this.position + 1;
+        if (this.parentNode.childNodes.length <= index)
+            return null;
+        return {
+            node: this.parentNode.childNodes[index],
+            path: this.path.slice(0, -1).concat(index),
+        };
+    }
+
     public get exists(): boolean {
         try {
             return this.node !== null;
