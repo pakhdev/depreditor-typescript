@@ -3,7 +3,7 @@ import { SelectedElement } from '../selection/helpers/selected-element.ts';
 
 export class Operation {
 
-    private readonly elementToInject: Node | undefined;
+    public readonly elementToInject: Node | undefined;
     private readonly textToInject: string | undefined;
 
     private removedElement: Node | undefined;
