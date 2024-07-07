@@ -23,15 +23,21 @@ export class MergingOperationsBuilder {
     }
 
     private static redirectInsertions(args: RedirectArgs): void {
+
         // Buscar todas las inserciones en la ruta indicada
         // Organizar las operaciones
         // Decidir la posición inicial que se asignará a las operaciones
         // Reasignar las rutas
     }
 
-    private static orderInsertions(operations: Operation[]): Operation[] {
-        // Comprobar si todas las operaciones son del mismo nodo padre
-        // Organizar las operaciones por el último digito de la ruta
+    private static orderByPosition(operations: Operation[]): Operation[] {
+        if (operations.length === 0)
+            return operations;
+
+        if (!this.checkPathConsistency(operations))
+            throw new Error('Las operaciones no tienen la misma ruta padre');
+
+        return operations.sort((a, b) => a.position.position - b.position.position);
     }
 
     private static findRequiredRedirects(transaction: Transaction): RedirectEntry[] {
@@ -76,6 +82,20 @@ export class MergingOperationsBuilder {
     private static checkSibling(node: Node, referenceType: ContainerProperties): boolean {
         const containerType = ContainerIdentifier.identify(node as HTMLElement);
         return !!containerType && containerType === referenceType;
+    }
+
+    private static checkPathConsistency(operations: Operation[]): boolean {
+        if (operations.length === 0)
+            return true;
+
+        const referenceLength = operations[0].position.path.length;
+        const referenceParentPath = JSON.stringify(operations[0].position.path.slice(0, -1));
+        if (operations.every(operation =>
+            operation.position.path.length === referenceLength
+            && JSON.stringify(operation.position.path.slice(0, -1)) === referenceParentPath,
+        )) return true;
+
+        return false;
     }
 
 }
