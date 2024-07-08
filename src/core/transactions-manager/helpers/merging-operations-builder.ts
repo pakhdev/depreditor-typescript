@@ -1,33 +1,38 @@
-import { Operation } from '../operation.ts';
-import { Transaction } from '../transaction.ts';
-import { OperationType } from '../enums/operation-type.enum.ts';
 import { ContainerIdentifier } from '../../containers/identifier.ts';
-import { RedirectArgs } from '../interfaces/redirect-args.interface.ts';
 import { ContainerProperties } from '../../containers/interfaces/container-properties.interface.ts';
+import { Operation } from '../operation.ts';
+import { OperationType } from '../enums/operation-type.enum.ts';
+import { RedirectArgs } from '../interfaces/redirect-args.interface.ts';
 import { RedirectEntry } from '../interfaces/redirect-entry.interface.ts';
+import { Transaction } from '../transaction.ts';
 
 export class MergingOperationsBuilder {
 
-    public static build(transaction: Transaction) {
+    // TODO: Probablemente hay que analizar los elementos
+    //  inyectados que se encuentran en el mismo nivel también
 
+    public static build(transaction: Transaction): void {
         const requiredRedirects = this.findRequiredRedirects(transaction);
-
-        // Opción 1: Si el elemento anterior es del mismo tipo - modificar las rutas de inserción para que los
-        // elementos se añadan al final del elemento anterior
-        // Opción 2: Si el elemento posterior es del mismo tipo - modificar las rutas de inserción para que los
-        // elementos se añadan al principio del elemento posterior
-
-        // Redireccionar las inserciones en este elemento
-
-        // Eliminar la inserción del nodo actual ya que no será necesario
+        for (const redirect of requiredRedirects) {
+            let childInjections = transaction.findOperations({
+                type: OperationType.ELEMENT_INJECTION,
+                parentPath: redirect.operation.position.path,
+            });
+            childInjections = this.orderByPosition(childInjections);
+            this.redirectInjections(childInjections, redirect.data);
+            transaction.removeOperation(redirect.operation);
+        }
     }
 
-    private static redirectInsertions(args: RedirectArgs): void {
-
-        // Buscar todas las inserciones en la ruta indicada
-        // Organizar las operaciones
-        // Decidir la posición inicial que se asignará a las operaciones
-        // Reasignar las rutas
+    private static redirectInjections(operations: Operation[], args: RedirectArgs): void {
+        let position = args.startPosition;
+        const referenceParentPath = JSON.stringify(args.newParentPath.slice(0, -1));
+        for (const operation of operations) {
+            if (JSON.stringify(operation.position.path.slice(0, -1)) !== referenceParentPath)
+                throw new Error('La operación no tiene la misma ruta padre que el redireccionamiento');
+            operation.position.path = [...args.newParentPath, position];
+            position++;
+        }
     }
 
     private static orderByPosition(operations: Operation[]): Operation[] {
@@ -41,7 +46,7 @@ export class MergingOperationsBuilder {
     }
 
     private static findRequiredRedirects(transaction: Transaction): RedirectEntry[] {
-        const redirects: { operation: Operation, redirect: RedirectArgs }[] = [];
+        const redirects: { operation: Operation, data: RedirectArgs }[] = [];
 
         const injectionOperations = transaction.findOperations({ type: OperationType.ELEMENT_INJECTION });
         for (const operation of injectionOperations) {
@@ -54,7 +59,7 @@ export class MergingOperationsBuilder {
                 continue;
             const compatibleSibling = this.findCompatibleSibling(operation, containerType);
             if (compatibleSibling)
-                redirects.push({ operation, redirect: compatibleSibling });
+                redirects.push({ operation, data: compatibleSibling });
         }
         return redirects;
     }
@@ -65,7 +70,7 @@ export class MergingOperationsBuilder {
             return {
                 parentPath: operation.position.path,
                 newParentPath: previousSibling.path,
-                position: 'end',
+                startPosition: previousSibling.node.childNodes.length,
             };
 
         const nextSibling = operation.position.nextSibling;
@@ -73,7 +78,7 @@ export class MergingOperationsBuilder {
             return {
                 parentPath: operation.position.path,
                 newParentPath: nextSibling.path,
-                position: 'start',
+                startPosition: 0,
             };
 
         return null;
@@ -87,15 +92,12 @@ export class MergingOperationsBuilder {
     private static checkPathConsistency(operations: Operation[]): boolean {
         if (operations.length === 0)
             return true;
-
         const referenceLength = operations[0].position.path.length;
         const referenceParentPath = JSON.stringify(operations[0].position.path.slice(0, -1));
-        if (operations.every(operation =>
+        return operations.every(operation =>
             operation.position.path.length === referenceLength
             && JSON.stringify(operation.position.path.slice(0, -1)) === referenceParentPath,
-        )) return true;
-
-        return false;
+        );
     }
 
 }

@@ -3,5 +3,5 @@ import { Operation } from '../operation.ts';
 
 export interface RedirectEntry {
     operation: Operation;
-    redirect: RedirectArgs;
+    data: RedirectArgs;
 }

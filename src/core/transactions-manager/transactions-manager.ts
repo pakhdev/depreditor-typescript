@@ -1,3 +1,5 @@
+import { CleaningOperationsBuilder } from './helpers/cleaning-operations-builder.ts';
+import { MergingOperationsBuilder } from './helpers/merging-operations-builder.ts';
 import { Selection } from '../selection/selection.ts';
 import { Transaction } from './transaction.ts';
 
@@ -9,12 +11,11 @@ export class TransactionsManager {
     constructor(private readonly selection: Selection) {}
 
     public commit(transaction: Transaction): void {
-        // TODO: Create cleaning tasks
-        // TODO: Create merging tasks
+        MergingOperationsBuilder.build(transaction);
+        CleaningOperationsBuilder.build(transaction);
         this.purgeFutureTransactions();
         this.transactionsHistory.push(transaction);
         this.redo();
-
     }
 
     public redo(): void {
