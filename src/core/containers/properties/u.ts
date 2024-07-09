@@ -1,6 +1,8 @@
-import { ContainerProperties } from '../interfaces/container-properties.interface.ts';
+import ContainerProperties from '../interfaces/container-properties.interface.ts';
 
-export const u: ContainerProperties = {
+const u: ContainerProperties = {
     tagName: 'u',
     isBlock: false,
 };
+
+export default u;

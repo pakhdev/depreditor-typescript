@@ -1,6 +1,8 @@
-import { ContainerProperties } from '../interfaces/container-properties.interface.ts';
+import ContainerProperties from '../interfaces/container-properties.interface.ts';
 
-export const strong: ContainerProperties = {
+const strong: ContainerProperties = {
     tagName: 'strong',
     isBlock: false,
 };
+
+export default strong;

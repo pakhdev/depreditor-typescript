@@ -1,7 +1,9 @@
-import { ContainerProperties } from '../interfaces/container-properties.interface.ts';
+import ContainerProperties from '../interfaces/container-properties.interface.ts';
 
-export const divHidden: ContainerProperties = {
+const divHidden: ContainerProperties = {
     tagName: 'div',
     isBlock: false,
     classes: ['hidden-text'],
 };
+
+export default divHidden;

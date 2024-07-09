@@ -1,7 +1,9 @@
-import { ContainerProperties } from '../interfaces/container-properties.interface.ts';
+import ContainerProperties from '../interfaces/container-properties.interface.ts';
 
-export const link: ContainerProperties = {
+const link: ContainerProperties = {
     tagName: 'a',
     isBlock: false,
     attributes: { href: '' },
 };
+
+export default link;

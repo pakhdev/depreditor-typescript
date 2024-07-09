@@ -1,9 +1,9 @@
-import { DomSelection } from './helpers/dom-selection.ts';
-import { EventHooks } from '../event-hooks/event-hooks.ts';
-import { SelectionStateType } from './enums/selection-state-type.enum.ts';
-import { StoredSelection } from './helpers/stored-selection.ts';
+import DomSelection from './helpers/dom-selection.ts';
+import EventHooks from '../event-hooks/event-hooks.ts';
+import SelectionStateType from './enums/selection-state-type.enum.ts';
+import StoredSelection from './helpers/stored-selection.ts';
 
-export class Selection {
+class Selection {
 
     private readonly state: {
         previous: StoredSelection,
@@ -53,3 +53,5 @@ export class Selection {
     }
 
 }
+
+export default Selection;

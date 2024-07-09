@@ -1,8 +1,8 @@
-import { containersConfig } from './config.ts';
-import { ContainerProperties } from './interfaces/container-properties.interface.ts';
-import { MatchingStatus } from './enums/matching-status.enum.ts';
+import containersConfig from './config.ts';
+import ContainerProperties from './interfaces/container-properties.interface.ts';
+import MatchingStatus from './enums/matching-status.enum.ts';
 
-export class ContainerIdentifier {
+class ContainerIdentifier {
 
     public static identify(element: HTMLElement): ContainerProperties | null {
         for (const key in containersConfig) {
@@ -98,3 +98,5 @@ export class ContainerIdentifier {
     };
 
 }
+
+export default ContainerIdentifier;

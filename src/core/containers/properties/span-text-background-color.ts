@@ -1,7 +1,9 @@
-import { ContainerProperties } from '../interfaces/container-properties.interface.ts';
+import ContainerProperties from '../interfaces/container-properties.interface.ts';
 
-export const spanTextBackgroundColor: ContainerProperties = {
+const spanTextBackgroundColor: ContainerProperties = {
     tagName: 'span',
     isBlock: false,
     styles: { backgroundColor: '' },
 };
+
+export default spanTextBackgroundColor;

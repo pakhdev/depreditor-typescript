@@ -1,7 +1,7 @@
-import { OperationType } from './enums/operation-type.enum.ts';
-import { SelectedElement } from '../selection/helpers/selected-element.ts';
+import OperationType from './enums/operation-type.enum.ts';
+import SelectedElement from '../selection/helpers/selected-element.ts';
 
-export class Operation {
+class Operation {
 
     public readonly elementToInject: Node | undefined;
     private readonly textToInject: string | undefined;
@@ -121,3 +121,5 @@ export class Operation {
     }
 
 }
+
+export default Operation;

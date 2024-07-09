@@ -1,6 +1,6 @@
-import { SelectionOffset } from '../interfaces/selection-offset.interface.ts';
+import SelectionOffset from '../interfaces/selection-offset.interface.ts';
 
-export class SelectedElement {
+class SelectedElement {
     public path: number[];
     public offset: SelectionOffset;
 
@@ -87,3 +87,5 @@ export class SelectedElement {
     }
 
 }
+
+export default SelectedElement;

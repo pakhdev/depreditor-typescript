@@ -1,12 +1,12 @@
-import { ContainerIdentifier } from '../../containers/identifier.ts';
-import { ContainerProperties } from '../../containers/interfaces/container-properties.interface.ts';
-import { Operation } from '../operation.ts';
-import { OperationType } from '../enums/operation-type.enum.ts';
-import { RedirectArgs } from '../interfaces/redirect-args.interface.ts';
-import { RedirectEntry } from '../interfaces/redirect-entry.interface.ts';
-import { Transaction } from '../transaction.ts';
+import ContainerIdentifier from '../../containers/identifier.ts';
+import ContainerProperties from '../../containers/interfaces/container-properties.interface.ts';
+import Operation from '../operation.ts';
+import OperationType from '../enums/operation-type.enum.ts';
+import RedirectArgs from '../interfaces/redirect-args.interface.ts';
+import RedirectEntry from '../interfaces/redirect-entry.interface.ts';
+import Transaction from '../transaction.ts';
 
-export class MergingOperationsBuilder {
+class MergingOperationsBuilder {
 
     // TODO: Probablemente hay que analizar los elementos
     //  inyectados que se encuentran en el mismo nivel también
@@ -101,3 +101,5 @@ export class MergingOperationsBuilder {
     }
 
 }
+
+export default MergingOperationsBuilder;

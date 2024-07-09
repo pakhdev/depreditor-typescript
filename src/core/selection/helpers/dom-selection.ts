@@ -1,7 +1,7 @@
-import { SelectedElement } from './selected-element.ts';
-import { StoredSelection } from './stored-selection.ts';
+import SelectedElement from './selected-element.ts';
+import StoredSelection from './stored-selection.ts';
 
-export class DomSelection {
+class DomSelection {
 
     public static get(editableDiv: HTMLDivElement): StoredSelection {
         const selection = window.getSelection();
@@ -29,14 +29,14 @@ export class DomSelection {
         const commonAncestor = new SelectedElement(
             editableDiv,
             range.commonAncestorContainer,
-            { start: 0 }
+            { start: 0 },
         );
         return new StoredSelection(startElement, endElement, commonAncestor);
     }
 
     private static getFallbackSelection(editableDiv: HTMLDivElement): StoredSelection {
         const firstNode = this.findFirstTextNode(editableDiv) || editableDiv;
-        const offset = { start: 0, end: 0 }
+        const offset = { start: 0, end: 0 };
         const startElement = new SelectedElement(editableDiv, firstNode, { ...offset });
         const endElement = new SelectedElement(editableDiv, firstNode, { ...offset });
         const commonAncestor = new SelectedElement(editableDiv, firstNode, { ...offset });
@@ -56,3 +56,5 @@ export class DomSelection {
         return !!(selection?.focusNode && editableDiv.contains(selection.anchorNode) && selection.rangeCount);
     }
 }
+
+export default DomSelection;

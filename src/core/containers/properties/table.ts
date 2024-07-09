@@ -1,6 +1,8 @@
-import { ContainerProperties } from '../interfaces/container-properties.interface.ts';
+import ContainerProperties from '../interfaces/container-properties.interface.ts';
 
-export const table: ContainerProperties = {
+const table: ContainerProperties = {
     tagName: 'table',
     isBlock: true,
 };
+
+export default table;

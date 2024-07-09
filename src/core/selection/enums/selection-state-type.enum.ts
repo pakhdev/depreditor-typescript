@@ -1,4 +1,6 @@
-export enum SelectionStateType {
+enum SelectionStateType {
     PREVIOUS = 'previous',
     CURRENT = 'current'
 }
+
+export default SelectionStateType;

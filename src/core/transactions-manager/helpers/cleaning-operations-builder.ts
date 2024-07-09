@@ -1,12 +1,12 @@
-import { ContainerIdentifier } from '../../containers/identifier.ts';
-import { Operation } from '../operation.ts';
-import { OperationType } from '../enums/operation-type.enum.ts';
-import { ParentWithRemovals } from '../interfaces/parent-with-removals.interface.ts';
-import { SelectedElement } from '../../selection/helpers/selected-element.ts';
-import { Transaction } from '../transaction.ts';
+import ContainerIdentifier from '../../containers/identifier.ts';
+import Operation from '../operation.ts';
+import OperationType from '../enums/operation-type.enum.ts';
+import ParentWithRemovals from '../interfaces/parent-with-removals.interface.ts';
+import SelectedElement from '../../selection/helpers/selected-element.ts';
+import Transaction from '../transaction.ts';
 
 // La clase se encarga de limpiar los nodos vacíos y las operaciones innecesarias
-export class CleaningOperationsBuilder {
+class CleaningOperationsBuilder {
 
     public static build(transaction: Transaction): void {
         // Eliminar los nodos de texto que se quedarán vacíos
@@ -105,3 +105,5 @@ export class CleaningOperationsBuilder {
     }
 
 }
+
+export default CleaningOperationsBuilder;

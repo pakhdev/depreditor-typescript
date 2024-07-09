@@ -10,12 +10,12 @@ import {
     u,
     ul,
 } from './properties';
-import { ContainerProperties } from './interfaces/container-properties.interface.ts';
+import ContainerProperties from './interfaces/container-properties.interface.ts';
 
 // Constante que contiene las propiedades de los contenedores para poder
 // ser utilizadas al crear e identificar un contenedor. También se utiliza
 // para definir las acciones que se activaran al interactuar con el contenedor.
-export const containersConfig: { [key: string]: ContainerProperties } = {
+const containersConfig: { [key: string]: ContainerProperties } = {
     divAlignCenter,
     divAlignLeft,
     divAlignRight,
@@ -32,3 +32,5 @@ export const containersConfig: { [key: string]: ContainerProperties } = {
     u,
     ul,
 };
+
+export default containersConfig;

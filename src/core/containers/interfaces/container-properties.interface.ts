@@ -1,4 +1,4 @@
-export interface ContainerProperties {
+interface ContainerProperties {
     tagName: string;
     isBlock: boolean;
     classes?: string[];
@@ -7,3 +7,5 @@ export interface ContainerProperties {
     keepIfEmpty?: boolean;
     mergeable?: boolean;
 }
+
+export default ContainerProperties;

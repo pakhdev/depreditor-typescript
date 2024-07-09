@@ -1,11 +1,11 @@
-import { SelectedElement } from './selected-element.ts';
+import SelectedElement from './selected-element.ts';
 
-export class StoredSelection {
+class StoredSelection {
 
     constructor(
         public readonly startElement: SelectedElement,
         public readonly endElement: SelectedElement,
-        public readonly commonAncestor: SelectedElement
+        public readonly commonAncestor: SelectedElement,
     ) {}
 
     public get isNothingSelected(): boolean {
@@ -23,3 +23,5 @@ export class StoredSelection {
         return range;
     }
 }
+
+export default StoredSelection;

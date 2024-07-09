@@ -1,6 +1,8 @@
-import { ContainerProperties } from '../interfaces/container-properties.interface.ts';
+import ContainerProperties from '../interfaces/container-properties.interface.ts';
 
-export const ol: ContainerProperties = {
+const ol: ContainerProperties = {
     tagName: 'ol',
     isBlock: true,
 };
+
+export default ol;

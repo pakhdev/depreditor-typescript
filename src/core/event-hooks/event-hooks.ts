@@ -1,6 +1,6 @@
-import { HookHandler } from './interfaces/hook-handler.interface.ts';
+import HookHandler from './interfaces/hook-handler.interface.ts';
 
-export class EventHooks {
+class EventHooks {
     private readonly hooks: { [key: string]: HookHandler[] };
     private domChangeObserver: MutationObserver | null = null;
     private isDragDetected = false;
@@ -125,3 +125,5 @@ export class EventHooks {
     }
 
 }
+
+export default EventHooks;

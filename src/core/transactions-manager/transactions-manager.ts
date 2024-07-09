@@ -1,9 +1,9 @@
-import { CleaningOperationsBuilder } from './helpers/cleaning-operations-builder.ts';
-import { MergingOperationsBuilder } from './helpers/merging-operations-builder.ts';
-import { Selection } from '../selection/selection.ts';
-import { Transaction } from './transaction.ts';
+import CleaningOperationsBuilder from './helpers/cleaning-operations-builder.ts';
+import MergingOperationsBuilder from './helpers/merging-operations-builder.ts';
+import Selection from '../selection/selection.ts';
+import Transaction from './transaction.ts';
 
-export class TransactionsManager {
+class TransactionsManager {
 
     private transactionsHistory: Transaction[] = [];
     private currentTransactionIndex = -1;
@@ -27,8 +27,8 @@ export class TransactionsManager {
 
     public undo(): void {
         if (this.currentTransactionIndex >= 0) {
-            this.transactionsHistory[this.currentTransactionIndex].undo(this.selection);
             this.currentTransactionIndex--;
+            this.transactionsHistory[this.currentTransactionIndex].undo(this.selection);
         }
     }
 
@@ -38,3 +38,5 @@ export class TransactionsManager {
     }
 
 }
+
+export default TransactionsManager;

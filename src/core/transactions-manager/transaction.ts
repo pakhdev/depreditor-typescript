@@ -1,9 +1,9 @@
-import { Operation } from './operation.ts';
-import { OperationType } from './enums/operation-type.enum.ts';
-import { Selection } from '../selection/selection';
-import { StoredSelection } from '../selection/helpers/stored-selection.ts';
+import Operation from './operation.ts';
+import OperationType from './enums/operation-type.enum.ts';
+import Selection from '../selection/selection';
+import StoredSelection from '../selection/helpers/stored-selection.ts';
 
-export class Transaction {
+class Transaction {
 
     constructor(
         public operations: Operation[],
@@ -65,3 +65,5 @@ export class Transaction {
     }
 
 }
+
+export default Transaction;

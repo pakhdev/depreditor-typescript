@@ -1,7 +1,9 @@
-import { ContainerProperties } from '../interfaces/container-properties.interface.ts';
+import ContainerProperties from '../interfaces/container-properties.interface.ts';
 
-export const image: ContainerProperties = {
+const image: ContainerProperties = {
     tagName: 'img',
     isBlock: true,
     attributes: { src: '' },
 };
+
+export default image;
