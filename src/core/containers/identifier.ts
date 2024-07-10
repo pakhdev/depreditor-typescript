@@ -5,6 +5,9 @@ import MatchingStatus from './enums/matching-status.enum.ts';
 class ContainerIdentifier {
 
     public static identify(element: HTMLElement): ContainerProperties | null {
+        if (element.nodeType === Node.TEXT_NODE)
+            return null;
+
         for (const key in containersConfig) {
             if (element.tagName.toLowerCase() !== containersConfig[key].tagName.toLowerCase())
                 continue;
@@ -24,7 +27,7 @@ class ContainerIdentifier {
     // La comprobación de atributos no es estricta, solo se comprobará si los atributos del contenedor están
     // presentes en el elemento, pero no se comprobará si hay atributos adicionales en el elemento.
     // Probablemente en el futuro se pueda añadir una opción para hacer una comprobación estricta.
-    private static areAttributesMatching(
+    public static areAttributesMatching(
         elementOrProperties: HTMLElement | ContainerProperties,
         referenceProperties: ContainerProperties,
     ): boolean {
@@ -48,7 +51,7 @@ class ContainerIdentifier {
         return true;
     }
 
-    private static areClassesMatching(
+    public static areClassesMatching(
         elementOrProperties: HTMLElement | ContainerProperties,
         referenceProperties: ContainerProperties,
     ): boolean {
@@ -63,7 +66,7 @@ class ContainerIdentifier {
         return this.areEqualStringArrays(classesToCompare, referenceClasses);
     }
 
-    private static areStylesMatching(
+    public static areStylesMatching(
         elementOrProperties: HTMLElement | ContainerProperties,
         referenceProperties: ContainerProperties,
     ): MatchingStatus {

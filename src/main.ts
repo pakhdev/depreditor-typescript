@@ -1,4 +1,4 @@
-import { EditorInitializer } from './modules/editor-Initializer.ts';
+import { EditorInitializer } from './editor-Initializer.ts';
 
 const firstContentEditableDiv = document.getElementById('editor-content')! as HTMLDivElement;
 const firstToolbarContainer = document.getElementById('editor-toolbar__icons-container')!;

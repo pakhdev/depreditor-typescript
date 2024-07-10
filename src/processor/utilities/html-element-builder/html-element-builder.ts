@@ -1,7 +1,7 @@
 import { Attributes, Classes, StructureSchema, Styles } from './interfaces';
 
 // Creación de elementos y estructuras HTML con atributos y eventos
-export class HtmlElementBuilder {
+class HtmlElementBuilder {
     public static createElement(tagName: string, attributes: Attributes): HTMLElement {
         const element = document.createElement(tagName);
 
@@ -72,3 +72,5 @@ export class HtmlElementBuilder {
         element.addEventListener(eventName, value);
     }
 }
+
+export default HtmlElementBuilder;

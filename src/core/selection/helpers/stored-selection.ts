@@ -3,6 +3,7 @@ import SelectedElement from './selected-element.ts';
 class StoredSelection {
 
     constructor(
+        public readonly editableDiv: HTMLDivElement,
         public readonly startElement: SelectedElement,
         public readonly endElement: SelectedElement,
         public readonly commonAncestor: SelectedElement,

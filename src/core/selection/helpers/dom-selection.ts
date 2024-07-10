@@ -31,7 +31,7 @@ class DomSelection {
             range.commonAncestorContainer,
             { start: 0 },
         );
-        return new StoredSelection(startElement, endElement, commonAncestor);
+        return new StoredSelection(editableDiv, startElement, endElement, commonAncestor);
     }
 
     private static getFallbackSelection(editableDiv: HTMLDivElement): StoredSelection {
@@ -40,7 +40,7 @@ class DomSelection {
         const startElement = new SelectedElement(editableDiv, firstNode, { ...offset });
         const endElement = new SelectedElement(editableDiv, firstNode, { ...offset });
         const commonAncestor = new SelectedElement(editableDiv, firstNode, { ...offset });
-        return new StoredSelection(startElement, endElement, commonAncestor);
+        return new StoredSelection(editableDiv, startElement, endElement, commonAncestor);
     }
 
     private static findFirstTextNode(node: Node): Node | null {
