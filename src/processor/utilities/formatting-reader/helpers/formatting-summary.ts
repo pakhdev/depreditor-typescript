@@ -1,6 +1,7 @@
 import ContainerProperties from '../../../../core/containers/interfaces/container-properties.interface.ts';
 import Core from '../../../../core/core.ts';
 import FormattingEntry from '../interfaces/formatting-entry.interface.ts';
+import FormattingCoverage from '../enums/formatting-coverage.enum.ts';
 
 class FormattingSummary {
 
@@ -18,8 +19,12 @@ class FormattingSummary {
     }
 
     public registerFormattingNode(formatting: ContainerProperties, node: Node): void {
-        // Si no existe un entry con el mismo formato, crear uno
-        // Si existe un entry con el mismo formato, agregar el nodo al entry
+        const formattingEntry = this.entries.find(entry => entry.formatting === formatting);
+        if (!formattingEntry) {
+            this.entries.push({ formatting, nodes: [node], coverage: FormattingCoverage.FULL });
+        } else {
+            formattingEntry.nodes.push(node);
+        }
     }
 
 }

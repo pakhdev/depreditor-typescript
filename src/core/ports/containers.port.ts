@@ -3,7 +3,7 @@ import ContainerIdentifier from '../containers/identifier.ts';
 import MatchingStatus from '../containers/enums/matching-status.enum.ts';
 
 class ContainersPort {
-    public static(element: HTMLElement): ContainerProperties | null {
+    public identify(element: HTMLElement | Node): ContainerProperties | null {
         return ContainerIdentifier.identify(element);
     }
 
@@ -20,7 +20,7 @@ class ContainersPort {
     ): boolean {
         return ContainerIdentifier.areClassesMatching(elementOrProperties, referenceProperties);
     }
-    
+
     public static areStylesMatching(
         elementOrProperties: HTMLElement | ContainerProperties,
         referenceProperties: ContainerProperties,

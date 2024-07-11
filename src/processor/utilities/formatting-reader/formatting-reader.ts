@@ -1,6 +1,7 @@
 import Core from '../../../core/core.ts';
 import FormattingSummary from './helpers/formatting-summary.ts';
 import SelectionStateType from '../../../core/selection/enums/selection-state-type.enum.ts';
+import ContainerProperties from '../../../core/containers/interfaces/container-properties.interface.ts';
 
 class FormattingReader {
 
@@ -15,9 +16,21 @@ class FormattingReader {
         return summary;
     }
 
-    private getFormattingFromParentNodes(editableDiv: HTMLDivElement, targetNode: Node, summary: FormattingSummary) {
-        // Leer el formato de los nodos padre de commonAncestor
-        // Registrar todos los nodos de formato en FormattingSummary
+    private getFormattingFromParentNodes(editableDiv: HTMLDivElement, targetNode: Node, summary: FormattingSummary): ContainerProperties[] {
+        const formattings: ContainerProperties[] = [];
+
+        let currentNode: Node | null = targetNode;
+        while (currentNode !== editableDiv && currentNode?.parentNode) {
+            const formatting = this.core.containers.identify(currentNode);
+            if (formatting) {
+                if (!formattings.some(f => f === formatting))
+                    formattings.push(formatting);
+                summary.registerFormattingNode(formatting, currentNode);
+            }
+            currentNode = currentNode.parentNode;
+        }
+
+        return formattings;
     }
 
 }

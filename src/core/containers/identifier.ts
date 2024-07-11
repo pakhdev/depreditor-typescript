@@ -4,7 +4,7 @@ import MatchingStatus from './enums/matching-status.enum.ts';
 
 class ContainerIdentifier {
 
-    public static identify(element: HTMLElement): ContainerProperties | null {
+    public static identify(element: HTMLElement | Node): ContainerProperties | null {
         if (element.nodeType === Node.TEXT_NODE)
             return null;
 
@@ -12,13 +12,13 @@ class ContainerIdentifier {
             if (element.tagName.toLowerCase() !== containersConfig[key].tagName.toLowerCase())
                 continue;
 
-            if (!this.areAttributesMatching(element, containersConfig[key]))
+            if (!this.areAttributesMatching(element as HTMLElement, containersConfig[key]))
                 continue;
 
-            if (!this.areClassesMatching(element, containersConfig[key]))
+            if (!this.areClassesMatching(element as HTMLElement, containersConfig[key]))
                 continue;
 
-            if (this.areStylesMatching(element, containersConfig[key]) === MatchingStatus.EXACT)
+            if (this.areStylesMatching(element as HTMLElement, containersConfig[key]) === MatchingStatus.EXACT)
                 return containersConfig[key];
         }
         return null;
