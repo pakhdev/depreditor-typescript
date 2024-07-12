@@ -9,12 +9,17 @@ class SelectedElement {
         node: Node,
         offset: { start: number, end?: number },
     ) {
-        this.path = this.calculatePath(node);
         if (offset.end === undefined)
             offset.end = node.nodeType === Node.TEXT_NODE
                 ? (node as Text).length
                 : 0;
         this.offset = { start: offset.start, end: offset.end };
+
+        if (node.nodeType !== Node.TEXT_NODE) {
+            node = node.childNodes[offset.end];
+            this.offset = { start: 0, end: 0 };
+        }
+        this.path = this.calculatePath(node);
     }
 
     public get node(): Node {
