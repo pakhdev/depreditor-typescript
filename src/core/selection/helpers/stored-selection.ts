@@ -9,18 +9,6 @@ class StoredSelection {
         public readonly commonAncestor: SelectedElement,
     ) {}
 
-    private getIndexInCommonAncestor(element: SelectedElement): number {
-        if (this.commonAncestor.node.nodeType === Node.TEXT_NODE)
-            return element.offset.start;
-
-        if (!this.commonAncestor.node.hasChildNodes())
-            throw new Error('El nodo común no tiene nodos hijos');
-
-        return Array
-            .from(this.commonAncestor.node.childNodes)
-            .indexOf(element.node as ChildNode);
-    }
-
     public get startIndexInCommonAncestor(): number {
         return this.getIndexInCommonAncestor(this.startElement);
     }
@@ -43,6 +31,19 @@ class StoredSelection {
         range.setEnd(this.endElement.ownerEditor, this.endElement.offset.end);
         return range;
     }
+
+    private getIndexInCommonAncestor(element: SelectedElement): number {
+        if (this.commonAncestor.node.nodeType === Node.TEXT_NODE)
+            return element.offset.start;
+
+        if (!this.commonAncestor.node.hasChildNodes())
+            throw new Error('El nodo común no tiene nodos hijos');
+
+        const commonAncestorChildren = Array.from(this.commonAncestor.node.childNodes);
+        const elementOrContainer = commonAncestorChildren.find(childNode => childNode.contains(element.node));
+        return commonAncestorChildren.indexOf(elementOrContainer as ChildNode);
+    }
+
 }
 
 export default StoredSelection;
