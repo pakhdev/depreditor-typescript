@@ -14,11 +14,6 @@ class SelectedElement {
                 ? (node as Text).length
                 : 0;
         this.offset = { start: offset.start, end: offset.end };
-
-        if (node.nodeType !== Node.TEXT_NODE) {
-            node = node.childNodes[offset.end];
-            this.offset = { start: 0, end: 0 };
-        }
         this.path = this.calculatePath(node);
     }
 

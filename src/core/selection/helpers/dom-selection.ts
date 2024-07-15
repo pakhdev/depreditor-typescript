@@ -9,29 +9,53 @@ class DomSelection {
             return this.getFallbackSelection(editableDiv);
 
         const range = selection.getRangeAt(0);
-        const sameNode = range.startContainer === range.endContainer;
-        const startElement = new SelectedElement(
-            editableDiv,
-            range.startContainer,
-            {
-                start: range.startOffset,
-                end: sameNode ? range.endOffset : undefined,
-            },
-        );
-        const endElement = new SelectedElement(
-            editableDiv,
-            range.endContainer,
-            {
-                start: sameNode ? range.startOffset : 0,
-                end: range.endOffset,
-            },
-        );
+        const startElement = this.getStartNode(editableDiv, range);
+        const endElement = this.getEndNode(editableDiv, range);
         const commonAncestor = new SelectedElement(
             editableDiv,
             range.commonAncestorContainer,
             { start: 0 },
         );
         return new StoredSelection(editableDiv, startElement, endElement, commonAncestor);
+    }
+
+    private static getStartNode(editableDiv: HTMLDivElement, range: Range): SelectedElement {
+        return this.getSelectedNode(editableDiv, range, true);
+    }
+
+    private static getEndNode(editableDiv: HTMLDivElement, range: Range): SelectedElement {
+        return this.getSelectedNode(editableDiv, range, false);
+    }
+
+    private static getSelectedNode(
+        editableDiv: HTMLDivElement,
+        range: Range,
+        isStart: boolean,
+    ): SelectedElement {
+        const container = isStart ? range.startContainer : range.endContainer;
+        const offset = isStart ? range.startOffset : range.endOffset;
+
+        if (range.commonAncestorContainer === container && container.nodeType !== Node.TEXT_NODE) {
+            return new SelectedElement(
+                editableDiv,
+                container.childNodes[offset],
+                { start: 0, end: 0 },
+            );
+        }
+
+        const start = isStart
+            ? offset
+            : (container === range.startContainer ? range.startOffset : 0);
+
+        const end = isStart
+            ? (container === range.endContainer ? range.endOffset : undefined)
+            : offset;
+
+        return new SelectedElement(
+            editableDiv,
+            container,
+            { start, end },
+        );
     }
 
     private static getFallbackSelection(editableDiv: HTMLDivElement): StoredSelection {
