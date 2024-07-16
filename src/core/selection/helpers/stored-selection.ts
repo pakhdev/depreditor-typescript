@@ -1,4 +1,6 @@
 import SelectedElement from './selected-element.ts';
+import AffectedNodes from '../interfaces/affected-nodes.interface.ts';
+import AffectedNodesFetcher from './affected-nodes-fetcher.ts';
 
 class StoredSelection {
 
@@ -30,6 +32,10 @@ class StoredSelection {
         range.setStart(this.startElement.ownerEditor, this.startElement.offset.start);
         range.setEnd(this.endElement.ownerEditor, this.endElement.offset.end);
         return range;
+    }
+
+    public getAffectedNodes(part: 'before' | 'within' | 'after'): AffectedNodes[] {
+        return AffectedNodesFetcher.get(this, part);
     }
 
     private getIndexInCommonAncestor(element: SelectedElement): number {
