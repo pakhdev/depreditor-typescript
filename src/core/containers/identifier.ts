@@ -9,7 +9,7 @@ class ContainerIdentifier {
             return null;
 
         for (const key in containersConfig) {
-            if (element.tagName.toLowerCase() !== containersConfig[key].tagName.toLowerCase())
+            if ((element as HTMLElement).tagName.toLowerCase() !== containersConfig[key].tagName.toLowerCase())
                 continue;
 
             if (!this.areAttributesMatching(element as HTMLElement, containersConfig[key]))

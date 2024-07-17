@@ -14,7 +14,7 @@ class FormattingSummary {
         return this.entries;
     }
 
-    public updateFormattingCoverage(): void {
+    public updateFormattingCoverage(formattings: ContainerProperties[]): void {
         // Recibir formattings y comprar con los existentes
     }
 

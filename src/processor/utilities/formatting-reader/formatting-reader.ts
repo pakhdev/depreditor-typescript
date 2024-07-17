@@ -1,7 +1,8 @@
+import AffectedNodes from '../../../core/selection/interfaces/affected-nodes.interface.ts';
+import ContainerProperties from '../../../core/containers/interfaces/container-properties.interface.ts';
 import Core from '../../../core/core.ts';
 import FormattingSummary from './helpers/formatting-summary.ts';
 import SelectionStateType from '../../../core/selection/enums/selection-state-type.enum.ts';
-import ContainerProperties from '../../../core/containers/interfaces/container-properties.interface.ts';
 
 class FormattingReader {
 
@@ -9,14 +10,13 @@ class FormattingReader {
 
     public getFormatting(selectionType: SelectionStateType): FormattingSummary {
         const summary = new FormattingSummary(this.core);
-        this.core.selection.get(selectionType);
-        // Leer el formato de los nodos padre de commonAncestor
-        // Leer el formato de los nodos hijos de commonAncestor entre los nodos seleccionados
-        // Al encontrar un nodo sin nodos hijos registrarlo en el summary
+        const selection = this.core.selection.get(selectionType);
+        const parentFormattings = this.scanParentsFormatting(selection.editableDiv, selection.commonAncestor.node, summary);
+        this.scanChildrenFormatting(selection.getAffectedNodes('within'), parentFormattings, summary);
         return summary;
     }
 
-    private getFormattingFromParentNodes(editableDiv: HTMLDivElement, targetNode: Node, summary: FormattingSummary): ContainerProperties[] {
+    private scanParentsFormatting(editableDiv: HTMLDivElement, targetNode: Node, summary: FormattingSummary): ContainerProperties[] {
         const formattings: ContainerProperties[] = [];
 
         let currentNode: Node | null = targetNode;
@@ -33,6 +33,22 @@ class FormattingReader {
         return formattings;
     }
 
+    private scanChildrenFormatting(affectedNodes: AffectedNodes[], parentFormattings: ContainerProperties[], summary: FormattingSummary): void {
+        const formattings: ContainerProperties[] = [...parentFormattings];
+
+        for (const affectedNode of affectedNodes) {
+            const nodeFormatting = this.core.containers.identify(affectedNode.node);
+            if (nodeFormatting) {
+                if (!formattings.some(f => f === nodeFormatting))
+                    formattings.push(nodeFormatting);
+                summary.registerFormattingNode(nodeFormatting, affectedNode.node);
+            }
+            if (affectedNode.node.hasChildNodes())
+                this.scanChildrenFormatting(affectedNode.children, formattings, summary);
+            else
+                summary.updateFormattingCoverage(formattings);
+        }
+    }
 }
 
 export default FormattingReader;
