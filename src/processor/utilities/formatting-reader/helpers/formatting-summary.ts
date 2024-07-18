@@ -1,7 +1,8 @@
 import ContainerProperties from '../../../../core/containers/interfaces/container-properties.interface.ts';
 import Core from '../../../../core/core.ts';
-import FormattingEntry from '../interfaces/formatting-entry.interface.ts';
 import FormattingCoverage from '../enums/formatting-coverage.enum.ts';
+import FormattingEntry from '../interfaces/formatting-entry.interface.ts';
+import MatchingStatus from '../../../../core/containers/enums/matching-status.enum.ts';
 
 class FormattingSummary {
 
@@ -9,13 +10,17 @@ class FormattingSummary {
 
     constructor(private readonly core: Core) {}
 
-    public filterSimilar(reference: ContainerProperties): FormattingEntry[] {
-        // Devolver todos los entries que tengan un formato similar al de reference
-        return this.entries;
+    public getSimilar(reference: ContainerProperties): FormattingEntry[] {
+        return this.entries.filter(
+            entry => this.areMatchingContainers(entry.formatting, reference) === MatchingStatus.SIMILAR,
+        );
     }
 
-    public updateFormattingCoverage(formattings: ContainerProperties[]): void {
-        // Recibir formattings y comprar con los existentes
+    public updateFormattingCoverage(activeFormattings: ContainerProperties[]): void {
+        const fullCoverageEntries = this.entries.filter(entry => entry.coverage === FormattingCoverage.FULL);
+        fullCoverageEntries
+            .filter(entry => !activeFormattings.includes(entry.formatting))
+            .forEach(entry => entry.coverage = FormattingCoverage.PARTIAL);
     }
 
     public registerFormattingNode(formatting: ContainerProperties, node: Node): void {
@@ -25,6 +30,23 @@ class FormattingSummary {
         } else {
             formattingEntry.nodes.push(node);
         }
+    }
+
+    private areMatchingContainers(
+        elementOrProperties: HTMLElement | ContainerProperties,
+        referenceProperties: ContainerProperties,
+    ): MatchingStatus {
+
+        if (elementOrProperties.tagName.toLowerCase() !== referenceProperties.tagName.toLowerCase())
+            return MatchingStatus.DIFFERENT;
+
+        if (!this.core.containers.areAttributesMatching(elementOrProperties, referenceProperties))
+            return MatchingStatus.DIFFERENT;
+
+        if (!this.core.containers.areClassesMatching(elementOrProperties, referenceProperties))
+            return MatchingStatus.DIFFERENT;
+
+        return this.core.containers.areStylesMatching(elementOrProperties, referenceProperties);
     }
 
 }

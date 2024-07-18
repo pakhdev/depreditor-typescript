@@ -7,21 +7,21 @@ class ContainersPort {
         return ContainerIdentifier.identify(element);
     }
 
-    public static areAttributesMatching(
+    public areAttributesMatching(
         elementOrProperties: HTMLElement | ContainerProperties,
         referenceProperties: ContainerProperties,
     ): boolean {
         return ContainerIdentifier.areAttributesMatching(elementOrProperties, referenceProperties);
     }
 
-    public static areClassesMatching(
+    public areClassesMatching(
         elementOrProperties: HTMLElement | ContainerProperties,
         referenceProperties: ContainerProperties,
     ): boolean {
         return ContainerIdentifier.areClassesMatching(elementOrProperties, referenceProperties);
     }
 
-    public static areStylesMatching(
+    public areStylesMatching(
         elementOrProperties: HTMLElement | ContainerProperties,
         referenceProperties: ContainerProperties,
     ): MatchingStatus {
