@@ -8,7 +8,7 @@ class StoredSelection {
         public readonly editableDiv: HTMLDivElement,
         public readonly startElement: SelectedElement,
         public readonly endElement: SelectedElement,
-        public readonly commonAncestor: SelectedElement,
+        public commonAncestor: SelectedElement,
     ) {}
 
     public get startIndexInCommonAncestor(): number {
@@ -32,6 +32,14 @@ class StoredSelection {
         range.setStart(this.startElement.ownerEditor, this.startElement.offset.start);
         range.setEnd(this.endElement.ownerEditor, this.endElement.offset.end);
         return range;
+    }
+
+    public setCommonAncestorNode(commonAncestor: Node): void {
+        this.commonAncestor = new SelectedElement(
+            this.editableDiv,
+            commonAncestor,
+            { start: 0 },
+        );
     }
 
     public getAffectedNodes(part: 'before' | 'within' | 'after'): AffectedNodes[] {

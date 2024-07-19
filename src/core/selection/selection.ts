@@ -2,6 +2,7 @@ import DomSelection from './helpers/dom-selection.ts';
 import EventHooks from '../event-hooks/event-hooks.ts';
 import SelectionStateType from './enums/selection-state-type.enum.ts';
 import StoredSelection from './helpers/stored-selection.ts';
+import SelectedElement from './helpers/selected-element.ts';
 
 class Selection {
 
@@ -19,6 +20,10 @@ class Selection {
             previous: DomSelection.get(this.editableDiv),
             current: DomSelection.get(this.editableDiv),
         };
+    }
+
+    public create(commonAncestor: SelectedElement, startElement: SelectedElement, endElement: SelectedElement): StoredSelection {
+        return new StoredSelection(this.editableDiv, startElement, endElement, commonAncestor);
     }
 
     public set(storedSelection: StoredSelection): void {
