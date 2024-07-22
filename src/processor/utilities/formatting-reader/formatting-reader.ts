@@ -12,7 +12,7 @@ class FormattingReader {
         const summary = new FormattingSummary(this.core);
         const selection = this.core.selection.get(selectionType);
         const parentFormattings = this.scanParentsFormatting(selection.editableDiv, selection.commonAncestor.node, summary);
-        this.scanChildrenFormatting(selection.getAffectedNodes('within'), parentFormattings, summary);
+        this.scanChildrenFormatting(selection.getAffectedNodes(AffectedNodesPart.WITHIN), parentFormattings, summary);
         return summary;
     }
 

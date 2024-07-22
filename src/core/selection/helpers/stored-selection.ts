@@ -42,7 +42,7 @@ class StoredSelection {
         );
     }
 
-    public getAffectedNodes(part: 'before' | 'within' | 'after'): AffectedNodes[] {
+    public getAffectedNodes(part: AffectedNodesPart): AffectedNodes[] {
         return AffectedNodesFetcher.get(this, part);
     }
 

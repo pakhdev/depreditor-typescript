@@ -5,7 +5,7 @@ import StoredSelection from './stored-selection.ts';
 
 class AffectedNodesFetcher {
 
-    public static get(storedSelection: StoredSelection, part: 'before' | 'within' | 'after'): AffectedNodes[] {
+    public static get(storedSelection: StoredSelection, part: AffectedNodesPart): AffectedNodes[] {
         const {
             startElement,
             endElement,
@@ -18,23 +18,23 @@ class AffectedNodesFetcher {
             return [{ node: commonAncestor.node, children: [] }];
 
         let startContainer = commonAncestor.node.childNodes[startIndex];
-        if (part === 'after')
+        if (part === AffectedNodesPart.AFTER)
             startContainer = commonAncestor.node.childNodes[endIndex];
 
         let endContainer: Node | undefined = undefined;
-        if (part === 'after')
+        if (part === AffectedNodesPart.AFTER)
             endContainer = commonAncestor.node.childNodes[endIndex];
 
         let startNode: Node | undefined = undefined;
-        if (part === 'within')
+        if (part === AffectedNodesPart.WITHIN)
             startNode = startElement.node;
-        if (part === 'after')
+        if (part === AffectedNodesPart.AFTER)
             startNode = endElement.node;
 
         let endNode: Node | undefined = undefined;
-        if (part === 'before')
+        if (part === AffectedNodesPart.BEFORE)
             endNode = startElement.node;
-        if (part === 'within')
+        if (part === AffectedNodesPart.WITHIN)
             endNode = endElement.node;
 
         return this.collect({
