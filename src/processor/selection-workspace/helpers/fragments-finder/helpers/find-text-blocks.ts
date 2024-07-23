@@ -20,6 +20,8 @@ class FindTextBlocks {
         const textBlocks: TextBlock[] = [];
         while (this.targetElements.length)
             textBlocks.push(this.composeTextBlock(this.targetElements[0]));
+        textBlocks.forEach(textBlock => this.mapClonesToOriginals(textBlock));
+
         return textBlocks;
     }
 
@@ -36,9 +38,16 @@ class FindTextBlocks {
         });
     }
 
-    private findOriginalNode(node: Node): Node | null {
+    private findOriginalNode(node: Node): Node {
         const foundNodePair = this.nodesMap.find(({ clone }) => clone === node);
-        return foundNodePair?.original ?? null;
+        if (!foundNodePair)
+            throw new Error('Nodo no encontrado');
+        return foundNodePair.original;
+    }
+
+    private mapClonesToOriginals(textBlock: TextBlock): TextBlock {
+        textBlock.nodes.forEach(node => textBlock.replaceNode(node, this.findOriginalNode(node)));
+        return textBlock;
     }
 
     private findTargetElements(container: Node = this.tempContainer): Node[] {
