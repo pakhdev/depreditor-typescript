@@ -59,6 +59,10 @@ class SelectedElement {
         return this.path[this.path.length - 1];
     }
 
+    public setNode(node: Node): void {
+        this.path = this.calculatePath(node);
+    }
+
     private calculatePath(node: Node): number[] {
         const path: number[] = [];
         let currentNode: Node | null = node;

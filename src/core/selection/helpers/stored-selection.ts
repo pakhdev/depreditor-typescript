@@ -1,6 +1,7 @@
-import SelectedElement from './selected-element.ts';
 import AffectedNodes from '../interfaces/affected-nodes.interface.ts';
 import AffectedNodesFetcher from './affected-nodes-fetcher.ts';
+import SelectedElement from './selected-element.ts';
+import SelectionParams from '../interfaces/selection-params.interface.ts';
 
 class StoredSelection {
 
@@ -40,6 +41,18 @@ class StoredSelection {
             commonAncestor,
             { start: 0 },
         );
+    }
+
+    public updateAllSelectionPoints(selectionParams: SelectionParams): void {
+        if (!this.isNothingSelected)
+            throw new Error('No se puede actualizar todos los puntos de la selección si no son iguales');
+
+        for (const element of [this.startElement, this.endElement, this.commonAncestor]) {
+            if (selectionParams.node)
+                element.setNode(selectionParams.node);
+            if (selectionParams.offset)
+                element.offset = { ...element.offset, ...selectionParams.offset };
+        }
     }
 
     public getAffectedNodes(part: AffectedNodesPart): AffectedNodes[] {
