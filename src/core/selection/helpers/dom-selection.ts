@@ -9,12 +9,30 @@ class DomSelection {
             return this.getFallbackSelection(editableDiv);
 
         const range = selection.getRangeAt(0);
+        if (range.collapsed)
+            return this.getCollapsedSelection(editableDiv, range);
+        else
+            return this.getExpandedSelection(editableDiv, range);
+    }
+
+    private static getCollapsedSelection(editableDiv: HTMLDivElement, range: Range): StoredSelection {
+        const [startElement, endElement, commonAncestor] = new Array(3).fill(null).map(() =>
+            new SelectedElement(
+                editableDiv,
+                range.startContainer,
+                { start: range.startOffset, end: range.endOffset },
+            ),
+        );
+        return new StoredSelection(editableDiv, startElement, endElement, commonAncestor);
+    }
+
+    private static getExpandedSelection(editableDiv: HTMLDivElement, range: Range): StoredSelection {
         const startElement = this.getStartNode(editableDiv, range);
         const endElement = this.getEndNode(editableDiv, range);
         const commonAncestor = new SelectedElement(
             editableDiv,
             range.commonAncestorContainer,
-            { start: 0 },
+            { start: startElement.position, end: endElement.position },
         );
         return new StoredSelection(editableDiv, startElement, endElement, commonAncestor);
     }
