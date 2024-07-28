@@ -1,28 +1,8 @@
-import SelectedElement from '../../../core/selection/helpers/selected-element.ts';
-import StoredSelection from '../../../core/selection/helpers/stored-selection.ts';
+import StoredSelection from '../../../../../core/selection/helpers/stored-selection.ts';
+import SelectedElement from '../../../../../core/selection/helpers/selected-element.ts';
 
-class WorkspaceExtender {
+class AdjacentPartSelector {
     constructor(private readonly workspaceSelection: StoredSelection) {}
-
-    public selectFully(): void {
-        const { startElement, endElement } = this.workspaceSelection;
-        for (const element of [startElement, endElement]) {
-            if (element.node.nodeType === Node.TEXT_NODE) {
-                const textNode = element.node as Text;
-                element.offset = { start: 0, end: textNode.length };
-            }
-        }
-    }
-
-    public coverNode(node: Node): void {
-        if (this.workspaceSelection.commonAncestor.node === node)
-            return;
-        if (this.workspaceSelection.commonAncestor.node.contains(node))
-            return;
-        if (!node.parentNode)
-            throw new Error('No se puede cubrir el nodo porque no tiene nodo padre');
-        this.workspaceSelection.setCommonAncestorNode(node.parentNode);
-    }
 
     public selectNext(): void {
         if (!this.workspaceSelection.isNothingSelected)
@@ -46,7 +26,7 @@ class WorkspaceExtender {
         this.selectAdjacentNode(this.workspaceSelection.startElement, 'previous');
     }
 
-    private selectChar(selectedElement: SelectedElement, isNext: boolean): boolean {
+    private selectAdjacentChar(selectedElement: SelectedElement, isNext: boolean): boolean {
         if (selectedElement.node.nodeType === Node.TEXT_NODE) {
             const textNode = selectedElement.node as Text;
             const { start, end } = selectedElement.offset;
@@ -64,11 +44,11 @@ class WorkspaceExtender {
     }
 
     private selectNextChar(selectedElement: SelectedElement): boolean {
-        return this.selectChar(selectedElement, true);
+        return this.selectAdjacentChar(selectedElement, true);
     }
 
     private selectPreviousChar(selectedElement: SelectedElement): boolean {
-        return this.selectChar(selectedElement, false);
+        return this.selectAdjacentChar(selectedElement, false);
     }
 
     private selectAdjacentNode(selectedElement: SelectedElement, direction: 'next' | 'previous'): boolean {
@@ -78,7 +58,7 @@ class WorkspaceExtender {
         while (currentNode) {
             const validNode = this.findValidNode(currentNode);
             if (validNode) {
-                this.updateSelection(validNode, direction === 'next');
+                this.setSelectionNodes(validNode, direction === 'next');
                 return true;
             }
             currentNode = nodeGetter(currentNode);
@@ -86,7 +66,7 @@ class WorkspaceExtender {
         return false;
     }
 
-    private updateSelection(node: Node, selectStart: boolean): void {
+    private setSelectionNodes(node: Node, selectStart: boolean): void {
         const isTextNode = node.nodeType === Node.TEXT_NODE;
         const length = isTextNode ? (node as Text).length : 1;
         const offset = {
@@ -136,4 +116,4 @@ class WorkspaceExtender {
     }
 }
 
-export default WorkspaceExtender;
+export default AdjacentPartSelector;

@@ -3,7 +3,7 @@ import FragmentsCloner from './helpers/fragments-cloner.ts';
 import FragmentsFinder from './helpers/fragments-finder/fragments-finder.ts';
 import SelectionStateType from '../../core/selection/enums/selection-state-type.enum.ts';
 import StoredSelection from '../../core/selection/helpers/stored-selection.ts';
-import WorkspaceExtender from './helpers/workspace-extender.ts';
+import WorkspaceExtender from './helpers/workspace-extender/workspace-extender.ts';
 
 class SelectionWorkspace {
     private readonly selection: StoredSelection;
