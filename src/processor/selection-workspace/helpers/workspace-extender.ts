@@ -1,13 +1,8 @@
-import StoredSelection from '../../../core/selection/helpers/stored-selection.ts';
-import ContainerProperties from '../../../core/containers/interfaces/container-properties.interface.ts';
-import Core from '../../../core/core.ts';
 import SelectedElement from '../../../core/selection/helpers/selected-element.ts';
+import StoredSelection from '../../../core/selection/helpers/stored-selection.ts';
 
 class WorkspaceExtender {
-    constructor(
-        private readonly workspaceSelection: StoredSelection,
-        private readonly core: Core,
-    ) {}
+    constructor(private readonly workspaceSelection: StoredSelection) {}
 
     public selectFully(): void {
         const { startElement, endElement } = this.workspaceSelection;
@@ -29,7 +24,7 @@ class WorkspaceExtender {
         this.workspaceSelection.setCommonAncestorNode(node.parentNode);
     }
 
-    public selectNext(restrictedContainers: ContainerProperties[]): void {
+    public selectNext(): void {
         if (!this.workspaceSelection.isNothingSelected)
             return;
 
@@ -37,10 +32,10 @@ class WorkspaceExtender {
             if (this.selectNextChar(this.workspaceSelection.startElement))
                 return;
         }
-        // Select next node
+        this.selectAdjacentNode(this.workspaceSelection.startElement, 'next');
     }
 
-    private selectPrevious(restrictedContainers: ContainerProperties[]): void {
+    public selectPrevious(): void {
         if (!this.workspaceSelection.isNothingSelected)
             return;
 
@@ -48,7 +43,7 @@ class WorkspaceExtender {
             if (this.selectPreviousChar(this.workspaceSelection.startElement))
                 return;
         }
-        // Select previous node
+        this.selectAdjacentNode(this.workspaceSelection.startElement, 'previous');
     }
 
     private selectChar(selectedElement: SelectedElement, isNext: boolean): boolean {
@@ -76,6 +71,69 @@ class WorkspaceExtender {
         return this.selectChar(selectedElement, false);
     }
 
+    private selectAdjacentNode(selectedElement: SelectedElement, direction: 'next' | 'previous'): boolean {
+        const nodeGetter = direction === 'next' ? this.getNextNode : this.getPreviousNode;
+        let currentNode: Node | null | undefined = nodeGetter(selectedElement.node);
+
+        while (currentNode) {
+            const validNode = this.findValidNode(currentNode);
+            if (validNode) {
+                this.updateSelection(validNode, direction === 'next');
+                return true;
+            }
+            currentNode = nodeGetter(currentNode);
+        }
+        return false;
+    }
+
+    private updateSelection(node: Node, selectStart: boolean): void {
+        const isTextNode = node.nodeType === Node.TEXT_NODE;
+        const length = isTextNode ? (node as Text).length : 1;
+        const offset = {
+            start: this.getStartOffset(isTextNode, selectStart, length),
+            end: this.getEndOffset(isTextNode, selectStart, length),
+        };
+
+        this.workspaceSelection.updateAllSelectionPoints({ node, offset });
+
+        if (!isTextNode && node.parentNode) {
+            this.workspaceSelection.commonAncestor.setNode(node.parentNode);
+            const nodePosition = this.workspaceSelection.startElement.position;
+            this.workspaceSelection.commonAncestor.offset = {
+                start: nodePosition,
+                end: nodePosition + 1,
+            };
+        }
+    }
+
+    private getNextNode(node: Node): Node | null | undefined {
+        return node.nextSibling ?? node.parentNode?.nextSibling;
+    }
+
+    private getPreviousNode(node: Node): Node | null | undefined {
+        return node.previousSibling ?? node.parentNode?.previousSibling;
+    }
+
+    private getStartOffset(isTextNode: boolean, selectStart: boolean, length: number): number {
+        if (!isTextNode) return 0;
+        return selectStart ? 0 : length - 1;
+    };
+
+    private getEndOffset(isTextNode: boolean, selectStart: boolean, length: number): number {
+        if (!isTextNode) return 0;
+        return selectStart ? 1 : length;
+    };
+
+    private findValidNode(node: Node): Node | null {
+        if (node.nodeType === Node.TEXT_NODE || !node.hasChildNodes())
+            return node;
+        for (const child of node.childNodes) {
+            const validNode = this.findValidNode(child);
+            if (validNode)
+                return validNode;
+        }
+        return null;
+    }
 }
 
 export default WorkspaceExtender;
