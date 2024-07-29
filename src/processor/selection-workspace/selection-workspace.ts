@@ -4,6 +4,7 @@ import FragmentsFinder from './helpers/fragments-finder/fragments-finder.ts';
 import SelectionStateType from '../../core/selection/enums/selection-state-type.enum.ts';
 import StoredSelection from '../../core/selection/helpers/stored-selection.ts';
 import WorkspaceExtender from './helpers/workspace-extender/workspace-extender.ts';
+import IndentGetter from './helpers/indent-getter.ts';
 
 class SelectionWorkspace {
     private readonly selection: StoredSelection;
@@ -23,5 +24,9 @@ class SelectionWorkspace {
 
     public get extend(): WorkspaceExtender {
         return new WorkspaceExtender(this.selection);
+    }
+
+    public get getIndent(): number {
+        return IndentGetter.get(this.selection);
     }
 }
