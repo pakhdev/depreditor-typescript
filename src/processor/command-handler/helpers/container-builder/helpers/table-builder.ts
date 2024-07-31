@@ -1,6 +1,6 @@
 class TableBuilder {
-    
-    public static create(rows: number, cols: number): void {
+
+    public static create(rows: number, cols: number): HTMLElement | undefined {
         if (rows && cols) {
             const table = document.createElement('table');
             const tbody = document.createElement('tbody');
@@ -17,7 +17,9 @@ class TableBuilder {
             }
 
             table.appendChild(tbody);
+            return table;
         }
+        return;
     }
 }
 

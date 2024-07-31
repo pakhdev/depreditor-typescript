@@ -1,4 +1,5 @@
-import { Attributes, Classes, StructureSchema, Styles } from './interfaces';
+import { Attributes, Classes, Styles } from '../../../core/containers/interfaces';
+import StructureSchema from './interfaces/structure-schema.interface.ts';
 
 // Creación de elementos y estructuras HTML con atributos y eventos
 class HtmlElementBuilder {

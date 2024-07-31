@@ -1,9 +1,11 @@
+import { Attributes, Classes, Styles } from './index.ts';
+
 interface ContainerProperties {
     tagName: string;
     isBlock: boolean;
-    classes?: string[];
-    attributes?: { [key: string]: string };
-    styles?: { [key: string]: string };
+    classes?: Classes;
+    attributes?: Attributes;
+    styles?: Styles;
     keepIfEmpty?: boolean;
     mergeable?: boolean;
 }

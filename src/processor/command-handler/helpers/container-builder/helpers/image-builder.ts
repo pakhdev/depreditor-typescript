@@ -1,4 +1,4 @@
-import ImageLimits from '../interfaces/image-limits.inteface.ts';
+import ImageLimits from '../../../interfaces/image-limits.inteface.ts';
 
 class ImageBuilder {
 
@@ -16,10 +16,7 @@ class ImageBuilder {
         this.minResolutionDifference = imageLimits.minResolutionDifference;
     }
 
-    public async create(fileInput: HTMLInputElement, userWantsLargeImage: boolean): Promise<{
-        initialImage: string,
-        largeImage: string | null
-    } | undefined> {
+    public async create(fileInput: HTMLInputElement, userWantsLargeImage: boolean): Promise<HTMLElement | undefined> {
 
         if (!fileInput.files || !fileInput.files[0]) return;
 
@@ -27,8 +24,11 @@ class ImageBuilder {
         if (!img) return;
 
         const initialImage: string = this.createInitialImage(img);
-        const largeImage: string | null = userWantsLargeImage ? this.createLargeImage(img) : null;
-        return { initialImage, largeImage };
+        const largeImage: string | undefined = userWantsLargeImage ? this.createLargeImage(img) : undefined;
+        const newImage = document.createElement('img');
+        newImage.src = initialImage;
+        newImage.dataset.largeImage = largeImage;
+        return newImage;
     }
 
     private createInitialImage(img: HTMLImageElement): string {
@@ -38,7 +38,7 @@ class ImageBuilder {
         return this.resizeImage(img, this.maxInitialImageWidth, this.maxInitialImageHeight);
     }
 
-    private createLargeImage(img: HTMLImageElement): string | null {
+    private createLargeImage(img: HTMLImageElement): string | undefined {
 
         if (img.width > this.maxInitialImageWidth + this.minResolutionDifference
             ||
@@ -46,7 +46,7 @@ class ImageBuilder {
         ) {
             return this.resizeImage(img, this.maxLargeImageWidth, this.maxLargeImageHeight);
         }
-        return null;
+        return;
     }
 
     private async readImage(file: File): Promise<HTMLImageElement | void> {
