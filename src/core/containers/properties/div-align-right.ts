@@ -5,6 +5,7 @@ const divAlignRight: ContainerProperties = {
     tagName: 'div',
     types: [ContainerType.INSERTABLE, ContainerType.WRAPPER],
     isBlock: true,
+    keepIfEmpty: true,
     styles: { textAlign: 'right' },
 };
 

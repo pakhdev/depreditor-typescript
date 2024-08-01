@@ -5,6 +5,7 @@ const divCodeText: ContainerProperties = {
     tagName: 'div',
     types: [ContainerType.INSERTABLE, ContainerType.WRAPPER],
     isBlock: true,
+    keepIfEmpty: true,
     classes: ['code-text'],
 };
 
