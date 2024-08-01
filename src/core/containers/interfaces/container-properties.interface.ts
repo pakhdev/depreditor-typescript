@@ -1,11 +1,13 @@
 import { Attributes, Classes, Styles } from './index.ts';
+import ContainerType from '../enums/container-type.enum.ts';
 
 interface ContainerProperties {
     tagName: string;
-    isBlock: boolean;
+    types: ContainerType[];
     classes?: Classes;
     attributes?: Attributes;
     styles?: Styles;
+    isBlock?: boolean;
     keepIfEmpty?: boolean;
     mergeable?: boolean;
 }

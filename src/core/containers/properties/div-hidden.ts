@@ -1,8 +1,9 @@
 import ContainerProperties from '../interfaces/container-properties.interface.ts';
+import ContainerType from '../enums/container-type.enum.ts';
 
 const divHidden: ContainerProperties = {
     tagName: 'div',
-    isBlock: false,
+    types: [ContainerType.WRAPPER],
     classes: ['hidden-text'],
 };
 

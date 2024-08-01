@@ -1,9 +1,10 @@
 import ContainerProperties from '../interfaces/container-properties.interface.ts';
 import ContainerType from '../enums/container-type.enum.ts';
 
-const u: ContainerProperties = {
-    tagName: 'u',
+const td: ContainerProperties = {
+    tagName: 'td',
     types: [ContainerType.WRAPPER],
+    keepIfEmpty: true,
 };
 
-export default u;
+export default td;
