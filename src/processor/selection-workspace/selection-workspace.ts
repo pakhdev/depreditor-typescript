@@ -1,10 +1,12 @@
 import Core from '../../core/core.ts';
+import FormattingReader from '../utilities/formatting-reader/formatting-reader.ts';
+import FormattingSummary from '../utilities/formatting-reader/helpers/formatting-summary.ts';
 import FragmentsCloner from './helpers/fragments-cloner.ts';
 import FragmentsFinder from './helpers/fragments-finder/fragments-finder.ts';
+import IndentGetter from './helpers/indent-getter.ts';
 import SelectionStateType from '../../core/selection/enums/selection-state-type.enum.ts';
 import StoredSelection from '../../core/selection/helpers/stored-selection.ts';
 import WorkspaceExtender from './helpers/workspace-extender/workspace-extender.ts';
-import IndentGetter from './helpers/indent-getter.ts';
 
 class SelectionWorkspace {
     private readonly selection: StoredSelection;
@@ -26,7 +28,17 @@ class SelectionWorkspace {
         return new WorkspaceExtender(this.selection);
     }
 
-    public get getIndent(): number {
+    public get indent(): number {
         return IndentGetter.get(this.selection);
     }
+
+    public get formatting(): FormattingSummary {
+        return new FormattingReader(this.core).getFormatting(SelectionStateType.CURRENT);
+    }
+
+    public get isNothingSelected(): boolean {
+        return this.selection.isNothingSelected;
+    }
 }
+
+export default SelectionWorkspace;
