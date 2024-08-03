@@ -1,8 +1,12 @@
 import AdjacentPartSelector from './helpers/adjacent-part-selector.ts';
 import StoredSelection from '../../../../core/selection/helpers/stored-selection.ts';
+import SelectionWorkspace from '../../selection-workspace.ts';
 
 class WorkspaceExtender {
-    constructor(private readonly workspaceSelection: StoredSelection) {}
+    constructor(
+        private readonly workspace: SelectionWorkspace,
+        private readonly workspaceSelection: StoredSelection,
+    ) {}
 
     public selectFully(): void {
         const { startElement, endElement } = this.workspaceSelection;
@@ -22,6 +26,14 @@ class WorkspaceExtender {
         if (!node.parentNode)
             throw new Error('No se puede cubrir el nodo porque no tiene nodo padre');
         this.workspaceSelection.setCommonAncestorNode(node.parentNode);
+    }
+
+    public outsideInlineParents(): void {
+        const { commonAncestor } = this.workspaceSelection;
+        while (this.workspace.hasInlineParent) {
+            const parentNode = commonAncestor.parentNode;
+            this.workspaceSelection.setCommonAncestorNode(parentNode);
+        }
     }
 
     public selectNext(): void {

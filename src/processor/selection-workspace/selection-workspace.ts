@@ -25,7 +25,7 @@ class SelectionWorkspace {
     }
 
     public get extend(): WorkspaceExtender {
-        return new WorkspaceExtender(this.selection);
+        return new WorkspaceExtender(this, this.selection);
     }
 
     public get indent(): number {
@@ -39,6 +39,26 @@ class SelectionWorkspace {
     public get isNothingSelected(): boolean {
         return this.selection.isNothingSelected;
     }
+
+    public get hasInlineParent(): boolean {
+        const { commonAncestor } = this.selection;
+        if (!commonAncestor.path.length)
+            return false;
+
+        let node: Node | null = commonAncestor.parentNode;
+        const { ownerEditor } = commonAncestor;
+        while (node && node !== ownerEditor) {
+            const element = node as HTMLElement;
+            const containerProperties = this.core.containers.identify(element);
+            if (containerProperties && !containerProperties.isBlock)
+                return true;
+
+            node = node.parentNode;
+        }
+
+        return false;
+    }
+
 }
 
 export default SelectionWorkspace;
