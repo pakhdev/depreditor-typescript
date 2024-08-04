@@ -59,6 +59,10 @@ class SelectionWorkspace {
         return false;
     }
 
+    public get commonAncestor(): Node {
+        return this.selection.commonAncestor.node;
+    }
+
 }
 
 export default SelectionWorkspace;

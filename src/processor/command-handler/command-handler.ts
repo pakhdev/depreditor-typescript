@@ -15,10 +15,10 @@ class CommandHandler {
             if (!element)
                 return;
             const workspace = new SelectionWorkspace(this.core);
-            const { isNothingSelected } = workspace;
+            const { isNothingSelected, commonAncestor } = workspace;
             const currentFormatting = workspace.formatting;
-            const action = this.resolveContainerAction(element, currentFormatting, isNothingSelected);
-
+            const action = this.resolveContainerAction(element, currentFormatting, isNothingSelected, commonAncestor);
+            this.adjustSelection(element, action, workspace, currentFormatting, isNothingSelected);
             // Adjust workspace selection
             // Run insert/wrap/unwrap command
             // Create transaction
@@ -26,7 +26,7 @@ class CommandHandler {
         });
     }
 
-    private resolveContainerAction(element: HTMLElement, formatting: FormattingSummary, isNothingSelected: boolean): ActionTypes {
+    private resolveContainerAction(element: HTMLElement, formatting: FormattingSummary, isNothingSelected: boolean, commonAncestor: Node): ActionTypes {
         const containerProperties = this.core.containers.identify(element);
         if (!containerProperties)
             throw new Error('El elemento no está definido');
@@ -39,7 +39,7 @@ class CommandHandler {
             if (isAlreadyFormatted)
                 return ActionTypes.UNWRAP;
 
-            if (!isNothingSelected)
+            if (!isNothingSelected || (isNothingSelected && commonAncestor.nodeType === Node.TEXT_NODE))
                 return ActionTypes.WRAP;
         }
 
@@ -47,6 +47,39 @@ class CommandHandler {
             return ActionTypes.INSERT;
 
         return ActionTypes.NONE;
+    }
+
+    private adjustSelection(
+        element: HTMLElement,
+        action: ActionTypes,
+        workspace: SelectionWorkspace,
+        formatting: FormattingSummary,
+        isNothingSelected: boolean,
+    ): void {
+        const containerProperties = this.core.containers.identify(element);
+        if (!containerProperties)
+            throw new Error('El elemento no está definido');
+
+        switch (action) {
+            case ActionTypes.WRAP:
+                const similarFormatting = formatting.getSimilar(containerProperties);
+                if (similarFormatting)
+                    similarFormatting.forEach(entry =>
+                        entry.nodes.forEach(node => workspace.extend.coverNode(node)),
+                    );
+                if (isNothingSelected)
+                    workspace.extend.selectFully();
+                break;
+            case ActionTypes.UNWRAP:
+                const formattingEntry = formatting.entries.find(entry => entry.formatting === containerProperties);
+                if (formattingEntry)
+                    formattingEntry.nodes.forEach(node => workspace.extend.coverNode(node));
+                break;
+            case ActionTypes.INSERT:
+                if (containerProperties.isBlock)
+                    workspace.extend.outsideInlineParents();
+                break;
+        }
     }
 }
 
