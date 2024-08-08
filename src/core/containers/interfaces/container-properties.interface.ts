@@ -10,6 +10,7 @@ interface ContainerProperties {
     isBlock?: boolean;
     keepIfEmpty?: boolean;
     mergeable?: boolean;
+    childContainer?: ContainerProperties;
 }
 
 export default ContainerProperties;
