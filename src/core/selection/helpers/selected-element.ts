@@ -6,15 +6,28 @@ class SelectedElement {
 
     constructor(
         public readonly ownerEditor: HTMLDivElement,
-        node: Node,
-        offset: { start: number, end?: number },
+        nodeOrPath: Node | number[],
+        offset?: { start: number, end?: number },
     ) {
-        if (offset.end === undefined)
-            offset.end = node.nodeType === Node.TEXT_NODE
-                ? (node as Text).length
-                : 0;
+        if (offset === undefined)
+            offset = { start: 0 };
+
+        if (offset.end === undefined) {
+            if (nodeOrPath instanceof Node) {
+                offset.end = nodeOrPath.nodeType === Node.TEXT_NODE
+                    ? (nodeOrPath as Text).length
+                    : 0;
+            } else {
+                offset.end = 0;
+            }
+        }
+
         this.offset = { start: offset.start, end: offset.end };
-        this.path = this.calculatePath(node);
+
+        if (nodeOrPath instanceof Node)
+            this.path = this.calculatePath(nodeOrPath);
+        else
+            this.path = nodeOrPath;
     }
 
     public get node(): Node {

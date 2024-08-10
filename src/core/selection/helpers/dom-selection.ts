@@ -54,11 +54,7 @@ class DomSelection {
         const offset = isStart ? range.startOffset : range.endOffset;
 
         if (range.commonAncestorContainer === container && container.nodeType !== Node.TEXT_NODE) {
-            return new SelectedElement(
-                editableDiv,
-                container.childNodes[offset],
-                { start: 0, end: 0 },
-            );
+            return new SelectedElement(editableDiv, container.childNodes[offset]);
         }
 
         const start = isStart

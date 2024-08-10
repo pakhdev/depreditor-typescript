@@ -36,7 +36,7 @@ class CleaningOperationsBuilder {
                 continue;
             const newElementRemoval = new Operation(
                 OperationType.ELEMENT_REMOVAL,
-                new SelectedElement(transaction.ownerEditor, parent.node, { start: 0 }),
+                new SelectedElement(transaction.ownerEditor, parent.node),
             );
             transaction.addOperation(newElementRemoval, parent.firstRemovalIdx);
         }

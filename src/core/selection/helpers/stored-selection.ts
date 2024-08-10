@@ -36,11 +36,7 @@ class StoredSelection {
     }
 
     public setCommonAncestorNode(commonAncestor: Node): void {
-        this.commonAncestor = new SelectedElement(
-            this.editableDiv,
-            commonAncestor,
-            { start: 0 },
-        );
+        this.commonAncestor = new SelectedElement(this.editableDiv, commonAncestor);
     }
 
     public updateAllSelectionPoints(selectionParams: SelectionParams): void {
