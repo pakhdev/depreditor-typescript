@@ -9,7 +9,7 @@ import StoredSelection from '../../core/selection/helpers/stored-selection.ts';
 import WorkspaceExtender from './helpers/workspace-extender/workspace-extender.ts';
 
 class SelectionWorkspace {
-    private readonly selection: StoredSelection;
+    public readonly selection: StoredSelection;
 
     constructor(private readonly core: Core) {
         const { commonAncestor, startElement, endElement } = this.core.selection.get(SelectionStateType.CURRENT);
