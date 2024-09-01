@@ -1,4 +1,5 @@
 import HookHandler from './interfaces/hook-handler.interface.ts';
+import Core from '../core.ts';
 
 class EventHooks {
     private readonly hooks: { [key: string]: HookHandler[] };
@@ -6,7 +7,10 @@ class EventHooks {
     private isDragDetected = false;
     private isMouseButtonPressed = false;
 
-    constructor(private readonly editableDiv: HTMLDivElement) {
+    constructor(
+        private readonly editableDiv: HTMLDivElement,
+        private readonly core: Core
+    ) {
         this.hooks = {
             'backspace': [],
             'cut': [],
@@ -42,7 +46,7 @@ class EventHooks {
     }
 
     public executeHooks(eventName: string, event?: Event): void {
-        if (this.hooks[eventName]) this.hooks[eventName].forEach(handler => handler(event));
+        if (this.hooks[eventName]) this.hooks[eventName].forEach(handler => handler(this.core, event));
     }
 
     private setupEventListeners(): void {

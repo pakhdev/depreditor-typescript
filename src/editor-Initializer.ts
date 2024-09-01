@@ -1,8 +1,11 @@
 import Core from './core/core.ts';
+import Interaction from './interaction/interaction.ts';
 
 export class EditorInitializer {
 
-    private core: Core;
+    private readonly core: Core;
+
+    private readonly interaction: Interaction;
 
     constructor(
         public readonly editableDiv: HTMLDivElement,
@@ -10,6 +13,8 @@ export class EditorInitializer {
     ) {
         this.normalizeCode();
         this.core = new Core(this.editableDiv);
+
+        this.interaction = new Interaction(this.core, this.toolbarContainer);
     }
 
     private normalizeCode(): EditorInitializer {

@@ -1,5 +1,7 @@
+import Core from '../../core.ts';
+
 interface HookHandler {
-    (event?: Event): void;
+    (core: Core, event?: Event): void;
 }
 
 export default HookHandler;
