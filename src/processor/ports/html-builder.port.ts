@@ -4,11 +4,11 @@ import HtmlElementBuilder from '../utilities/html-element-builder/html-element-b
 
 class HtmlBuilderPort {
 
-    public static createElement(tagName: string, attributes: Attributes): HTMLElement {
+    public createElement(tagName: string, attributes: Attributes): HTMLElement {
         return HtmlElementBuilder.createElement(tagName, attributes);
     }
 
-    public static createStructure(schema: StructureSchema): HTMLElement {
+    public createStructure(schema: StructureSchema): HTMLElement {
         return HtmlElementBuilder.createStructure(schema);
     }
 }

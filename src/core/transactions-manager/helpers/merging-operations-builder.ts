@@ -84,6 +84,7 @@ class MergingOperationsBuilder {
         return null;
     }
 
+    // Comprueba si el nodo es un contenedor del tipo especificado
     private static checkSibling(node: Node, referenceType: ContainerProperties): boolean {
         const containerType = ContainerIdentifier.identify(node as HTMLElement);
         return !!containerType && containerType === referenceType;

@@ -15,7 +15,7 @@ export class EditorInitializer {
         this.normalizeCode();
         this.core = new Core(this.editableDiv);
         this.processor = new Processor(this.core);
-        this.interaction = new Interaction(this.core, this.toolbarContainer);
+        this.interaction = new Interaction(this.core, this.processor, this.toolbarContainer);
     }
 
     private normalizeCode(): EditorInitializer {

@@ -14,7 +14,7 @@ class Processor {
         const formattingReader = new FormattingReader(this.core);
         const commandHandler = new CommandHandler(this.core);
 
-        this.htmlBuilder = HtmlBuilderPort;
+        this.htmlBuilder = new HtmlBuilderPort();
         this.formattingReader = new FormattingReaderPort(formattingReader);
         this.commandHandler = new CommandHandlerPort(commandHandler);
     }
