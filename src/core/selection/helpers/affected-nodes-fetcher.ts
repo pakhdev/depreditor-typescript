@@ -1,4 +1,5 @@
 import AffectedNodes from '../interfaces/affected-nodes.interface.ts';
+import AffectedNodesPart from '../enums/affected-nodes-part.enum.ts';
 import CollectingRange from '../interfaces/collecting-range.interface.ts';
 import CollectingState from '../interfaces/collecting-state.interface.ts';
 import StoredSelection from './stored-selection.ts';

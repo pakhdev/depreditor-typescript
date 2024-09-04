@@ -3,3 +3,5 @@ enum AffectedNodesPart {
     WITHIN,
     AFTER,
 }
+
+export default AffectedNodesPart;

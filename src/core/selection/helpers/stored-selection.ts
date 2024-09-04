@@ -2,6 +2,7 @@ import AffectedNodes from '../interfaces/affected-nodes.interface.ts';
 import AffectedNodesFetcher from './affected-nodes-fetcher.ts';
 import SelectedElement from './selected-element.ts';
 import SelectionParams from '../interfaces/selection-params.interface.ts';
+import AffectedNodesPart from '../enums/affected-nodes-part.enum.ts';
 
 class StoredSelection {
 

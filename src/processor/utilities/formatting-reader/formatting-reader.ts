@@ -1,4 +1,5 @@
 import AffectedNodes from '../../../core/selection/interfaces/affected-nodes.interface.ts';
+import AffectedNodesPart from '../../../core/selection/enums/affected-nodes-part.enum.ts';
 import ContainerProperties from '../../../core/containers/interfaces/container-properties.interface.ts';
 import Core from '../../../core/core.ts';
 import FormattingSummary from './helpers/formatting-summary.ts';
@@ -21,12 +22,7 @@ class FormattingReader {
 
         let currentNode: Node | null = targetNode;
         while (currentNode !== editableDiv && currentNode?.parentNode) {
-            const formatting = this.core.containers.identify(currentNode);
-            if (formatting) {
-                if (!formattings.some(f => f === formatting))
-                    formattings.push(formatting);
-                summary.registerFormattingNode(formatting, currentNode);
-            }
+            this.processNodeFormatting(currentNode, formattings, summary);
             currentNode = currentNode.parentNode;
         }
 
@@ -34,19 +30,22 @@ class FormattingReader {
     }
 
     private scanChildrenFormatting(affectedNodes: AffectedNodes[], parentFormattings: ContainerProperties[], summary: FormattingSummary): void {
-        const formattings: ContainerProperties[] = [...parentFormattings];
-
         for (const affectedNode of affectedNodes) {
-            const nodeFormatting = this.core.containers.identify(affectedNode.node);
-            if (nodeFormatting) {
-                if (!formattings.some(f => f === nodeFormatting))
-                    formattings.push(nodeFormatting);
-                summary.registerFormattingNode(nodeFormatting, affectedNode.node);
-            }
+            const formattings: ContainerProperties[] = [...parentFormattings];
+            this.processNodeFormatting(affectedNode.node, formattings, summary);
             if (affectedNode.node.hasChildNodes())
                 this.scanChildrenFormatting(affectedNode.children, formattings, summary);
             else
                 summary.updateFormattingCoverage(formattings);
+        }
+    }
+
+    private processNodeFormatting(node: Node, formattings: ContainerProperties[], summary: FormattingSummary): void {
+        const nodeFormatting = this.core.containers.identify(node);
+        if (nodeFormatting) {
+            if (!formattings.some(f => f === nodeFormatting))
+                formattings.push(nodeFormatting);
+            summary.registerFormattingNode(nodeFormatting, node);
         }
     }
 }

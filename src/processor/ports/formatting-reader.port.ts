@@ -8,6 +8,10 @@ class FormattingReaderPort {
     public getFormatting(selectionType: SelectionStateType): FormattingSummary {
         return this.formattingReader.getFormatting(selectionType);
     }
+
+    public getCurrentFormatting(): FormattingSummary {
+        return this.formattingReader.getFormatting(SelectionStateType.CURRENT);
+    }
 }
 
 export default FormattingReaderPort;
