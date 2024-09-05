@@ -3,6 +3,8 @@ import Processor from '../../processor/processor.ts';
 import ToolbarButton from './interfaces/toolbar-button.interface.ts';
 import ToolbarButtonState from './interfaces/toolbar-button-state.interface.ts';
 import toolbarButtonsConfig from './config/toolbar-buttons.config.ts';
+import FormattingEntry from '../../processor/utilities/formatting-reader/interfaces/formatting-entry.interface.ts';
+import FormattingCoverage from '../../processor/utilities/formatting-reader/enums/formatting-coverage.enum.ts';
 
 class Toolbar {
 
@@ -15,6 +17,7 @@ class Toolbar {
         private readonly toolbarContainer: HTMLElement,
     ) {
         this.createButtons();
+        this.subscribeToRelevantEvents();
     }
 
     public createButtons(): void {
@@ -33,6 +36,23 @@ class Toolbar {
 
     public handleButtonAction(event: Event): void {
         console.log('Button clicked:', this.buttonElements.get(event.target as HTMLButtonElement));
+    }
+
+    public handleButtonsState(): void {
+        const currentFormatting: FormattingEntry[] = this.processor.formattingReader.getCurrentFormatting().entries;
+        this.buttonElements.forEach((state, button) => {
+            if (currentFormatting.some(entry => entry.coverage === FormattingCoverage.FULL && entry.formatting === state.formattingContainerProperties)) {
+                button.classList.add('editor-toolbar__icon--active');
+                state.activated = true;
+            } else if (state.activated) {
+                button.classList.remove('editor-toolbar__icon--active');
+                state.activated = false;
+            }
+        });
+    }
+
+    private subscribeToRelevantEvents(): void {
+        this.core.eventHooks.on(['selectionChange'], () => this.handleButtonsState());
     }
 }
 
