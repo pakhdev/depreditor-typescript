@@ -1,4 +1,4 @@
-import Attributes from './attributes.interface.ts';
+import { Attributes } from '../../../../core/containers/interfaces';
 
 interface StructureSchema {
     tagName: string;
