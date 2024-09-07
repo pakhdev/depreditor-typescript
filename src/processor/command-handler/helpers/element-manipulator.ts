@@ -3,6 +3,7 @@ import ContainerProperties from '../../../core/containers/interfaces/container-p
 import HtmlElementBuilder from '../../utilities/html-element-builder/html-element-builder.ts';
 import SelectionWorkspace from '../../selection-workspace/selection-workspace.ts';
 import TextBlock from '../../selection-workspace/helpers/fragments-finder/helpers/text-block.ts';
+import AffectedNodesPart from '../../../core/selection/enums/affected-nodes-part.enum.ts';
 
 class ElementManipulator {
     private readonly workspace: SelectionWorkspace;

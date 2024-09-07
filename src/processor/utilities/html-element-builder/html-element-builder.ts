@@ -2,6 +2,21 @@ import { Attributes, Classes, Styles } from '../../../core/containers/interfaces
 import StructureSchema from './interfaces/structure-schema.interface.ts';
 
 // Creación de elementos y estructuras HTML con atributos y eventos
+// Ejemplo:
+// const myElement: Attributes = {
+//     id: "myDiv",
+//     classes: ["container", "highlight", "rounded"],
+//     styles: {
+//         color: "red",
+//         backgroundColor: "lightgray",
+//         padding: "10px",
+//         border: "1px solid black"
+//     },
+//     click: (event: Event) => {
+//         console.log("Div clicked!", event);
+//     },
+//     "data-custom": "myCustomValue",
+// };
 class HtmlElementBuilder {
     public static createElement(tagName: string, attributes: Attributes): HTMLElement {
         const element = document.createElement(tagName);
@@ -21,6 +36,10 @@ class HtmlElementBuilder {
 
                 case 'event':
                     this.handleEvent(element, key, value as EventListenerOrEventListenerObject);
+                    break;
+
+                case 'textContent':
+                    element.textContent = value as string;
                     break;
 
                 default:
@@ -53,6 +72,8 @@ class HtmlElementBuilder {
                 return 'styles';
             case key.startsWith('on') && typeof value === 'function':
                 return 'event';
+            case key === 'textContent':
+                return 'textContent';
             default:
                 return 'attribute';
         }
