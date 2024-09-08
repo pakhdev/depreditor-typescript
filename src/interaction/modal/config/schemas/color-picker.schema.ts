@@ -20,7 +20,7 @@ const colorPickerSchema = (processor: Processor, type: 'text' | 'background'): M
         : 'de fondo';
     const containerProperties: ContainerProperties = type === 'text'
         ? containersConfig.spanTextColor
-        : containersConfig.spanBackgroundColor;
+        : containersConfig.spanTextBackgroundColor;
     const customProperty = type === 'text'
         ? 'color'
         : 'backgroundColor';

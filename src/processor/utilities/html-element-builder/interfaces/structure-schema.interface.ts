@@ -2,7 +2,7 @@ import { Attributes } from '../../../../core/containers/interfaces';
 
 interface StructureSchema {
     tagName: string;
-    attributes: Attributes;
+    attributes?: Attributes;
     children?: StructureSchema[];
 }
 

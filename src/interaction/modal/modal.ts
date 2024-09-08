@@ -6,18 +6,18 @@ import modalSchemas from './config/modal-schemas.ts';
 
 class Modal {
 
+    public modalContainer: HTMLElement | undefined;
+    private openedModalName: string | undefined;
+
     private readonly htmlBuilder: HtmlBuilderPort;
     private readonly schemas: ModalSchema[];
-
-    private modalContainer: HTMLElement | undefined;
-    private openedModalName: string | undefined;
 
     constructor(
         private readonly processor: Processor,
         private readonly editableDiv: HTMLElement,
     ) {
         this.htmlBuilder = this.processor.htmlBuilder;
-        this.schemas = modalSchemas(processor);
+        this.schemas = modalSchemas(processor, this);
     }
 
     public openModal(schemaName: string): void {
@@ -26,7 +26,7 @@ class Modal {
             throw new Error(`No se encontró el esquema de modal con nombre ${ schemaName }`);
 
         this.openedModalName = schemaName;
-        this.modalContainer = ModalBuilder.build(this, this.htmlBuilder, schema);
+        this.modalContainer = ModalBuilder.build(this, this.processor, this.htmlBuilder, schema);
         this.insertModalIntoDOM();
     }
 

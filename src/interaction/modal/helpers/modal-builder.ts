@@ -3,9 +3,10 @@ import StructureSchema
     from '../../../processor/utilities/html-element-builder/interfaces/structure-schema.interface.ts';
 import Modal from '../modal.ts';
 import HtmlBuilderPort from '../../../processor/ports/html-builder.port.ts';
+import Processor from '../../../processor/processor.ts';
 
 class ModalBuilder {
-    public static build(modal: Modal, htmlBuilder: HtmlBuilderPort, schema: ModalSchema): HTMLElement {
+    public static build(modal: Modal, processor: Processor, htmlBuilder: HtmlBuilderPort, schema: ModalSchema): HTMLElement {
         return htmlBuilder.createStructure({
             tagName: 'div',
             attributes: {
@@ -22,7 +23,7 @@ class ModalBuilder {
                     children: [
                         this.createHeaderStructure(schema.headerText),
                         schema.content,
-                        this.createFooterStructure(modal, schema),
+                        this.createFooterStructure(modal, processor, schema),
                     ],
                 },
             ],
@@ -39,16 +40,26 @@ class ModalBuilder {
         };
     }
 
-    private static createFooterStructure(modal: Modal, schema: ModalSchema): StructureSchema {
+    private static createFooterStructure(modal: Modal, processor: Processor, schema: ModalSchema): StructureSchema {
         const footerChildren: StructureSchema[] = [
-            this.createButtonStructure('Cancelar', ['button-danger', 'button'], () => modal.closeModal()),
+            this.createButtonStructure(
+                'Cancelar',
+                ['button-danger', 'button'],
+                (modal) => modal.closeModal(),
+                modal,
+                processor,
+            ),
         ];
 
-        if (schema.actionButtonText) {
+        if (schema.actionButton) {
             footerChildren.push(
-                this.createButtonStructure(schema.actionButtonText, ['button-success', 'button'], () => {
-                    // TODO: Create action logic
-                }),
+                this.createButtonStructure(
+                    schema.actionButton.text,
+                    ['button-success', 'button'],
+                    schema.actionButton.action,
+                    modal,
+                    processor,
+                ),
             );
         }
 
@@ -64,7 +75,9 @@ class ModalBuilder {
     private static createButtonStructure(
         text: string,
         classes: string[],
-        onClick: (e: Event) => void,
+        onClick: (modal: Modal, processor: Processor) => void,
+        modal: Modal,
+        processor: Processor,
     ): StructureSchema {
         return {
             tagName: 'button',
@@ -73,7 +86,7 @@ class ModalBuilder {
                 textContent: text,
                 onmousedown: (e) => {
                     e.stopPropagation();
-                    onClick(e);
+                    onClick(modal, processor);
                 },
             },
         };
