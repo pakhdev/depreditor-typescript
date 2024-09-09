@@ -12,7 +12,7 @@ import StructureSchema from './interfaces/structure-schema.interface.ts';
 //         padding: "10px",
 //         border: "1px solid black"
 //     },
-//     click: (event: Event) => {
+//     onclick: (event: Event) => {
 //         console.log("Div clicked!", event);
 //     },
 //     "data-custom": "myCustomValue",

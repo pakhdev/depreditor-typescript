@@ -3,11 +3,13 @@ import Processor from '../../../processor/processor.ts';
 import colorPickerSchema from './schemas/color-picker.schema.ts';
 import Modal from '../modal.ts';
 import tableFormSchema from './schemas/table-form.schema.ts';
+import imageFormSchema from './schemas/image-form.schema.ts';
 
 const modalSchemas = (processor: Processor, modal: Modal): ModalSchema[] => ([
     colorPickerSchema(processor, 'text'),
     colorPickerSchema(processor, 'background'),
     tableFormSchema(processor, modal),
+    imageFormSchema(processor, modal),
 ]);
 
 export default modalSchemas;
