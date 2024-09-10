@@ -2,7 +2,7 @@ import ContainerProperties from '../../../core/containers/interfaces/container-p
 
 interface ToolbarButton {
     icon: string;
-    modalSchema: string;
+    modalSchema?: string;
     formattingContainerProperties: ContainerProperties;
 }
 

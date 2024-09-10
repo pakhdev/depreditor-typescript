@@ -1,12 +1,12 @@
-import StructureSchema
-    from '../../../../processor/utilities/html-element-builder/interfaces/structure-schema.interface.ts';
-import ModalSchema from '../../interfaces/modal-schema.interface.ts';
 import ImageCreationProperties
     from '../../../../processor/command-handler/interfaces/image-creation-properties.interface.ts';
-import Modal from '../../modal.ts';
-import containersConfig from '../../../../core/containers/config.ts';
 import ImageLimits from '../../../../processor/command-handler/interfaces/image-limits.inteface.ts';
+import Modal from '../../modal.ts';
+import ModalSchema from '../../interfaces/modal-schema.interface.ts';
 import Processor from '../../../../processor/processor.ts';
+import StructureSchema
+    from '../../../../processor/utilities/html-element-builder/interfaces/structure-schema.interface.ts';
+import containersConfig from '../../../../core/containers/config.ts';
 
 const imageLimits: ImageLimits = {
     maxInitialImageWidth: 800,
