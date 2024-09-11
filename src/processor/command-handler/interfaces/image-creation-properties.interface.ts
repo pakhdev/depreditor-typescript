@@ -2,7 +2,7 @@ import ContainerProperties from '../../../core/containers/interfaces/container-p
 import ImageLimits from './image-limits.inteface.ts';
 
 interface ImageCreationProperties extends ContainerProperties {
-    tagName: 'image',
+    tagName: 'img',
     creationParams: {
         fileInput: HTMLInputElement,
         userWantsLargeImage: boolean,

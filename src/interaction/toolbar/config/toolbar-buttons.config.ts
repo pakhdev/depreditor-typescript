@@ -13,6 +13,7 @@ import paragraphRight from './button-properties/paragraph-right.ts';
 import paragraphCenter from './button-properties/paragraph-center.ts';
 import hidden from './button-properties/hidden.ts';
 import link from './button-properties/link.ts';
+import textColor from './button-properties/text-color.ts';
 
 const toolbarButtonsConfig: { [key: string]: ToolbarButton } = {
     strong,
@@ -28,6 +29,7 @@ const toolbarButtonsConfig: { [key: string]: ToolbarButton } = {
     table,
     link,
     image,
+    textColor,
     textBackgroundColor,
 };
 

@@ -2,7 +2,7 @@ import ContainerProperties from '../../../core/containers/interfaces/container-p
 
 interface ToolbarButtonState {
     activated: boolean;
-    modalSchema: string;
+    modalSchema?: string;
     formattingContainerProperties: ContainerProperties;
 }
 
