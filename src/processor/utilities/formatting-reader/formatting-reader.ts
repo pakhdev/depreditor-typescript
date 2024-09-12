@@ -31,12 +31,12 @@ class FormattingReader {
 
     private scanChildrenFormatting(affectedNodes: AffectedNodes[], parentFormattings: ContainerProperties[], summary: FormattingSummary): void {
         for (const affectedNode of affectedNodes) {
+            console.log('affectedNode', affectedNode);
             const formattings: ContainerProperties[] = [...parentFormattings];
             this.processNodeFormatting(affectedNode.node, formattings, summary);
             if (affectedNode.node.hasChildNodes())
                 this.scanChildrenFormatting(affectedNode.children, formattings, summary);
-            else
-                summary.updateFormattingCoverage(formattings);
+            summary.updateFormattingCoverage(formattings);
         }
     }
 

@@ -7,6 +7,7 @@ import MatchingStatus from '../../../../core/containers/enums/matching-status.en
 class FormattingSummary {
 
     public entries: FormattingEntry[] = [];
+    private formattingCombinations: ContainerProperties[][] = [];
 
     constructor(private readonly core: Core) {}
 
@@ -17,10 +18,13 @@ class FormattingSummary {
     }
 
     public updateFormattingCoverage(activeFormattings: ContainerProperties[]): void {
+        this.formattingCombinations.push(activeFormattings);
+
         const fullCoverageEntries = this.entries.filter(entry => entry.coverage === FormattingCoverage.FULL);
-        fullCoverageEntries
-            .filter(entry => !activeFormattings.includes(entry.formatting))
-            .forEach(entry => entry.coverage = FormattingCoverage.PARTIAL);
+        fullCoverageEntries.forEach(entry => {
+            if (!this.formattingCombinations.every(combination => combination.includes(entry.formatting)))
+                entry.coverage = FormattingCoverage.PARTIAL;
+        });
     }
 
     public registerFormattingNode(formatting: ContainerProperties, node: Node): void {
