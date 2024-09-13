@@ -21,6 +21,13 @@ class Modal {
     }
 
     public openModal(schemaName: string): void {
+        if (this.openedModalName === schemaName) {
+            this.closeModal();
+            return;
+        } else if (this.openedModalName) {
+            this.closeModal();
+        }
+
         const schema = this.schemas.find(s => s.name === schemaName);
         if (!schema)
             throw new Error(`No se encontró el esquema de modal con nombre ${ schemaName }`);
