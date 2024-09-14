@@ -5,7 +5,6 @@ import Modal from '../modal.ts';
 import Processor from '../../../processor/processor.ts';
 
 interface ModalSchema {
-    name: string;
     headerText: string;
     content: StructureSchema;
     actionButton?: {

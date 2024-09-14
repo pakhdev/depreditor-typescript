@@ -1,8 +1,8 @@
 import HtmlBuilderPort from '../../processor/ports/html-builder.port.ts';
 import ModalBuilder from './helpers/modal-builder.ts';
-import ModalSchema from './interfaces/modal-schema.interface.ts';
 import Processor from '../../processor/processor.ts';
-import modalSchemas from './config/modal-schemas.ts';
+import modalSchemasConfig from './config/modal-schemas.config.ts';
+import ModalSchemaConfig from './interfaces/modal-schema-config.interface.ts';
 
 class Modal {
 
@@ -10,14 +10,14 @@ class Modal {
     private openedModalName: string | undefined;
 
     private readonly htmlBuilder: HtmlBuilderPort;
-    private readonly schemas: ModalSchema[];
+    private readonly schemasConfig: ModalSchemaConfig;
 
     constructor(
         private readonly processor: Processor,
         private readonly editableDiv: HTMLElement,
     ) {
         this.htmlBuilder = this.processor.htmlBuilder;
-        this.schemas = modalSchemas(processor, this);
+        this.schemasConfig = modalSchemasConfig(processor, this);
     }
 
     public openModal(schemaName: string): void {
@@ -28,9 +28,10 @@ class Modal {
             this.closeModal();
         }
 
-        const schema = this.schemas.find(s => s.name === schemaName);
-        if (!schema)
+        const schemaEntry = this.schemasConfig[schemaName];
+        if (!schemaEntry)
             throw new Error(`No se encontró el esquema de modal con nombre ${ schemaName }`);
+        const schema = schemaEntry.provider.getSchema(schemaEntry.type);
 
         this.openedModalName = schemaName;
         this.modalContainer = ModalBuilder.build(this, this.processor, this.htmlBuilder, schema);

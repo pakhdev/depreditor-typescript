@@ -6,13 +6,13 @@ import StructureSchema
 import TableCreationProperties
     from '../../../../processor/command-handler/interfaces/table-creation-properties.interface.ts';
 import containersConfig from '../../../../core/containers/config.ts';
+import ModalSchemaProvider from '../../interfaces/modal-schema-provider.interface.ts';
 
-class TableFormModal {
+class TableFormModal implements ModalSchemaProvider {
     constructor(private processor: Processor, private modal: Modal) {}
 
     public getSchema(): ModalSchema {
         return {
-            name: 'tableForm',
             headerText: 'Insertar tabla',
             formattingContainerProperties: containersConfig.table,
             content: this.createContent(),

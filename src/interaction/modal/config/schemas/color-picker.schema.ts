@@ -5,8 +5,9 @@ import Processor from '../../../../processor/processor.ts';
 import StructureSchema
     from '../../../../processor/utilities/html-element-builder/interfaces/structure-schema.interface.ts';
 import containersConfig from '../../../../core/containers/config.ts';
+import ModalSchemaProvider from '../../interfaces/modal-schema-provider.interface.ts';
 
-class ColorPickerModal {
+class ColorPickerModal implements ModalSchemaProvider {
     private colors: string[] = [
         '#000000', '#434343', '#666666', '#999999', '#B7B7B7', '#CCCCCC', '#D9D9D9', '#EFEFEF', '#F3F3F3', '#FFFFFF',
         '#980000', '#FF0000', '#FF9900', '#FFFF00', '#00FF00', '#00FFFF', '#4A86E8', '#0000FF', '#9900FF', '#FF00FF',
@@ -18,21 +19,15 @@ class ColorPickerModal {
     constructor(private processor: Processor, private modal: Modal) {}
 
     public getSchema(type: 'text' | 'background'): ModalSchema {
-        const name = this.getName(type);
         const headerText = this.getHeaderText(type);
         const containerProperties = this.getContainerProperties(type);
         const customProperty = this.getCustomProperty(type);
 
         return {
-            name,
             headerText,
             content: this.createContent(containerProperties, customProperty),
             formattingContainerProperties: containerProperties,
         };
-    }
-
-    private getName(type: 'text' | 'background'): string {
-        return type === 'text' ? 'textColor' : 'backgroundColor';
     }
 
     private getHeaderText(type: 'text' | 'background'): string {

@@ -7,8 +7,9 @@ import Processor from '../../../../processor/processor.ts';
 import StructureSchema
     from '../../../../processor/utilities/html-element-builder/interfaces/structure-schema.interface.ts';
 import containersConfig from '../../../../core/containers/config.ts';
+import ModalSchemaProvider from '../../interfaces/modal-schema-provider.interface.ts';
 
-class ImageFormModal {
+class ImageFormModal implements ModalSchemaProvider {
     private imageLimits: ImageLimits = {
         maxInitialImageWidth: 800,
         maxInitialImageHeight: 600,
@@ -21,7 +22,6 @@ class ImageFormModal {
 
     public getSchema(): ModalSchema {
         return {
-            name: 'imageForm',
             headerText: 'Insertar imagen',
             formattingContainerProperties: containersConfig.image,
             content: this.createContent(),
