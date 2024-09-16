@@ -4,26 +4,26 @@ import SelectedElement from '../../../../../core/selection/helpers/selected-elem
 class AdjacentPartSelector {
     constructor(private readonly workspaceSelection: StoredSelection) {}
 
-    public selectNext(): void {
+    public selectNext(): 'char' | 'element' | null {
         if (!this.workspaceSelection.isNothingSelected)
-            return;
+            return null;
 
         if (this.workspaceSelection.commonAncestor.node.nodeType === Node.TEXT_NODE) {
             if (this.selectNextChar(this.workspaceSelection.startElement))
-                return;
+                return 'char';
         }
-        this.selectAdjacentNode(this.workspaceSelection.startElement, 'next');
+        return this.selectAdjacentNode(this.workspaceSelection.startElement, 'next');
     }
 
-    public selectPrevious(): void {
+    public selectPrevious(): 'char' | 'element' | null {
         if (!this.workspaceSelection.isNothingSelected)
-            return;
+            return null;
 
         if (this.workspaceSelection.commonAncestor.node.nodeType === Node.TEXT_NODE) {
             if (this.selectPreviousChar(this.workspaceSelection.startElement))
-                return;
+                return 'char';
         }
-        this.selectAdjacentNode(this.workspaceSelection.startElement, 'previous');
+        return this.selectAdjacentNode(this.workspaceSelection.startElement, 'previous');
     }
 
     private selectAdjacentChar(selectedElement: SelectedElement, isNext: boolean): boolean {
@@ -51,7 +51,7 @@ class AdjacentPartSelector {
         return this.selectAdjacentChar(selectedElement, false);
     }
 
-    private selectAdjacentNode(selectedElement: SelectedElement, direction: 'next' | 'previous'): boolean {
+    private selectAdjacentNode(selectedElement: SelectedElement, direction: 'next' | 'previous'): 'element' | null {
         const nodeGetter = direction === 'next' ? this.getNextNode : this.getPreviousNode;
         let currentNode: Node | null | undefined = nodeGetter(selectedElement.node);
 
@@ -59,11 +59,11 @@ class AdjacentPartSelector {
             const validNode = this.findValidNode(currentNode);
             if (validNode) {
                 this.setSelectionNodes(validNode, direction === 'next');
-                return true;
+                return 'element';
             }
             currentNode = nodeGetter(currentNode);
         }
-        return false;
+        return null;
     }
 
     private setSelectionNodes(node: Node, selectStart: boolean): void {

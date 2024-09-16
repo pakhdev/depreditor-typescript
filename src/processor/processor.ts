@@ -4,6 +4,7 @@ import Core from '../core/core.ts';
 import FormattingReader from './utilities/formatting-reader/formatting-reader.ts';
 import FormattingReaderPort from './ports/formatting-reader.port.ts';
 import HtmlBuilderPort from './ports/html-builder.port.ts';
+import SelectionWorkspacePort from './ports/selection-workspace.port.ts';
 
 class Processor {
     public htmlBuilder: HtmlBuilderPort;
@@ -17,6 +18,10 @@ class Processor {
         this.htmlBuilder = new HtmlBuilderPort();
         this.formattingReader = new FormattingReaderPort(formattingReader);
         this.commandHandler = new CommandHandlerPort(commandHandler);
+    }
+    
+    get selectionWorkspace(): SelectionWorkspacePort {
+        return new SelectionWorkspacePort(this.core);
     }
 }
 
