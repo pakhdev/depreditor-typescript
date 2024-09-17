@@ -4,9 +4,9 @@ import SelectedElement from '../../../../../core/selection/helpers/selected-elem
 class AdjacentPartSelector {
     constructor(private readonly workspaceSelection: StoredSelection) {}
 
-    public selectNext(): 'char' | 'element' | null {
+    public selectNext(): 'char' | 'element' | 'range' | null {
         if (!this.workspaceSelection.isNothingSelected)
-            return null;
+            return 'range';
 
         if (this.workspaceSelection.commonAncestor.node.nodeType === Node.TEXT_NODE) {
             if (this.selectNextChar(this.workspaceSelection.startElement))
@@ -15,9 +15,9 @@ class AdjacentPartSelector {
         return this.selectAdjacentNode(this.workspaceSelection.startElement, 'next');
     }
 
-    public selectPrevious(): 'char' | 'element' | null {
+    public selectPrevious(): 'char' | 'element' | 'range' | null {
         if (!this.workspaceSelection.isNothingSelected)
-            return null;
+            return 'range';
 
         if (this.workspaceSelection.commonAncestor.node.nodeType === Node.TEXT_NODE) {
             if (this.selectPreviousChar(this.workspaceSelection.startElement))

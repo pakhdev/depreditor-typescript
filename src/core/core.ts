@@ -14,7 +14,7 @@ class Core {
     public transactions: TransactionsPort;
 
     constructor(public readonly editableDiv: HTMLDivElement) {
-        const eventHooks = new EventHooks(editableDiv, this);
+        const eventHooks = new EventHooks(editableDiv);
         const selection = new Selection(editableDiv, eventHooks);
         const transactionsManager = new TransactionsManager(selection);
         this.transactions = new TransactionsPort(transactionsManager);

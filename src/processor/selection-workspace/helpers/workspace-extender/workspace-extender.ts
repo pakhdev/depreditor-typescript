@@ -36,11 +36,11 @@ class WorkspaceExtender {
         }
     }
 
-    public selectNext(): 'char' | 'element' | null {
+    public selectNext(): 'char' | 'element' | 'range' | null {
         return new AdjacentPartSelector(this.workspaceSelection).selectNext();
     }
 
-    public selectPrevious(): 'char' | 'element' | null {
+    public selectPrevious(): 'char' | 'element' | 'range' | null {
         return new AdjacentPartSelector(this.workspaceSelection).selectPrevious();
     }
 }

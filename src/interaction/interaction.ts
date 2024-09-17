@@ -15,7 +15,7 @@ class Interaction {
         private readonly processor: Processor,
         private readonly toolbarContainer: HTMLElement,
     ) {
-        this.editorEvents = new EditorEvents(this.core);
+        this.editorEvents = new EditorEvents(this.core, this.processor);
         this.modal = new Modal(this.processor, this.core.editableDiv);
         this.toolbar = new Toolbar(this.core, this.processor, this.modal, this.toolbarContainer);
     }

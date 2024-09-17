@@ -1,7 +1,7 @@
-import Core from '../../core.ts';
+import Processor from '../../../processor/processor.ts';
 
 interface HookHandler {
-    (core: Core, event?: Event): void;
+    (event?: Event, processor?: Processor): void;
 }
 
 export default HookHandler;
