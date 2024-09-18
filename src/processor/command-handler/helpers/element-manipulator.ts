@@ -12,11 +12,20 @@ class ElementManipulator {
         this.workspace = workspace;
     }
 
-    public insert(element: HTMLElement): Node[] {
+    public insertHtmlElement(element: HTMLElement): Node[] {
         const { selectedPart } = this.workspace.cloneFragment;
         return [
             ...selectedPart(AffectedNodesPart.BEFORE).nodes,
             element,
+            ...selectedPart(AffectedNodesPart.AFTER).nodes,
+        ];
+    }
+
+    public insertNodes(nodes: Node[]): Node[] {
+        const { selectedPart } = this.workspace.cloneFragment;
+        return [
+            ...selectedPart(AffectedNodesPart.BEFORE).nodes,
+            ...nodes,
             ...selectedPart(AffectedNodesPart.AFTER).nodes,
         ];
     }

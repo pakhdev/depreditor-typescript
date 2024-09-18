@@ -5,6 +5,7 @@ import write from './handlers/write.ts';
 import backspace from './handlers/backspace.ts';
 import cut from './handlers/cut.ts';
 import remove from './handlers/remove.ts';
+import paste from './handlers/paste.ts';
 
 class EditorEvents {
     private readonly list: HookHandlers[] = [
@@ -12,6 +13,7 @@ class EditorEvents {
         { hooks: ['backspace'], method: backspace },
         { hooks: ['cut'], method: cut },
         { hooks: ['delete'], method: remove },
+        { hooks: ['paste'], method: paste },
     ];
 
     constructor(
