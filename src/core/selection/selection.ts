@@ -47,11 +47,12 @@ class Selection {
     }
 
     private subscribeToRelevantEvents(eventHooks: EventHooks): void {
-        eventHooks.on(['userNavigation', 'internalDrop'], this.storeSelection.bind(this));
+        eventHooks.on(['userNavigation'], () => this.storeSelection());
+        eventHooks.on(['internalDrop', 'externalDrop'], (event?: Event) => this.storeSelection(event as DragEvent));
     }
 
-    private storeSelection(): void {
-        const currentSelection = DomSelection.get(this.editableDiv);
+    private storeSelection(dragEvent?: DragEvent): void {
+        const currentSelection = DomSelection.get(this.editableDiv, dragEvent);
         this.state.previous = this.state.current;
         this.state.current = currentSelection;
         this.eventHooks.executeHooks('selectionChange');

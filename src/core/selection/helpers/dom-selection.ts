@@ -3,7 +3,10 @@ import StoredSelection from './stored-selection.ts';
 
 class DomSelection {
 
-    public static get(editableDiv: HTMLDivElement): StoredSelection {
+    public static get(editableDiv: HTMLDivElement, dragEvent?: DragEvent): StoredSelection {
+        if (dragEvent)
+            return this.getDropSelection(editableDiv, dragEvent);
+
         const selection = window.getSelection();
         if (!selection || !this.isSelectionOnEditor(selection, editableDiv))
             return this.getFallbackSelection(editableDiv);
@@ -13,6 +16,13 @@ class DomSelection {
             return this.getCollapsedSelection(editableDiv, range);
         else
             return this.getExpandedSelection(editableDiv, range);
+    }
+
+    private static getDropSelection(editableDiv: HTMLDivElement, event: DragEvent): StoredSelection {
+        const range = document.caretRangeFromPoint(event.clientX, event.clientY);
+        if (!range)
+            return this.getFallbackSelection(editableDiv);
+        return this.getCollapsedSelection(editableDiv, range);
     }
 
     private static getCollapsedSelection(editableDiv: HTMLDivElement, range: Range): StoredSelection {
