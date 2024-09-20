@@ -18,9 +18,10 @@ import StructureSchema from './interfaces/structure-schema.interface.ts';
 //     "data-custom": "myCustomValue",
 // };
 class HtmlElementBuilder {
-    public static createElement(tagName: string, attributes: Attributes): HTMLElement {
+    public static createElement(tagName: string, attributes?: Attributes): HTMLElement {
         const element = document.createElement(tagName);
-
+        if (!attributes) return element;
+        
         for (const key in attributes) {
             const value = attributes[key];
             const attrType = this.getAttributeType(key, value);
