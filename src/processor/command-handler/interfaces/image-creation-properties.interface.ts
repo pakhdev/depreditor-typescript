@@ -4,7 +4,7 @@ import ImageLimits from './image-limits.inteface.ts';
 interface ImageCreationProperties extends ContainerProperties {
     tagName: 'img',
     creationParams: {
-        fileInput: HTMLInputElement,
+        files: File[],
         userWantsLargeImage: boolean,
         imageLimits: ImageLimits
     }

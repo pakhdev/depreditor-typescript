@@ -16,19 +16,28 @@ class ImageBuilder {
         this.minResolutionDifference = imageLimits.minResolutionDifference;
     }
 
-    public async create(fileInput: HTMLInputElement, userWantsLargeImage: boolean): Promise<HTMLElement | undefined> {
+    public async create(files: File[], userWantsLargeImage: boolean): Promise<HTMLElement[] | undefined> {
+        if (!files.length) return;
 
-        if (!fileInput.files || !fileInput.files[0]) return;
+        const images: HTMLElement[] = [];
 
-        const img = await this.readImage(fileInput.files[0]);
-        if (!img) return;
+        for (const file of files) {
+            const img = await this.readImage(file);
+            if (!img) continue;
 
-        const initialImage: string = this.createInitialImage(img);
-        const largeImage: string | undefined = userWantsLargeImage ? this.createLargeImage(img) : undefined;
-        const newImage = document.createElement('img');
-        newImage.src = initialImage;
-        newImage.dataset.largeImage = largeImage;
-        return newImage;
+            const initialImage: string = this.createInitialImage(img);
+            const largeImage: string | undefined = userWantsLargeImage ? this.createLargeImage(img) : undefined;
+
+            const newImage = document.createElement('img');
+            newImage.src = initialImage;
+            if (largeImage) {
+                newImage.dataset.largeImage = largeImage;
+            }
+
+            images.push(newImage);
+        }
+
+        return images;
     }
 
     private createInitialImage(img: HTMLImageElement): string {

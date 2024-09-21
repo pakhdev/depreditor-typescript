@@ -22,7 +22,7 @@ class ImageFormModal implements ModalSchemaProvider {
 
     public getSchema(): ModalSchema {
         return {
-            headerText: 'Insertar imagen',
+            headerText: 'Insertar imágenes',
             formattingContainerProperties: containersConfig.image,
             content: this.createContent(),
             actionButton: this.createActionButton(),
@@ -77,11 +77,14 @@ class ImageFormModal implements ModalSchemaProvider {
         return {
             tagName: 'input',
             attributes: {
+                multiple: 'true',
                 type: 'file',
                 accept: 'image/*',
                 style: 'display: none',
                 onchange: () => {
-                    this.processor.commandHandler.handleElement(this.prepareImageProperties());
+                    const imageProperties = this.prepareImageProperties();
+                    if (imageProperties.creationParams.files.length)
+                        this.processor.commandHandler.createAndInsert(imageProperties);
                     this.modal.closeModal();
                 },
             },
@@ -90,7 +93,7 @@ class ImageFormModal implements ModalSchemaProvider {
 
     private createActionButton(): { text: string; action: (modal: Modal) => void } {
         return {
-            text: 'Seleccionar imágen',
+            text: 'Seleccionar imágenes',
             action: () => {
                 const fileInput = this.getFileInput();
                 fileInput.click();
@@ -101,12 +104,13 @@ class ImageFormModal implements ModalSchemaProvider {
     private prepareImageProperties(): ImageCreationProperties {
         const fileInput = this.getFileInput();
         const checkboxInput = this.getCheckboxInput();
+        const files: File[] = Array.from(fileInput.files || []);
 
         return {
             ...containersConfig.image,
             tagName: 'img',
             creationParams: {
-                fileInput,
+                files,
                 userWantsLargeImage: checkboxInput.checked,
                 imageLimits: this.imageLimits,
             },
