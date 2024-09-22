@@ -9,36 +9,62 @@ import ElementManipulator from './helpers/element-manipulator.ts';
 
 class CommandHandler {
 
-    private readonly workspace: SelectionWorkspace;
+    constructor(private readonly core: Core) {}
 
-    constructor(private readonly core: Core) {
-        this.workspace = new SelectionWorkspace(this.core);
+    public createAndInsert(
+        elementProperties: ElementCreationProperties,
+        selectionWorkspace: SelectionWorkspace = new SelectionWorkspace(this.core),
+    ): void {
+        ContainerBuilder.create(elementProperties).then((creationResult) => {
+            if (!creationResult || (creationResult instanceof Array && creationResult.length === 0))
+                throw new Error('Error al crear el elemento');
+
+            if (!(creationResult instanceof Array))
+                creationResult = [creationResult];
+
+            this.insertNodes(creationResult, selectionWorkspace);
+        });
     }
 
-    public execute(elementProperties: ElementCreationProperties): void {
-        ContainerBuilder.create(elementProperties).then((element) => {
-            if (!element)
-                throw new Error('El elemento no está definido');
+    public insertNodes(nodes: Node[], selectionWorkspace: SelectionWorkspace = new SelectionWorkspace(this.core)): void {
+        console.log('insertNodes recibido', nodes);
+        if (!nodes.length)
+            throw new Error('No hay nodos para insertar');
 
-            const containerProperties = this.core.containers.identify(element);
-            if (!containerProperties)
-                throw new Error('El elemento no está definido');
+        const containerProperties = this.core.containers.identify(nodes[0]);
+        if (!containerProperties)
+            throw new Error('El elemento no está definido');
 
-            const action = ActionResolver.resolveContainerAction(this.workspace, containerProperties);
-            SelectionAdjuster.adjust(this.workspace, containerProperties, action);
+        const action: ActionTypes = ActionResolver.resolveContainerAction(selectionWorkspace, containerProperties);
+        SelectionAdjuster.adjust(selectionWorkspace, containerProperties, action);
 
-            let newNodes: Node[] = [];
-            const elementManipulator = new ElementManipulator(this.workspace);
-            if (action === ActionTypes.INSERT)
-                newNodes = elementManipulator.insert(element);
-            else if (action === ActionTypes.UNWRAP)
-                newNodes = elementManipulator.unwrap(containerProperties);
-            else if (action === ActionTypes.WRAP)
-                newNodes = elementManipulator.wrap(element, containerProperties);
+        let newNodes: Node[] = [];
+        const elementManipulator = new ElementManipulator(selectionWorkspace);
+        if (action === ActionTypes.INSERT)
+            newNodes = elementManipulator.insertNodes(nodes);
+        else if (action === ActionTypes.UNWRAP)
+            newNodes = elementManipulator.unwrap(containerProperties);
+        else if (action === ActionTypes.WRAP)
+            newNodes = elementManipulator.wrap(nodes[0], containerProperties);
 
-            // Create transaction
-            // Commit transaction
-        });
+        this.core.transactions
+            .builder(selectionWorkspace)
+            .createRemovalOps()
+            .createInjectingOps(newNodes)
+            .test();
+        // .setInitialSelection(selectionWorkspace.selection)
+        // .selectDeferredSelection()
+        // .build();
+
+        // Commit transaction
+    }
+
+    public handleText(
+        text: string | null,
+        selectionWorkspace: SelectionWorkspace = new SelectionWorkspace(this.core),
+    ): void {
+        console.log('handleText recibido', text);
+        console.log('selectionWorkspace', selectionWorkspace);
     }
 
 }

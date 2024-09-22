@@ -59,7 +59,7 @@ class TableFormModal implements ModalSchemaProvider {
             text: 'Insertar',
             action: () => {
                 const tableProperties = this.prepareTableProperties();
-                this.processor.commandHandler.handleElement(tableProperties);
+                this.processor.commandHandler.createAndInsert(tableProperties);
                 this.modal.closeModal();
             },
         };

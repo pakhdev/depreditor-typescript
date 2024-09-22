@@ -50,7 +50,7 @@ class LinkFormModal implements ModalSchemaProvider {
             text: buttonText,
             action: () => {
                 const fileInput = this.getLinkInput();
-                this.processor.commandHandler.handleElement({
+                this.processor.commandHandler.createAndInsert({
                     ...containersConfig.link,
                     attributes: {
                         href: fileInput.value,

@@ -14,7 +14,7 @@ const paste: HookHandler = (event?: Event, processor?: Processor): void => {
 
     let text = new TextPreprocessor(clipboardData.getData('text')).sanitize();
     if (text.containsBreakLine())
-        processor.commandHandler.handleMultipleElements(text.getAsHtml());
+        processor.commandHandler.insertNodes(text.getAsHtml());
     else
         processor.commandHandler.handleText(text.getAsText());
 };

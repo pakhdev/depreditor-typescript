@@ -2,6 +2,7 @@ import AffectedNodes from '../../../core/selection/interfaces/affected-nodes.int
 import Core from '../../../core/core.ts';
 import SelectionStateType from '../../../core/selection/enums/selection-state-type.enum.ts';
 import ClonedFragment from './fragments-cloner/helpers/cloned-fragment.ts';
+import AffectedNodesPart from '../../../core/selection/enums/affected-nodes-part.enum.ts';
 
 class FragmentsCloner {
 

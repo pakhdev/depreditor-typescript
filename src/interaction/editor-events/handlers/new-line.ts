@@ -6,7 +6,7 @@ const newLine: HookHandler = (event?: Event, processor?: Processor): void => {
         throw new Error('NewLine: El evento o el procesador no están definidos');
     const e = event as KeyboardEvent;
     e.preventDefault();
-    processor.commandHandler.handleMultipleElements([document.createElement('br')]);
+    processor.commandHandler.insertNodes([document.createElement('br')]);
 };
 
 export default newLine;

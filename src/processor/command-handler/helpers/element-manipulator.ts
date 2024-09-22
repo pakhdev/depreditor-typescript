@@ -12,15 +12,6 @@ class ElementManipulator {
         this.workspace = workspace;
     }
 
-    public insertHtmlElement(element: HTMLElement): Node[] {
-        const { selectedPart } = this.workspace.cloneFragment;
-        return [
-            ...selectedPart(AffectedNodesPart.BEFORE).nodes,
-            element,
-            ...selectedPart(AffectedNodesPart.AFTER).nodes,
-        ];
-    }
-
     public insertNodes(nodes: Node[]): Node[] {
         const { selectedPart } = this.workspace.cloneFragment;
         return [
@@ -30,7 +21,7 @@ class ElementManipulator {
         ];
     }
 
-    public wrap(element: HTMLElement, containerProperties: ContainerProperties): Node[] {
+    public wrap(element: Node, containerProperties: ContainerProperties): Node[] {
         const fragments = this.getFragments();
         this.unwrapFormattingNodes(containerProperties, fragments[1]);
 
@@ -99,7 +90,7 @@ class ElementManipulator {
         formattingNodesToUnwrap.forEach(node => this.unwrapNode(fragmentWithin.findByOriginalNode(node)));
     }
 
-    private wrapTextBlocks(textBlocks: TextBlock[], container: HTMLElement): void {
+    private wrapTextBlocks(textBlocks: TextBlock[], container: Node): void {
         textBlocks.forEach(textBlock => this.wrapNodes([...textBlock.nodes], container));
     }
 
