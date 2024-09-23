@@ -66,14 +66,14 @@ class FindTextBlocks {
         const textBlock = new TextBlock();
         let currentNode: Node | null = node;
 
-        while (currentNode && !this.core.containers.identify(currentNode)?.isBlock) {
+        while (currentNode && currentNode !== this.tempContainer && !this.core.containers.identify(currentNode)?.isBlock) {
             if (textBlock.nodes.length === 1)
                 textBlock.replaceLastNode(currentNode);
 
             const validNodes = this.findValidNodes(currentNode);
-            validNodes.forEach(node => {
-                textBlock.addNode(node);
-                this.targetElements = this.targetElements.filter(targetElement => targetElement !== node);
+            validNodes.forEach(validNode => {
+                textBlock.addNode(validNode);
+                this.targetElements = this.targetElements.filter(targetElement => targetElement !== validNode);
             });
 
             if (validNodes.length > 1)
@@ -90,8 +90,8 @@ class FindTextBlocks {
         let currentNode: Node | null = node;
         while (currentNode) {
             if (this.isValidNode(currentNode)) {
-                nodes.push(node);
-                this.targetElements = this.targetElements.filter(targetElement => targetElement !== node);
+                nodes.push(currentNode);
+                this.targetElements = this.targetElements.filter(targetElement => targetElement !== currentNode);
             } else return nodes;
 
             currentNode = currentNode.nextSibling;

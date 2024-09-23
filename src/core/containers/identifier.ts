@@ -18,8 +18,9 @@ class ContainerIdentifier {
             if (!this.areClassesMatching(element as HTMLElement, containersConfig[key]))
                 continue;
 
-            if (this.areStylesMatching(element as HTMLElement, containersConfig[key]) === MatchingStatus.EXACT)
+            if (this.areStylesMatching(element as HTMLElement, containersConfig[key]) === MatchingStatus.EXACT) {
                 return containersConfig[key];
+            }
         }
         return null;
     }
@@ -73,7 +74,7 @@ class ContainerIdentifier {
         const stylesToCompare: { [key: string]: string } = elementOrProperties instanceof HTMLElement
             ? this.styleToObject(elementOrProperties.style)
             : elementOrProperties.styles || {};
-        const referenceStyles = referenceProperties.styles || {};
+        const referenceStyles = this.convertCamelToKebab(referenceProperties.styles || {});
 
         if (Object.keys(stylesToCompare).length !== Object.keys(referenceStyles).length)
             return MatchingStatus.DIFFERENT;
@@ -99,6 +100,17 @@ class ContainerIdentifier {
     private static areEqualStringArrays(firstArray: string[], secondArray: string[]): boolean {
         return JSON.stringify(firstArray.sort()) === JSON.stringify(secondArray.sort());
     };
+
+    private static convertCamelToKebab(styles: { [key: string]: string }): { [key: string]: string } {
+        const kebabCaseStyles: { [key: string]: string } = {};
+
+        for (const key in styles) {
+            const kebabKey = key.replace(/[A-Z]/g, match => `-${ match.toLowerCase() }`);
+            kebabCaseStyles[kebabKey] = styles[key];
+        }
+
+        return kebabCaseStyles;
+    }
 
 }
 

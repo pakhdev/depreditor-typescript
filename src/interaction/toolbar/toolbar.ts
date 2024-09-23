@@ -5,6 +5,7 @@ import ToolbarButtonState from './interfaces/toolbar-button-state.interface.ts';
 import toolbarButtonsConfig from './config/toolbar-buttons.config.ts';
 import FormattingEntry from '../../processor/utilities/formatting-reader/interfaces/formatting-entry.interface.ts';
 import FormattingCoverage from '../../processor/utilities/formatting-reader/enums/formatting-coverage.enum.ts';
+import Modal from '../modal/modal.ts';
 
 class Toolbar {
 
@@ -14,6 +15,7 @@ class Toolbar {
     constructor(
         private readonly core: Core,
         private readonly processor: Processor,
+        private readonly modal: Modal,
         private readonly toolbarContainer: HTMLElement,
     ) {
         this.createButtons();
@@ -29,17 +31,27 @@ class Toolbar {
             this.toolbarContainer.appendChild(buttonElement);
             this.buttonElements.set(buttonElement, {
                 activated: false,
+                modalSchema: buttonConfig.modalSchema,
                 formattingContainerProperties: buttonConfig.formattingContainerProperties,
             });
         });
     }
 
     public handleButtonAction(event: Event): void {
-        console.log('Button clicked:', this.buttonElements.get(event.target as HTMLButtonElement));
+        const buttonProperties = this.buttonElements.get(event.target as HTMLButtonElement);
+        if (!buttonProperties) return;
+
+        if (buttonProperties.modalSchema) {
+            this.modal.openModal(buttonProperties.modalSchema);
+            return;
+        }
+
+        this.processor.commandHandler.createAndInsert(buttonProperties.formattingContainerProperties);
     }
 
     public handleButtonsState(): void {
         const currentFormatting: FormattingEntry[] = this.processor.formattingReader.getCurrentFormatting().entries;
+        console.log(currentFormatting);
         this.buttonElements.forEach((state, button) => {
             if (currentFormatting.some(entry => entry.coverage === FormattingCoverage.FULL && entry.formatting === state.formattingContainerProperties)) {
                 button.classList.add('editor-toolbar__icon--active');
