@@ -40,7 +40,6 @@ class FormattingSummary {
         elementOrProperties: HTMLElement | ContainerProperties,
         referenceProperties: ContainerProperties,
     ): MatchingStatus {
-
         if (elementOrProperties.tagName.toLowerCase() !== referenceProperties.tagName.toLowerCase())
             return MatchingStatus.DIFFERENT;
 

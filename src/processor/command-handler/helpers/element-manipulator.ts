@@ -6,18 +6,14 @@ import TextBlock from '../../selection-workspace/helpers/fragments-finder/helper
 import AffectedNodesPart from '../../../core/selection/enums/affected-nodes-part.enum.ts';
 
 class ElementManipulator {
-    private readonly workspace: SelectionWorkspace;
-
-    constructor(workspace: SelectionWorkspace) {
-        this.workspace = workspace;
-    }
+    constructor(private readonly workspace: SelectionWorkspace) {}
 
     public insertNodes(nodes: Node[]): Node[] {
-        const { selectedPart } = this.workspace.cloneFragment;
+        const { cloneFragment } = this.workspace;
         return [
-            ...selectedPart(AffectedNodesPart.BEFORE).nodes,
+            ...cloneFragment.selectedPart(AffectedNodesPart.BEFORE).nodes,
             ...nodes,
-            ...selectedPart(AffectedNodesPart.AFTER).nodes,
+            ...cloneFragment.selectedPart(AffectedNodesPart.AFTER).nodes,
         ];
     }
 
@@ -81,10 +77,10 @@ class ElementManipulator {
     private unwrapFormattingNodes(containerProperties: ContainerProperties, fragmentWithin: ClonedFragment): void {
         const { formatting } = this.workspace;
         const similarFormattingEntries = formatting.getSimilar(containerProperties);
-        const currentFormattingEntry = formatting.entries.find(entry => entry.formatting === containerProperties);
+        const currentFormattingEntries = formatting.entries.filter(entry => entry.formatting === containerProperties);
         const formattingNodesToUnwrap = [
             ...similarFormattingEntries,
-            currentFormattingEntry!,
+            ...currentFormattingEntries,
         ].flatMap(entry => entry.nodes);
 
         formattingNodesToUnwrap.forEach(node => this.unwrapNode(fragmentWithin.findByOriginalNode(node)));

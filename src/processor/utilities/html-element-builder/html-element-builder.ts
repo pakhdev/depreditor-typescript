@@ -86,7 +86,8 @@ class HtmlElementBuilder {
     }
 
     private static handleStyles(element: HTMLElement, value: Styles): void {
-        for (const [styleKey, styleValue] of Object.entries(value)) {
+        for (let [styleKey, styleValue] of Object.entries(value)) {
+            styleKey = styleKey.replace(/[A-Z]/g, match => `-${ match.toLowerCase() }`);
             element.style.setProperty(styleKey, styleValue);
         }
     }

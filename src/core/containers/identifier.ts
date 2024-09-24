@@ -71,10 +71,12 @@ class ContainerIdentifier {
         elementOrProperties: HTMLElement | ContainerProperties,
         referenceProperties: ContainerProperties,
     ): MatchingStatus {
-        const stylesToCompare: { [key: string]: string } = elementOrProperties instanceof HTMLElement
+        let stylesToCompare: { [key: string]: string } = elementOrProperties instanceof HTMLElement
             ? this.styleToObject(elementOrProperties.style)
             : elementOrProperties.styles || {};
+
         const referenceStyles = this.convertCamelToKebab(referenceProperties.styles || {});
+        stylesToCompare = this.convertCamelToKebab(stylesToCompare);
 
         if (Object.keys(stylesToCompare).length !== Object.keys(referenceStyles).length)
             return MatchingStatus.DIFFERENT;
