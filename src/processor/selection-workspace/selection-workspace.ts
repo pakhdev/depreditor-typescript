@@ -21,7 +21,7 @@ class SelectionWorkspace {
     }
 
     public get cloneFragment(): FragmentsCloner {
-        return new FragmentsCloner(this.core);
+        return new FragmentsCloner(this.selection);
     }
 
     public get extend(): WorkspaceExtender {
