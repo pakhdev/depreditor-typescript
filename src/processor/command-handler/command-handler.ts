@@ -27,25 +27,27 @@ class CommandHandler {
     }
 
     public insertNodes(nodes: Node[], selectionWorkspace: SelectionWorkspace = new SelectionWorkspace(this.core)): void {
-        console.log('insertNodes recibido', nodes);
         if (!nodes.length)
             throw new Error('No hay nodos para insertar');
 
-        const containerProperties = this.core.containers.identify(nodes[0]);
-        if (!containerProperties)
-            throw new Error('El elemento no está definido');
+        let action: ActionTypes = ActionTypes.INSERT;
 
-        const action: ActionTypes = ActionResolver.resolveContainerAction(selectionWorkspace, containerProperties);
-        SelectionAdjuster.adjust(selectionWorkspace, containerProperties, action);
+        const containerProperties = this.core.containers.identify(nodes[0]);
+        if (containerProperties) {
+            action = ActionResolver.resolveContainerAction(selectionWorkspace, containerProperties);
+            SelectionAdjuster.adjust(selectionWorkspace, containerProperties, action);
+        } else if (nodes.some(node => node.nodeType !== Node.TEXT_NODE && (node as HTMLElement).tagName !== 'BR')) {
+            throw new Error('El elemento no está definido');
+        }
 
         let newNodes: Node[] = [];
         const elementManipulator = new ElementManipulator(selectionWorkspace);
         if (action === ActionTypes.INSERT)
             newNodes = elementManipulator.insertNodes(nodes);
         else if (action === ActionTypes.UNWRAP)
-            newNodes = elementManipulator.unwrap(containerProperties);
+            newNodes = elementManipulator.unwrap(containerProperties!);
         else if (action === ActionTypes.WRAP)
-            newNodes = elementManipulator.wrap(nodes[0], containerProperties);
+            newNodes = elementManipulator.wrap(nodes[0], containerProperties!);
 
         this.core.transactions
             .builder(selectionWorkspace)

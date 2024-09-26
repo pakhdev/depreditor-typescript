@@ -6,6 +6,8 @@ import backspace from './handlers/backspace.ts';
 import cut from './handlers/cut.ts';
 import remove from './handlers/remove.ts';
 import paste from './handlers/paste.ts';
+import externalDrop from './handlers/external-drop.ts';
+import internalDrop from './handlers/internal-drop.ts';
 
 class EditorEvents {
     private readonly list: HookHandlers[] = [
@@ -14,6 +16,8 @@ class EditorEvents {
         { hooks: ['cut'], method: cut },
         { hooks: ['delete'], method: remove },
         { hooks: ['paste'], method: paste },
+        { hooks: ['externalDrop'], method: externalDrop },
+        { hooks: ['internalDrop'], method: internalDrop },
     ];
 
     constructor(
