@@ -15,15 +15,14 @@ class CommandHandler {
         elementProperties: ElementCreationProperties,
         selectionWorkspace: SelectionWorkspace = new SelectionWorkspace(this.core),
     ): void {
-        ContainerBuilder.create(elementProperties).then((creationResult) => {
-            if (!creationResult || (creationResult instanceof Array && creationResult.length === 0))
-                throw new Error('Error al crear el elemento');
+        let creationResult = ContainerBuilder.create(elementProperties);
+        if (!creationResult || (creationResult instanceof Array && creationResult.length === 0))
+            throw new Error('Error al crear el elemento');
 
-            if (!(creationResult instanceof Array))
-                creationResult = [creationResult];
+        if (!(creationResult instanceof Array))
+            creationResult = [creationResult];
 
-            this.insertNodes(creationResult, selectionWorkspace);
-        });
+        this.insertNodes(creationResult, selectionWorkspace);
     }
 
     public insertNodes(nodes: Node[], selectionWorkspace: SelectionWorkspace = new SelectionWorkspace(this.core)): void {

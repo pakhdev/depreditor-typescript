@@ -29,9 +29,8 @@ class WorkspaceExtender {
     }
 
     public outsideInlineParents(): void {
-        const { commonAncestor } = this.workspaceSelection;
         while (this.workspace.hasInlineParent) {
-            const parentNode = commonAncestor.parentNode;
+            const parentNode = this.workspaceSelection.commonAncestor.parentNode;
             this.workspaceSelection.setCommonAncestorNode(parentNode);
         }
     }

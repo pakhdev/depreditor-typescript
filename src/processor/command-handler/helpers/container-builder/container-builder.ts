@@ -6,7 +6,7 @@ import TableBuilder from './helpers/table-builder.ts';
 import TableCreationProperties from '../../interfaces/table-creation-properties.interface.ts';
 
 class ContainerBuilder {
-    public static async create(elementProperties: ElementCreationProperties): Promise<HTMLElement | HTMLElement[] | undefined> {
+    public static create(elementProperties: ElementCreationProperties): HTMLElement | HTMLElement[] | undefined {
         switch (elementProperties.tagName) {
             case 'table':
                 const {
@@ -15,12 +15,8 @@ class ContainerBuilder {
                 } = (elementProperties as TableCreationProperties).creationParams;
                 return TableBuilder.create(rows, cols);
             case 'img':
-                const {
-                    files,
-                    userWantsLargeImage,
-                    imageLimits,
-                } = (elementProperties as ImageCreationProperties).creationParams;
-                return await new ImageBuilder(imageLimits).create(files, userWantsLargeImage);
+                const { images, userWantsLargeImage } = (elementProperties as ImageCreationProperties).creationParams;
+                return new ImageBuilder().create(images, userWantsLargeImage);
             default:
                 const { tagName, attributes, styles, classes } = elementProperties;
                 return HtmlElementBuilder.createElement(tagName, { ...attributes, styles, classes });

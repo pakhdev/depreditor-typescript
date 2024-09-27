@@ -1,4 +1,4 @@
-import ImageLimits from '../../../interfaces/image-limits.inteface.ts';
+import editorConfig from '../../../../../editor-config/editor-config.ts';
 
 class ImageBuilder {
 
@@ -8,35 +8,26 @@ class ImageBuilder {
     private readonly maxLargeImageHeight: number;
     private readonly minResolutionDifference: number;
 
-    constructor(imageLimits: ImageLimits) {
-        this.maxInitialImageWidth = imageLimits.maxInitialImageWidth;
-        this.maxInitialImageHeight = imageLimits.maxInitialImageHeight;
-        this.maxLargeImageWidth = imageLimits.maxLargeImageWidth;
-        this.maxLargeImageHeight = imageLimits.maxLargeImageHeight;
-        this.minResolutionDifference = imageLimits.minResolutionDifference;
+    constructor() {
+        const { images: imagesConfig } = editorConfig;
+        this.maxInitialImageWidth = imagesConfig.maxInitialImageWidth;
+        this.maxInitialImageHeight = imagesConfig.maxInitialImageHeight;
+        this.maxLargeImageWidth = imagesConfig.maxLargeImageWidth;
+        this.maxLargeImageHeight = imagesConfig.maxLargeImageHeight;
+        this.minResolutionDifference = imagesConfig.minResolutionDifference;
     }
 
-    public async create(files: File[], userWantsLargeImage: boolean): Promise<HTMLElement[] | undefined> {
-        if (!files.length) return;
-
+    public create(inputImages: HTMLImageElement[], userWantsLargeImage: boolean): HTMLElement[] {
         const images: HTMLElement[] = [];
-
-        for (const file of files) {
-            const img = await this.readImage(file);
-            if (!img) continue;
-
-            const initialImage: string = this.createInitialImage(img);
-            const largeImage: string | undefined = userWantsLargeImage ? this.createLargeImage(img) : undefined;
-
+        for (const inputImage of inputImages) {
+            const initialImage: string = this.createInitialImage(inputImage);
+            const largeImage: string | undefined = userWantsLargeImage ? this.createLargeImage(inputImage) : undefined;
             const newImage = document.createElement('img');
             newImage.src = initialImage;
-            if (largeImage) {
+            if (largeImage)
                 newImage.dataset.largeImage = largeImage;
-            }
-
             images.push(newImage);
         }
-
         return images;
     }
 
@@ -56,30 +47,6 @@ class ImageBuilder {
             return this.resizeImage(img, this.maxLargeImageWidth, this.maxLargeImageHeight);
         }
         return;
-    }
-
-    private async readImage(file: File): Promise<HTMLImageElement | void> {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                if (e.target) {
-                    const originalImageDataUrl = e.target.result as string;
-                    const img = new Image();
-                    img.src = originalImageDataUrl;
-
-                    img.onload = function () {
-                        resolve(img);
-                    };
-
-                    img.onerror = function () {
-                        reject(new Error('Error al cargar la imágen'));
-                    };
-                }
-            };
-
-            reader.readAsDataURL(file);
-        });
     }
 
     private resizeImage(img: HTMLImageElement, maxWidth: number, maxHeight: number): string {

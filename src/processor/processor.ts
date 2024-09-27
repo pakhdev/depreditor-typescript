@@ -5,8 +5,10 @@ import FormattingReader from './utilities/formatting-reader/formatting-reader.ts
 import FormattingReaderPort from './ports/formatting-reader.port.ts';
 import HtmlBuilderPort from './ports/html-builder.port.ts';
 import SelectionWorkspacePort from './ports/selection-workspace.port.ts';
+import ImageLoaderPort from './ports/image-loader.port.ts';
 
 class Processor {
+    public imageLoader: ImageLoaderPort;
     public htmlBuilder: HtmlBuilderPort;
     public formattingReader: FormattingReaderPort;
     public commandHandler: CommandHandlerPort;
@@ -15,11 +17,12 @@ class Processor {
         const formattingReader = new FormattingReader(this.core);
         const commandHandler = new CommandHandler(this.core);
 
+        this.imageLoader = new ImageLoaderPort();
         this.htmlBuilder = new HtmlBuilderPort();
         this.formattingReader = new FormattingReaderPort(formattingReader);
         this.commandHandler = new CommandHandlerPort(commandHandler);
     }
-    
+
     get selectionWorkspace(): SelectionWorkspacePort {
         return new SelectionWorkspacePort(this.core);
     }

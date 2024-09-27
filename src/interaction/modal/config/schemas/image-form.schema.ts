@@ -1,6 +1,5 @@
 import ImageCreationProperties
     from '../../../../processor/command-handler/interfaces/image-creation-properties.interface.ts';
-import ImageLimits from '../../../../processor/command-handler/interfaces/image-limits.inteface.ts';
 import Modal from '../../modal.ts';
 import ModalSchema from '../../interfaces/modal-schema.interface.ts';
 import Processor from '../../../../processor/processor.ts';
@@ -10,13 +9,6 @@ import containersConfig from '../../../../core/containers/config.ts';
 import ModalSchemaProvider from '../../interfaces/modal-schema-provider.interface.ts';
 
 class ImageFormModal implements ModalSchemaProvider {
-    private imageLimits: ImageLimits = {
-        maxInitialImageWidth: 800,
-        maxInitialImageHeight: 600,
-        maxLargeImageWidth: 300,
-        maxLargeImageHeight: 1600,
-        minResolutionDifference: 1200,
-    };
 
     constructor(private processor: Processor, private modal: Modal) {}
 
@@ -82,9 +74,7 @@ class ImageFormModal implements ModalSchemaProvider {
                 accept: 'image/*',
                 style: 'display: none',
                 onchange: () => {
-                    const imageProperties = this.prepareImageProperties();
-                    if (imageProperties.creationParams.files.length)
-                        this.processor.commandHandler.createAndInsert(imageProperties);
+                    this.insertImages();
                     this.modal.closeModal();
                 },
             },
@@ -101,20 +91,16 @@ class ImageFormModal implements ModalSchemaProvider {
         };
     }
 
-    private prepareImageProperties(): ImageCreationProperties {
+    private async insertImages(): Promise<void> {
         const fileInput = this.getFileInput();
         const checkboxInput = this.getCheckboxInput();
-        const files: File[] = Array.from(fileInput.files || []);
-
-        return {
+        const images: HTMLImageElement[] = await this.processor.imageLoader.load(Array.from(fileInput.files || []));
+        const imageProperties: ImageCreationProperties = {
             ...containersConfig.image,
             tagName: 'img',
-            creationParams: {
-                files,
-                userWantsLargeImage: checkboxInput.checked,
-                imageLimits: this.imageLimits,
-            },
+            creationParams: { images, userWantsLargeImage: checkboxInput.checked },
         };
+        this.processor.commandHandler.createAndInsert(imageProperties);
     }
 
     private getFileInput(): HTMLInputElement {
