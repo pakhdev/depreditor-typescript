@@ -43,9 +43,9 @@ class ModalBuilder {
     private static createFooterStructure(modal: Modal, processor: Processor, schema: ModalSchema): StructureSchema {
         const footerChildren: StructureSchema[] = [
             this.createButtonStructure(
-                'Cancelar',
+                schema.cancelButton?.text || 'Cancelar',
                 ['button-danger', 'button'],
-                (modal) => modal.closeModal(),
+                schema.cancelButton?.action || ((modal: Modal) => modal.closeModal()),
                 modal,
                 processor,
             ),

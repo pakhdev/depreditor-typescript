@@ -11,6 +11,10 @@ interface ModalSchema {
         text: string;
         action: (modal: Modal, processor: Processor) => void;
     };
+    cancelButton?: {
+        text: string;
+        action: (modal: Modal, processor: Processor) => void;
+    };
     formattingContainerProperties: ContainerProperties;
 }
 
