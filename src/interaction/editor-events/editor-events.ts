@@ -1,6 +1,7 @@
 import Core from '../../core/core.ts';
-import HookHandlers from './interfaces/hook-handlers.interface.ts';
 import Processor from '../../processor/processor.ts';
+import Interaction from '../interaction.ts';
+import HookHandlers from './interfaces/hook-handlers.interface.ts';
 import write from './handlers/write.ts';
 import backspace from './handlers/backspace.ts';
 import cut from './handlers/cut.ts';
@@ -23,13 +24,14 @@ class EditorEvents {
     constructor(
         private readonly core: Core,
         private readonly processor: Processor,
+        private readonly interaction: Interaction,
     ) {
         this.registerActions();
     }
 
     private registerActions(): void {
         this.list.forEach(action => {
-            this.core.eventHooks.on(action.hooks, (event) => action.method(event, this.processor));
+            this.core.eventHooks.on(action.hooks, (event) => action.method(event, this.processor, this.interaction));
         });
     }
 }

@@ -6,16 +6,16 @@ import Modal from './modal/modal.ts';
 
 class Interaction {
 
-    private readonly editorEvents: EditorEvents;
-    private readonly modal: Modal;
-    private readonly toolbar: Toolbar;
+    public readonly editorEvents: EditorEvents;
+    public readonly modal: Modal;
+    public readonly toolbar: Toolbar;
 
     constructor(
         private readonly core: Core,
         private readonly processor: Processor,
         private readonly toolbarContainer: HTMLElement,
     ) {
-        this.editorEvents = new EditorEvents(this.core, this.processor);
+        this.editorEvents = new EditorEvents(this.core, this.processor, this);
         this.modal = new Modal(this.processor, this.core.editableDiv);
         this.toolbar = new Toolbar(this.core, this.processor, this.modal, this.toolbarContainer);
     }

@@ -42,7 +42,7 @@ class Toolbar {
         if (!buttonProperties) return;
 
         if (buttonProperties.modalSchema) {
-            this.modal.openModal(buttonProperties.modalSchema);
+            this.modal.openSchema(buttonProperties.modalSchema);
             return;
         }
 
