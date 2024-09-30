@@ -2,7 +2,6 @@ import HookHandler from '../../../core/event-hooks/interfaces/hook-handler.inter
 import Interaction from '../../interaction.ts';
 import Processor from '../../../processor/processor.ts';
 import TextPreprocessor from '../helpers/text-preprocessor.ts';
-import containersConfig from '../../../core/containers/config.ts';
 import editorConfig from '../../../editor-config/editor-config.ts';
 
 const paste: HookHandler = (event?: Event, processor?: Processor, interaction?: Interaction): void => {
@@ -58,11 +57,8 @@ const checkImagesSize = (images: HTMLImageElement[]): boolean => {
 
 const insertImages = (processor: Processor, images: HTMLImageElement[]) => {
     return (confirmation?: boolean) => {
-        processor.commandHandler.createAndInsert({
-            ...containersConfig.image,
-            tagName: 'img',
-            creationParams: { images, userWantsLargeImage: confirmation ?? false },
-        });
+        const adjustedImages = processor.imageBuilder.create(images, confirmation ?? false);
+        processor.commandHandler.insertNodes(adjustedImages);
     };
 };
 

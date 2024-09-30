@@ -6,9 +6,11 @@ import FormattingReaderPort from './ports/formatting-reader.port.ts';
 import HtmlBuilderPort from './ports/html-builder.port.ts';
 import SelectionWorkspacePort from './ports/selection-workspace.port.ts';
 import ImageLoaderPort from './ports/image-loader.port.ts';
+import ImageBuilderPort from './ports/image-builder.port.ts';
 
 class Processor {
     public imageLoader: ImageLoaderPort;
+    public imageBuilder: ImageBuilderPort;
     public htmlBuilder: HtmlBuilderPort;
     public formattingReader: FormattingReaderPort;
     public commandHandler: CommandHandlerPort;
@@ -18,6 +20,7 @@ class Processor {
         const commandHandler = new CommandHandler(this.core);
 
         this.imageLoader = new ImageLoaderPort();
+        this.imageBuilder = new ImageBuilderPort();
         this.htmlBuilder = new HtmlBuilderPort();
         this.formattingReader = new FormattingReaderPort(formattingReader);
         this.commandHandler = new CommandHandlerPort(commandHandler);

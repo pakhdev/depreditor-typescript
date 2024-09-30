@@ -1,4 +1,4 @@
-import editorConfig from '../../../../../editor-config/editor-config.ts';
+import editorConfig from '../../../editor-config/editor-config.ts';
 
 class ImageBuilder {
 

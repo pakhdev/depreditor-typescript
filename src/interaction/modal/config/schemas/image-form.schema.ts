@@ -1,5 +1,3 @@
-import ImageCreationProperties
-    from '../../../../processor/command-handler/interfaces/image-creation-properties.interface.ts';
 import Modal from '../../modal.ts';
 import ModalSchema from '../../interfaces/modal-schema.interface.ts';
 import Processor from '../../../../processor/processor.ts';
@@ -94,13 +92,9 @@ class ImageFormModal implements ModalSchemaProvider {
     private async insertImages(): Promise<void> {
         const fileInput = this.getFileInput();
         const checkboxInput = this.getCheckboxInput();
-        const images: HTMLImageElement[] = await this.processor.imageLoader.load(Array.from(fileInput.files || []));
-        const imageProperties: ImageCreationProperties = {
-            ...containersConfig.image,
-            tagName: 'img',
-            creationParams: { images, userWantsLargeImage: checkboxInput.checked },
-        };
-        this.processor.commandHandler.createAndInsert(imageProperties);
+        const imageFiles: HTMLImageElement[] = await this.processor.imageLoader.load(Array.from(fileInput.files || []));
+        const adjustedImages = this.processor.imageBuilder.create(imageFiles, checkboxInput.checked);
+        this.processor.commandHandler.insertNodes(adjustedImages);
     }
 
     private getFileInput(): HTMLInputElement {
