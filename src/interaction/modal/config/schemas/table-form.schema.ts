@@ -3,8 +3,6 @@ import ModalSchema from '../../interfaces/modal-schema.interface.ts';
 import Processor from '../../../../processor/processor.ts';
 import StructureSchema
     from '../../../../processor/utilities/html-element-builder/interfaces/structure-schema.interface.ts';
-import TableCreationProperties
-    from '../../../../processor/command-handler/interfaces/table-creation-properties.interface.ts';
 import containersConfig from '../../../../core/containers/config.ts';
 import ModalSchemaProvider from '../../interfaces/modal-schema-provider.interface.ts';
 
@@ -58,33 +56,28 @@ class TableFormModal implements ModalSchemaProvider {
         return {
             text: 'Insertar',
             action: () => {
-                const tableProperties = this.prepareTableProperties();
-                this.processor.commandHandler.createAndInsert(tableProperties);
+                const { rows, cols } = this.prepareTableProperties();
+                const table = this.processor.tableBuilder.create(rows, cols);
+                this.processor.commandHandler.insertNodes([table]);
                 this.modal.closeModal();
             },
         };
     }
 
-    private prepareTableProperties(): TableCreationProperties {
+    private prepareTableProperties(): { rows: number, cols: number } {
         const modalContainer = this.modal.modalContainer;
-        if (!modalContainer) {
+        if (!modalContainer)
             throw new Error('No se encontró el contenedor del modal');
-        }
 
         const rowsInput = modalContainer.querySelector('#depreditor-row-num') as HTMLInputElement;
         const colsInput = modalContainer.querySelector('#depreditor-column-num') as HTMLInputElement;
 
-        if (!rowsInput || !colsInput) {
+        if (!rowsInput || !colsInput)
             throw new Error('No se encontraron los inputs de filas y/o columnas');
-        }
 
         return {
-            ...containersConfig.table,
-            tagName: 'table',
-            creationParams: {
-                rows: Number(rowsInput.value),
-                cols: Number(colsInput.value),
-            },
+            rows: Number(rowsInput.value),
+            cols: Number(colsInput.value),
         };
     }
 }
