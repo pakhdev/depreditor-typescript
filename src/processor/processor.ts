@@ -1,7 +1,5 @@
-import CommandHandler from './command-handler/command-handler.ts';
-import CommandHandlerPort from './ports/command-handler.port.ts';
 import Core from '../core/core.ts';
-import FormattingReader from './utilities/formatting-reader/formatting-reader.ts';
+import CommandHandlerPort from './ports/command-handler.port.ts';
 import FormattingReaderPort from './ports/formatting-reader.port.ts';
 import HtmlBuilderPort from './ports/html-builder.port.ts';
 import SelectionWorkspacePort from './ports/selection-workspace.port.ts';
@@ -18,15 +16,12 @@ class Processor {
     public commandHandler: CommandHandlerPort;
 
     constructor(private readonly core: Core) {
-        const formattingReader = new FormattingReader(this.core);
-        const commandHandler = new CommandHandler(this.core);
-
         this.imageLoader = new ImageLoaderPort();
         this.htmlBuilder = new HtmlBuilderPort();
         this.imageBuilder = new ImageBuilderPort();
         this.tableBuilder = new TableBuilderPort();
-        this.formattingReader = new FormattingReaderPort(formattingReader);
-        this.commandHandler = new CommandHandlerPort(commandHandler);
+        this.formattingReader = new FormattingReaderPort(this.core);
+        this.commandHandler = new CommandHandlerPort(this.core);
     }
 
     get selectionWorkspace(): SelectionWorkspacePort {

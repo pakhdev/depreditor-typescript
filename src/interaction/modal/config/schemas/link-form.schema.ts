@@ -50,12 +50,13 @@ class LinkFormModal implements ModalSchemaProvider {
             text: buttonText,
             action: () => {
                 const fileInput = this.getLinkInput();
-                this.processor.commandHandler.createAndInsert({
-                    ...containersConfig.link,
+                const { tagName } = containersConfig.link;
+                const wrapper = this.processor.htmlBuilder.createElement(tagName, {
                     attributes: {
                         href: fileInput.value,
                     },
                 });
+                this.processor.commandHandler.insertNodes([wrapper]);
                 this.modal.closeModal();
             },
         };

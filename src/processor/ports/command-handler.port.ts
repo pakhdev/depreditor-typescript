@@ -1,12 +1,13 @@
-import ElementCreationProperties from '../command-handler/interfaces/element-creation-properties.interface.ts';
 import CommandHandler from '../command-handler/command-handler.ts';
 import SelectionWorkspace from '../selection-workspace/selection-workspace.ts';
+import Core from '../../core/core.ts';
 
 class CommandHandlerPort {
-    constructor(private readonly commandHandler: CommandHandler) {}
 
-    public createAndInsert(elementProperties: ElementCreationProperties, selectionWorkspace?: SelectionWorkspace): void {
-        return this.commandHandler.createAndInsert(elementProperties, selectionWorkspace);
+    private commandHandler: CommandHandler;
+    
+    constructor(private readonly core: Core) {
+        this.commandHandler = new CommandHandler(this.core);
     }
 
     public insertNodes(nodes: Node[], selectionWorkspace?: SelectionWorkspace): void {

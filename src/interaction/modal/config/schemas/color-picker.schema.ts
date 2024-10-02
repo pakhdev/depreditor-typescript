@@ -60,12 +60,13 @@ class ColorPickerModal implements ModalSchemaProvider {
             attributes: {
                 style: `background-color: ${ color }`,
                 onmousedown: () => {
-                    this.processor.commandHandler.createAndInsert({
-                        ...containerProperties,
+                    const { tagName } = containerProperties;
+                    const wrapper = this.processor.htmlBuilder.createElement(tagName, {
                         styles: {
                             [customProperty]: color,
                         },
                     });
+                    this.processor.commandHandler.insertNodes([wrapper]);
                     this.modal.closeModal();
                 },
             },

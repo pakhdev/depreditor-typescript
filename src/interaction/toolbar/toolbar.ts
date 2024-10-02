@@ -46,7 +46,9 @@ class Toolbar {
             return;
         }
 
-        this.processor.commandHandler.createAndInsert(buttonProperties.formattingContainerProperties);
+        const { tagName, attributes, styles, classes } = buttonProperties.formattingContainerProperties;
+        const wrapper = this.processor.htmlBuilder.createElement(tagName, { ...attributes, styles, classes });
+        this.processor.commandHandler.insertNodes([wrapper]);
     }
 
     public handleButtonsState(): void {
