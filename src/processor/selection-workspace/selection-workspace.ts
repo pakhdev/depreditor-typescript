@@ -2,7 +2,6 @@ import Core from '../../core/core.ts';
 import FormattingReader from '../utilities/formatting-reader/formatting-reader.ts';
 import FormattingSummary from '../utilities/formatting-reader/helpers/formatting-summary.ts';
 import FragmentsCloner from './helpers/fragments-cloner.ts';
-import FragmentsFinder from './helpers/fragments-finder/fragments-finder.ts';
 import IndentGetter from './helpers/indent-getter.ts';
 import SelectionStateType from '../../core/selection/enums/selection-state-type.enum.ts';
 import StoredSelection from '../../core/selection/helpers/stored-selection.ts';
@@ -11,13 +10,12 @@ import WorkspaceExtender from './helpers/workspace-extender/workspace-extender.t
 class SelectionWorkspace {
     public readonly selection: StoredSelection;
 
-    constructor(private readonly core: Core) {
-        const { commonAncestor, startElement, endElement } = this.core.selection.get(SelectionStateType.CURRENT);
+    constructor(
+        private readonly core: Core,
+        private readonly selectionType: SelectionStateType = SelectionStateType.CURRENT,
+    ) {
+        const { commonAncestor, startElement, endElement } = this.core.selection.get(this.selectionType);
         this.selection = this.core.selection.create(commonAncestor, startElement, endElement);
-    }
-
-    public get findFragment(): FragmentsFinder {
-        return new FragmentsFinder(this.core);
     }
 
     public get cloneFragment(): FragmentsCloner {
@@ -33,7 +31,7 @@ class SelectionWorkspace {
     }
 
     public get formatting(): FormattingSummary {
-        return new FormattingReader(this.core).getFormatting(SelectionStateType.CURRENT);
+        return new FormattingReader(this.core).getFormatting(this.selectionType);
     }
 
     public get isNothingSelected(): boolean {

@@ -1,6 +1,6 @@
-import FindTextBlocks from './helpers/find-text-blocks.ts';
-import Core from '../../../../core/core.ts';
-import TextBlock from './helpers/text-block.ts';
+import FindTextBlocks from './utilities/find-text-blocks.ts';
+import Core from '../../../core/core.ts';
+import TextBlock from './entities/text-block.ts';
 
 class FragmentsFinder {
     constructor(private core: Core) {}

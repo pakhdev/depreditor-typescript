@@ -1,5 +1,5 @@
-import Core from '../../../../../core/core.ts';
-import TextBlock from './text-block.ts';
+import TextBlock from '../entities/text-block.ts';
+import Core from '../../../../core/core.ts';
 
 class FindTextBlocks {
 
