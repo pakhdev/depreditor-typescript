@@ -2,18 +2,30 @@ import AffectedNodes from '../../../core/selection/interfaces/affected-nodes.int
 import AffectedNodesPart from '../../../core/selection/enums/affected-nodes-part.enum.ts';
 import ContainerProperties from '../../../core/containers/interfaces/container-properties.interface.ts';
 import Core from '../../../core/core.ts';
-import FormattingSummary from './helpers/formatting-summary.ts';
+import FormattingSummary from './entities/formatting-summary.ts';
 import SelectionStateType from '../../../core/selection/enums/selection-state-type.enum.ts';
 
 class FormattingReader {
-
     constructor(private readonly core: Core) {}
 
-    public getFormatting(selectionType: SelectionStateType): FormattingSummary {
+    public getSelectionFormatting(selectionType: SelectionStateType): FormattingSummary {
         const summary = new FormattingSummary(this.core);
         const selection = this.core.selection.get(selectionType);
         const parentFormattings = this.scanParentsFormatting(selection.editableDiv, selection.commonAncestor.node, summary);
         this.scanChildrenFormatting(selection.getAffectedNodes(AffectedNodesPart.WITHIN), parentFormattings, summary);
+        return summary;
+    }
+
+    public getNodesFormatting(nodes: Node[]): FormattingSummary {
+        const summary = new FormattingSummary(this.core);
+        if (!nodes.length)
+            return summary;
+
+        let parentFormattings: ContainerProperties[] = [];
+        if (nodes[0].parentNode)
+            parentFormattings = this.scanParentsFormatting(this.core.editableDiv, nodes[0].parentNode, summary);
+
+        this.scanChildrenFormatting(nodes, parentFormattings, summary);
         return summary;
     }
 
@@ -29,12 +41,14 @@ class FormattingReader {
         return formattings;
     }
 
-    private scanChildrenFormatting(affectedNodes: AffectedNodes[], parentFormattings: ContainerProperties[], summary: FormattingSummary): void {
-        for (const affectedNode of affectedNodes) {
+    private scanChildrenFormatting(children: AffectedNodes[] | Node[], parentFormattings: ContainerProperties[], summary: FormattingSummary): void {
+        for (const child of children) {
             const formattings: ContainerProperties[] = [...parentFormattings];
-            this.processNodeFormatting(affectedNode.node, formattings, summary);
-            if (affectedNode.node.hasChildNodes())
-                this.scanChildrenFormatting(affectedNode.children, formattings, summary);
+            const childNode = child instanceof Node ? child : child.node;
+            const childChildren = child instanceof Node ? Array.from(child.childNodes) : child.children;
+            this.processNodeFormatting(childNode, formattings, summary);
+            if (childNode.hasChildNodes())
+                this.scanChildrenFormatting(childChildren, formattings, summary);
             summary.updateFormattingCoverage(formattings);
         }
     }

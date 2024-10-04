@@ -1,5 +1,5 @@
 import FormattingReader from '../utilities/formatting-reader/formatting-reader.ts';
-import FormattingSummary from '../utilities/formatting-reader/helpers/formatting-summary.ts';
+import FormattingSummary from '../utilities/formatting-reader/entities/formatting-summary.ts';
 import SelectionStateType from '../../core/selection/enums/selection-state-type.enum.ts';
 import Core from '../../core/core.ts';
 
@@ -11,12 +11,16 @@ class FormattingReaderPort {
         this.formattingReader = new FormattingReader(this.core);
     }
 
-    public getFormatting(selectionType: SelectionStateType): FormattingSummary {
-        return this.formattingReader.getFormatting(selectionType);
+    public getSelectionFormatting(selectionType: SelectionStateType): FormattingSummary {
+        return this.formattingReader.getSelectionFormatting(selectionType);
     }
 
     public getCurrentFormatting(): FormattingSummary {
-        return this.formattingReader.getFormatting(SelectionStateType.CURRENT);
+        return this.formattingReader.getSelectionFormatting(SelectionStateType.CURRENT);
+    }
+
+    public getNodesFormatting(nodes: Node[]): FormattingSummary {
+        return this.formattingReader.getNodesFormatting(nodes);
     }
 }
 

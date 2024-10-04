@@ -1,6 +1,6 @@
 import Core from '../../core/core.ts';
 import FormattingReader from '../utilities/formatting-reader/formatting-reader.ts';
-import FormattingSummary from '../utilities/formatting-reader/helpers/formatting-summary.ts';
+import FormattingSummary from '../utilities/formatting-reader/entities/formatting-summary.ts';
 import FragmentsCloner from './helpers/fragments-cloner.ts';
 import IndentGetter from './helpers/indent-getter.ts';
 import SelectionStateType from '../../core/selection/enums/selection-state-type.enum.ts';
@@ -31,7 +31,7 @@ class SelectionWorkspace {
     }
 
     public get formatting(): FormattingSummary {
-        return new FormattingReader(this.core).getFormatting(this.selectionType);
+        return new FormattingReader(this.core).getSelectionFormatting(this.selectionType);
     }
 
     public get isNothingSelected(): boolean {
