@@ -38,6 +38,10 @@ class SelectedElement {
         return this.getNodeByPath(this.path.slice(0, -1));
     }
 
+    public get isTextNode(): boolean {
+        return this.node.nodeType === Node.TEXT_NODE;
+    }
+
     public get previousSibling(): { node: Node, path: number [] } | null {
         const index = this.position - 1;
         if (index < 0)

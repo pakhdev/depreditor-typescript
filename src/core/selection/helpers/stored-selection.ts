@@ -21,6 +21,10 @@ class StoredSelection {
         return this.getIndexInCommonAncestor(this.endElement);
     }
 
+    public get isSomethingSelected(): boolean {
+        return !this.isNothingSelected;
+    }
+
     public get isNothingSelected(): boolean {
         return this.isSameElement && this.startElement.offset.start === this.startElement.offset.end;
     }

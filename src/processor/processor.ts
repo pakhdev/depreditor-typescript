@@ -7,6 +7,7 @@ import ImageLoaderPort from './ports/image-loader.port.ts';
 import ImageBuilderPort from './ports/image-builder.port.ts';
 import TableBuilderPort from './ports/table-builder.port.ts';
 import FragmentsFinderPort from './ports/fragments-finder.port.ts';
+import OperationsBuilderPort from './ports/operations-builder.port.ts';
 
 class Processor {
     public imageLoader: ImageLoaderPort;
@@ -16,6 +17,7 @@ class Processor {
     public formattingReader: FormattingReaderPort;
     public commandHandler: CommandHandlerPort;
     public fragmentsFinder: FragmentsFinderPort;
+    public operationsBuilder: OperationsBuilderPort;
 
     constructor(private readonly core: Core) {
         this.imageLoader = new ImageLoaderPort();
@@ -25,6 +27,7 @@ class Processor {
         this.formattingReader = new FormattingReaderPort(this.core);
         this.commandHandler = new CommandHandlerPort(this.core);
         this.fragmentsFinder = new FragmentsFinderPort(this.core);
+        this.operationsBuilder = OperationsBuilderPort;
     }
 
     get selectionWorkspace(): SelectionWorkspacePort {
