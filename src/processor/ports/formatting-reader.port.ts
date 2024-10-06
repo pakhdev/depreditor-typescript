@@ -22,6 +22,10 @@ class FormattingReaderPort {
     public getNodesFormatting(nodes: Node[]): FormattingSummary {
         return this.formattingReader.getNodesFormatting(nodes);
     }
+
+    public getInsertionPointFormatting(): FormattingSummary {
+        return this.formattingReader.getInsertionPointFormatting();
+    }
 }
 
 export default FormattingReaderPort;

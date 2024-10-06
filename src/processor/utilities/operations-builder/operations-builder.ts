@@ -24,8 +24,19 @@ class OperationsBuilder {
         });
     }
 
-    public removeSelectedNodes(): Operation[] {
-        const { startIdx, endIdx, commonAncestorPath, editableDiv } = this.getSelectionProperties();
+    public removeSelected(): Operation[] {
+        const {
+            startIdx,
+            endIdx,
+            commonAncestorPath,
+            offset,
+            editableDiv,
+            isTextNode,
+            isSomethingSelected,
+        } = this.getSelectionProperties();
+        if (isTextNode && isSomethingSelected)
+            return [new Operation(OperationType.TEXT_REMOVAL, new SelectedElement(editableDiv, [...commonAncestorPath], offset))];
+
         return Array.from({ length: endIdx - startIdx + 1 }, (_, i) => {
             const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath, startIdx + i]);
             return new Operation(OperationType.ELEMENT_REMOVAL, targetElement);
@@ -36,10 +47,11 @@ class OperationsBuilder {
         const {
             startIndexInCommonAncestor: startIdx,
             endIndexInCommonAncestor: endIdx,
-            commonAncestor: { path: commonAncestorPath, isTextNode },
+            commonAncestor: { path: commonAncestorPath, isTextNode, offset },
+            isSomethingSelected,
             editableDiv,
         } = this.selectionWorkspace.selection;
-        return { startIdx, endIdx, commonAncestorPath, editableDiv, isTextNode };
+        return { startIdx, endIdx, commonAncestorPath, offset, editableDiv, isTextNode, isSomethingSelected };
     }
 }
 

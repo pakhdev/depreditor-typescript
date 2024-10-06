@@ -29,6 +29,14 @@ class FormattingReader {
         return summary;
     }
 
+    public getInsertionPointFormatting(): FormattingSummary {
+        const summary = new FormattingSummary(this.core);
+        const { commonAncestor: { node: commonAncestor } } = this.core.selection.get(SelectionStateType.CURRENT);
+        const parentFormattings = this.scanParentsFormatting(this.core.editableDiv, commonAncestor, summary);
+        summary.updateFormattingCoverage(parentFormattings);
+        return summary;
+    }
+
     private scanParentsFormatting(editableDiv: HTMLDivElement, targetNode: Node, summary: FormattingSummary): ContainerProperties[] {
         const formattings: ContainerProperties[] = [];
 
