@@ -1,47 +1,34 @@
-import ClonedFragment from '../../selection-workspace/helpers/fragments-cloner/helpers/cloned-fragment.ts';
 import ContainerProperties from '../../../core/containers/interfaces/container-properties.interface.ts';
 import HtmlElementBuilder from '../../utilities/html-element-builder/html-element-builder.ts';
-import SelectionWorkspace from '../../selection-workspace/selection-workspace.ts';
-import TextBlock from '../../selection-workspace/helpers/fragments-finder/helpers/text-block.ts';
-import AffectedNodesPart from '../../../core/selection/enums/affected-nodes-part.enum.ts';
+import TextBlock from '../../utilities/fragments-finder/entities/text-block.ts';
+import Processor from '../../processor.ts';
 
-class ElementManipulator {
-    constructor(private readonly workspace: SelectionWorkspace) {}
+class ElementWrapper {
+    constructor(private readonly processor: Processor) {}
 
-    public insertNodes(nodes: Node[]): Node[] {
-        const { cloneFragment } = this.workspace;
-        return [
-            ...cloneFragment.selectedPart(AffectedNodesPart.BEFORE).nodes,
-            ...nodes,
-            ...cloneFragment.selectedPart(AffectedNodesPart.AFTER).nodes,
-        ];
-    }
-
-    public wrap(element: Node, containerProperties: ContainerProperties): Node[] {
-        const fragments = this.getFragments();
-        this.unwrapFormattingNodes(containerProperties, fragments[1]);
-
+    public wrap(nodes: Node[], wrapperElement: Node, containerProperties: ContainerProperties): Node[] {
+        const tempContainer = HtmlElementBuilder.createElement('div');
+        tempContainer.append(...nodes);
+        this.unwrapFormattingNodes(containerProperties, nodes);
         if (containerProperties.isBlock) {
-            this.wrapNodes([...fragments[1].nodes], element);
+            this.wrapNodes([...nodes], wrapperElement);
         } else {
-            const textBlocks = this.workspace.findFragment.findTextBlocks(fragments[1].nodes);
-            this.wrapTextBlocks(textBlocks, element);
+            const textBlocks = this.processor.fragmentsFinder.findTextBlocks(nodes);
+            this.wrapTextBlocks(textBlocks, wrapperElement);
             if (containerProperties.childContainer)
                 this.wrapChildContainers(containerProperties.childContainer, textBlocks);
         }
-        return fragments.flatMap(fragment => fragment.nodes);
+        return Array.from(tempContainer.childNodes);
     }
 
-    public unwrap(containerProperties: ContainerProperties): Node[] {
-        const { formatting } = this.workspace;
-        const fragments = this.getFragments();
-
+    public unwrap(nodes: Node[], containerProperties: ContainerProperties): Node[] {
+        const formatting = this.processor.formattingReader.getNodesFormatting(nodes);
         const formattingEntry = formatting.entries.find(entry => entry.formatting === containerProperties);
         if (!formattingEntry)
             throw new Error('Format not found');
 
-        formattingEntry.nodes.forEach(node => this.unwrapNode(fragments[1].findByOriginalNode(node)));
-        return fragments.flatMap(fragment => fragment.nodes);
+        formattingEntry.nodes.forEach(node => this.unwrapNode(node));
+        return formattingEntry.nodes;
     }
 
     private unwrapNode(node: Node): void {
@@ -65,25 +52,15 @@ class ElementManipulator {
         nodes.forEach(node => clonedContainer.appendChild(node));
     }
 
-    private getFragments(): ClonedFragment[] {
-        const { cloneFragment } = this.workspace;
-        return [
-            cloneFragment.selectedPart(AffectedNodesPart.BEFORE),
-            cloneFragment.selectedPart(AffectedNodesPart.WITHIN),
-            cloneFragment.selectedPart(AffectedNodesPart.AFTER),
-        ];
-    }
-
-    private unwrapFormattingNodes(containerProperties: ContainerProperties, fragmentWithin: ClonedFragment): void {
-        const { formatting } = this.workspace;
+    private unwrapFormattingNodes(containerProperties: ContainerProperties, nodes: Node[]): void {
+        const formatting = this.processor.formattingReader.getNodesFormatting(nodes);
         const similarFormattingEntries = formatting.getSimilar(containerProperties);
         const currentFormattingEntries = formatting.entries.filter(entry => entry.formatting === containerProperties);
         const formattingNodesToUnwrap = [
             ...similarFormattingEntries,
             ...currentFormattingEntries,
         ].flatMap(entry => entry.nodes);
-
-        formattingNodesToUnwrap.forEach(node => this.unwrapNode(fragmentWithin.findByOriginalNode(node)));
+        formattingNodesToUnwrap.forEach(node => this.unwrapNode(node));
     }
 
     private wrapTextBlocks(textBlocks: TextBlock[], container: Node): void {
@@ -100,4 +77,4 @@ class ElementManipulator {
     }
 }
 
-export default ElementManipulator;
+export default ElementWrapper;
