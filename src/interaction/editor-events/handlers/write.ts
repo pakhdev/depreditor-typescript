@@ -6,7 +6,7 @@ const write: HookHandler = (event?: Event, processor?: Processor): void => {
         throw new Error('Write: El evento o el procesador no están definidos');
     const e = event as KeyboardEvent;
     e.preventDefault();
-    processor.commandHandler.handleText(e.key);
+    processor.commandHandler.insertText(e.key);
 };
 
 export default write;

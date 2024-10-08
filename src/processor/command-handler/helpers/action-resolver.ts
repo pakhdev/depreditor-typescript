@@ -9,15 +9,17 @@ class ActionResolver {
         const { commonAncestor, isNothingSelected } = workspace;
         const { types } = containerProperties;
 
-        if (types.includes(ContainerType.WRAPPER)) {
-            const isAlreadyFormatted = workspace.formatting.entries.some(
-                entry => entry.formatting === containerProperties && entry.coverage === FormattingCoverage.FULL,
-            );
-            if (isAlreadyFormatted)
-                return ActionTypes.UNWRAP;
+        if (!workspace.isNothingSelected) {
+            if (types.includes(ContainerType.WRAPPER)) {
+                const isAlreadyFormatted = workspace.formatting.entries.some(
+                    entry => entry.formatting === containerProperties && entry.coverage === FormattingCoverage.FULL,
+                );
+                if (isAlreadyFormatted)
+                    return ActionTypes.UNWRAP;
 
-            if (!isNothingSelected || (isNothingSelected && commonAncestor.nodeType === Node.TEXT_NODE))
-                return ActionTypes.WRAP;
+                if (!isNothingSelected || (isNothingSelected && commonAncestor.nodeType === Node.TEXT_NODE))
+                    return ActionTypes.WRAP;
+            }
         }
 
         if (types.includes(ContainerType.INSERTABLE))

@@ -1,42 +1,31 @@
 import Operation from '../operation.ts';
-import OperationType from '../enums/operation-type.enum.ts';
-import SelectedElement from '../../selection/helpers/selected-element.ts';
 import SelectionWorkspace from '../../../processor/selection-workspace/selection-workspace.ts';
 import StoredSelection from '../../selection/helpers/stored-selection.ts';
 import Transaction from '../transaction.ts';
 
 class TransactionBuilder {
 
-    private removalOperations: Operation[] = [];
-    private injectingOperations: Operation[] = [];
+    private readonly removalOperations: Operation[] = [];
+    private readonly injectingOperations: Operation[] = [];
     private initialSelection: StoredSelection | null = null;
     private finalSelection: StoredSelection | null = null;
 
-    // Target elements to select?
-
     constructor(private workspace: SelectionWorkspace) {}
 
-    public createRemovalOps(): TransactionBuilder {
-        const { startIndexInCommonAncestor: startIdx, endIndexInCommonAncestor: endIdx } = this.workspace.selection;
-        const { path: commonAncestorPath } = this.workspace.selection.commonAncestor;
-        const { editableDiv } = this.workspace.selection;
-
-        for (let i = startIdx; i <= endIdx; i++) {
-            const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath, i]);
-            this.removalOperations.push(new Operation(OperationType.ELEMENT_REMOVAL, targetElement));
-        }
+    public appendInjections(operations: Operation | Operation[]): TransactionBuilder {
+        Array.isArray(operations)
+            ? this.injectingOperations.push(...operations)
+            : this.injectingOperations.push(operations);
         return this;
     }
 
-    public createInjectingOps(newNodes: Node[]): TransactionBuilder {
-        const { startIndexInCommonAncestor: startIdx } = this.workspace.selection;
-        const { path: commonAncestorPath } = this.workspace.selection.commonAncestor;
-        const { editableDiv } = this.workspace.selection;
+    public appendRemovals(operations: Operation[]): TransactionBuilder {
+        this.removalOperations.push(...operations);
+        return this;
+    }
 
-        for (let i = startIdx; i < startIdx + newNodes.length; i++) {
-            const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath, i]);
-            this.injectingOperations.push(new Operation(OperationType.ELEMENT_INJECTION, targetElement, newNodes[i - startIdx]));
-        }
+    public setInitialSelection(selection: StoredSelection): TransactionBuilder {
+        this.initialSelection = selection;
         return this;
     }
 
@@ -51,6 +40,10 @@ class TransactionBuilder {
             this.initialSelection,
             this.finalSelection,
         );
+    }
+
+    public test(): void {
+        console.log('Injecting ops:', this.injectingOperations);
     }
 }
 

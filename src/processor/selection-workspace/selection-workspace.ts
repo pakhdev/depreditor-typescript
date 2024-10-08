@@ -38,6 +38,10 @@ class SelectionWorkspace {
         return this.selection.isNothingSelected;
     }
 
+    public get isSomethingSelected(): boolean {
+        return this.selection.isSomethingSelected;
+    }
+
     public get hasInlineParent(): boolean {
         const { commonAncestor } = this.selection;
         if (!commonAncestor.path.length)

@@ -10,10 +10,10 @@ const externalDrop: HookHandler = (event?: Event, processor?: Processor): void =
     const dataTransfer = e.dataTransfer;
     if (!dataTransfer) return;
     let text = new TextPreprocessor(dataTransfer.getData('text')).sanitize();
-    if (text.containsBreakLine())
-        processor.commandHandler.insertNodes(text.getAsHtml());
-    else
-        processor.commandHandler.handleText(text.getAsText());
+
+    processor.commandHandler.handleInsertion(
+        text.containsBreakLine() ? text.getAsHtml() : text.getAsText(),
+    );
 };
 
 export default externalDrop;

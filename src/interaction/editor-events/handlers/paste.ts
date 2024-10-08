@@ -16,10 +16,9 @@ const paste: HookHandler = (event?: Event, processor?: Processor, interaction?: 
         return processImages(clipboardData, processor, interaction);
 
     let text = new TextPreprocessor(clipboardData.getData('text')).sanitize();
-    if (text.containsBreakLine())
-        processor.commandHandler.insertNodes(text.getAsHtml());
-    else
-        processor.commandHandler.handleText(text.getAsText());
+    processor.commandHandler.handleInsertion(
+        text.containsBreakLine() ? text.getAsHtml() : text.getAsText(),
+    );
 };
 
 const processImages = (clipboardData: DataTransfer, processor: Processor, interaction: Interaction): void => {

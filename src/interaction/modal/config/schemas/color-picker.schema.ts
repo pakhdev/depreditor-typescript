@@ -66,7 +66,7 @@ class ColorPickerModal implements ModalSchemaProvider {
                             [customProperty]: color,
                         },
                     });
-                    this.processor.commandHandler.insertNodes([wrapper]);
+                    this.processor.commandHandler.handleElement(wrapper);
                     this.modal.closeModal();
                 },
             },

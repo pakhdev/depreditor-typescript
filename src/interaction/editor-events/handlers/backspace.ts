@@ -10,7 +10,7 @@ const backspace: HookHandler = (event?: Event, processor?: Processor): void => {
     const selectPrevious = workspace.selectPrevious();
     if (!selectPrevious)
         return;
-    processor.commandHandler.handleText(null, workspace.selectionWorkspace);
+    processor.commandHandler.deleteSelectedContent();
 };
 
 export default backspace;

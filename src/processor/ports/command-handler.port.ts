@@ -1,21 +1,41 @@
 import CommandHandler from '../command-handler/command-handler.ts';
-import SelectionWorkspace from '../selection-workspace/selection-workspace.ts';
 import Core from '../../core/core.ts';
+import Processor from '../processor.ts';
+import Operation from '../../core/transactions-manager/operation.ts';
 
 class CommandHandlerPort {
 
     private commandHandler: CommandHandler;
-    
-    constructor(private readonly core: Core) {
-        this.commandHandler = new CommandHandler(this.core);
+
+    constructor(
+        private readonly core: Core,
+        private readonly processor: Processor,
+    ) {
+        this.commandHandler = new CommandHandler(this.core, this.processor);
     }
 
-    public insertNodes(nodes: Node[], selectionWorkspace?: SelectionWorkspace): void {
-        return this.commandHandler.insertNodes(nodes, selectionWorkspace);
+    public insertNodes(newNodes: Node[]): void {
+        return this.commandHandler.insertNodes(newNodes);
     }
 
-    public handleText(text: string | null, selectionWorkspace?: SelectionWorkspace): void {
-        return this.commandHandler.handleText(text, selectionWorkspace);
+    public insertText(text: string): void {
+        return this.commandHandler.insertText(text);
+    }
+
+    public handleInsertion(
+        input: Node[] | string,
+        additionalInjections: Operation[] = [],
+        additionalRemovals: Operation[] = [],
+    ): void {
+        return this.commandHandler.handleInsertion(input, additionalInjections, additionalRemovals);
+    }
+
+    public handleElement(node: Node): void {
+        return this.commandHandler.handleElement(node);
+    }
+
+    public deleteSelectedContent(): void {
+        return this.commandHandler.deleteSelectedContent();
     }
 }
 

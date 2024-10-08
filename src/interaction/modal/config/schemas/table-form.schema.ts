@@ -58,7 +58,7 @@ class TableFormModal implements ModalSchemaProvider {
             action: () => {
                 const { rows, cols } = this.prepareTableProperties();
                 const table = this.processor.tableBuilder.create(rows, cols);
-                this.processor.commandHandler.insertNodes([table]);
+                this.processor.commandHandler.handleElement(table);
                 this.modal.closeModal();
             },
         };

@@ -10,7 +10,7 @@ const remove: HookHandler = (event?: Event, processor?: Processor): void => {
     const selectNext = workspace.selectNext();
     if (!selectNext)
         return;
-    processor.commandHandler.handleText(null, workspace.selectionWorkspace);
+    processor.commandHandler.deleteSelectedContent();
 };
 
 export default remove;

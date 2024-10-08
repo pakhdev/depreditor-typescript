@@ -56,7 +56,7 @@ class LinkFormModal implements ModalSchemaProvider {
                         href: fileInput.value,
                     },
                 });
-                this.processor.commandHandler.insertNodes([wrapper]);
+                this.processor.commandHandler.handleElement(wrapper);
                 this.modal.closeModal();
             },
         };
