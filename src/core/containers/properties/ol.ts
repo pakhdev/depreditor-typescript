@@ -4,7 +4,7 @@ import li from './li.ts';
 
 const ol: ContainerProperties = {
     tagName: 'ol',
-    types: [ContainerType.WRAPPER, ContainerType.INSERTABLE],
+    types: [ContainerType.INSERTABLE],
     isBlock: true,
     childContainer: li,
 };

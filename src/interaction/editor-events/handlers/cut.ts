@@ -12,7 +12,7 @@ const cut: HookHandler = (event?: Event, processor?: Processor): void => {
         return;
 
     addSelectionToClipboard(e);
-    processor.commandHandler.deleteSelectedContent();
+    processor.commandHandler.handleDeletion();
 };
 
 const addSelectionToClipboard = (e: ClipboardEvent): void => {

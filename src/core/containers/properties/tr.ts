@@ -3,7 +3,7 @@ import ContainerType from '../enums/container-type.enum.ts';
 
 const tr: ContainerProperties = {
     tagName: 'tr',
-    types: [ContainerType.WRAPPER],
+    types: [ContainerType.INSERTABLE],
 };
 
 export default tr;

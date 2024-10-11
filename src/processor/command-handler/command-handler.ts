@@ -2,12 +2,12 @@ import ActionResolver from './helpers/action-resolver.ts';
 import ActionTypes from './enums/action-types.enum.ts';
 import AffectedNodesPart from '../../core/selection/enums/affected-nodes-part.enum.ts';
 import Core from '../../core/core.ts';
-import Operation from '../../core/transactions-manager/operation.ts';
 import OperationsBuilder from '../utilities/operations-builder/operations-builder.ts';
 import Processor from '../processor.ts';
 import SelectionAdjuster from './helpers/selection-adjuster.ts';
 import SelectionWorkspace from '../selection-workspace/selection-workspace.ts';
 import TransactionBuilder from '../../core/transactions-manager/helpers/transaction-builder.ts';
+import DeferredSelectionType from '../../core/transactions-manager/enums/deferred-selection-type.enum.ts';
 
 class CommandHandler {
 
@@ -16,19 +16,8 @@ class CommandHandler {
         private readonly processor: Processor,
     ) {}
 
-    public handleInsertion(
-        input: Node[] | string,
-        additionalInjections: Operation[] = [],
-        additionalRemovals: Operation[] = [],
-    ) {
+    public handleInsertion(input: Node[] | string, transactionBuilder?: TransactionBuilder) {
         if (!input.length) return;
-
-        const transactionBuilder = (additionalInjections.length || additionalRemovals.length)
-            ? this.core.transactions
-                .builder(new SelectionWorkspace(this.core))
-                .appendInjections(additionalInjections)
-                .appendRemovals(additionalRemovals)
-            : undefined;
 
         if (typeof input === 'string' || (input.length === 1 && input[0].nodeType === Node.TEXT_NODE)) {
             const text = typeof input === 'string' ? input : input[0].textContent;
@@ -66,8 +55,17 @@ class CommandHandler {
         else if (action === ActionTypes.NONE)
             return;
 
+        const { nodesBefore, nodesAfter } = this.extractBeforeAndAfterNodes(selectionWorkspace);
+        const nodesBeforeOps = operationsBuilder.injectNodes(nodesBefore);
+        const newNodesOps = operationsBuilder.injectNodes(newNodes);
+        const nodesAfterOps = operationsBuilder.injectNodes(nodesAfter);
+        const deferredSelectionType = (action === ActionTypes.INSERT)
+            ? DeferredSelectionType.INSIDE_FRAGMENT
+            : DeferredSelectionType.ENTIRE_FRAGMENT;
+
         transactionBuilder
-            .appendInjections(operationsBuilder.injectNodes(newNodes))
+            .appendInjections([...nodesBeforeOps, ...newNodesOps, ...nodesAfterOps])
+            .computeDeferredSelection(newNodesOps, deferredSelectionType)
             .appendRemovals(operationsBuilder.removeSelected());
     }
 
@@ -82,8 +80,11 @@ class CommandHandler {
         if (!isAncestorTextNode)
             this.insertNodes([document.createTextNode(text)], transactionBuilder);
 
+        const textInjectionOp = operationsBuilder.injectText(text);
+
         transactionBuilder
-            .appendInjections(operationsBuilder.injectText(text))
+            .appendInjections(textInjectionOp)
+            .computeDeferredSelection(textInjectionOp, DeferredSelectionType.AFTER_FRAGMENT)
             .appendRemovals(operationsBuilder.removeSelected());
     }
 
@@ -104,17 +105,59 @@ class CommandHandler {
         if (newNodesFormatting.entries.some(entry => entry.formatting.isBlock))
             selectionWorkspace.extend.outsideInlineParents();
 
+        const { nodesBefore, nodesAfter } = this.extractBeforeAndAfterNodes(selectionWorkspace);
+        const nodesBeforeOps = operationsBuilder.injectNodes(nodesBefore);
+        const newNodesOps = operationsBuilder.injectNodes(newNodes);
+        const nodesAfterOps = operationsBuilder.injectNodes(nodesAfter);
+
         transactionBuilder
-            .appendInjections(operationsBuilder.injectNodes(newNodes))
+            .appendInjections([...nodesBeforeOps, ...newNodesOps, ...nodesAfterOps])
+            .computeDeferredSelection(newNodesOps, DeferredSelectionType.AFTER_FRAGMENT)
             .appendRemovals(operationsBuilder.removeSelected());
     }
 
-    public deleteSelectedContent() {
+    public handleDeletion() {
+        const selectionWorkspace = new SelectionWorkspace(this.core);
+        if (selectionWorkspace.selection.commonAncestor.isTextNode)
+            this.deleteSelectedText();
+        else
+            this.deleteSelectedContent();
+    }
+
+    private deleteSelectedText() {
         const selectionWorkspace = new SelectionWorkspace(this.core);
         const operationsBuilder = new OperationsBuilder(selectionWorkspace);
+        const { offset: { start: offset }, path } = selectionWorkspace.selection.commonAncestor;
+
         this.core.transactions
             .builder(selectionWorkspace)
+            .setDeferredSelection({ type: 'caret', path, offset })
             .appendRemovals(operationsBuilder.removeSelected());
+    }
+
+    private deleteSelectedContent() {
+        const selectionWorkspace = new SelectionWorkspace(this.core);
+        const operationsBuilder = new OperationsBuilder(selectionWorkspace);
+
+        const { nodesBefore, nodesAfter } = this.extractBeforeAndAfterNodes(selectionWorkspace);
+        const nodesBeforeOps = operationsBuilder.injectNodes(nodesBefore);
+        const nodesAfterOps = operationsBuilder.injectNodes(nodesAfter);
+
+        this.core.transactions
+            .builder(selectionWorkspace)
+            .appendInjections([...nodesBeforeOps, ...nodesAfterOps])
+            .computeDeferredSelection(nodesBeforeOps, DeferredSelectionType.AFTER_FRAGMENT)
+            .appendRemovals(operationsBuilder.removeSelected());
+    }
+
+    private extractBeforeAndAfterNodes(selectionWorkspace: SelectionWorkspace): {
+        nodesBefore: Node[],
+        nodesAfter: Node[]
+    } {
+        return {
+            nodesBefore: selectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.BEFORE).nodes,
+            nodesAfter: selectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.AFTER).nodes,
+        };
     }
 
 }

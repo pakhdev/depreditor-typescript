@@ -4,7 +4,7 @@ import SelectedElement from '../selection/helpers/selected-element.ts';
 class Operation {
 
     public readonly elementToInject: Node | undefined;
-    private readonly textToInject: string | undefined;
+    public readonly textToInject: string | undefined;
 
     private removedElement: Node | undefined;
     private removedText: string | undefined;
