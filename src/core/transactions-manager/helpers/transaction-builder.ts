@@ -2,15 +2,21 @@ import Operation from '../operation.ts';
 import SelectionWorkspace from '../../../processor/selection-workspace/selection-workspace.ts';
 import StoredSelection from '../../selection/helpers/stored-selection.ts';
 import Transaction from '../transaction.ts';
+import DeferredSelection from '../interfaces/deferred-selection.interface.ts';
+import DeferredSelectionType from '../enums/deferred-selection-type.enum.ts';
+import DeferredSelectionBuilder
+    from '../../../processor/utilities/deferred-selection-builder/deferred-selection-builder.ts';
 
 class TransactionBuilder {
 
     private readonly removalOperations: Operation[] = [];
     private readonly injectingOperations: Operation[] = [];
-    private initialSelection: StoredSelection | null = null;
-    private finalSelection: StoredSelection | null = null;
+    private readonly initialSelection: StoredSelection;
+    private deferredSelection: DeferredSelection | null = null;
 
-    constructor(private workspace: SelectionWorkspace) {}
+    constructor(private workspace: SelectionWorkspace) {
+        this.initialSelection = workspace.selection;
+    }
 
     public appendInjections(operations: Operation | Operation[]): TransactionBuilder {
         Array.isArray(operations)
@@ -24,13 +30,31 @@ class TransactionBuilder {
         return this;
     }
 
-    public setInitialSelection(selection: StoredSelection): TransactionBuilder {
-        this.initialSelection = selection;
+    public computeDeferredSelection(operations: Operation[], deferredSelectionType: DeferredSelectionType): TransactionBuilder {
+        switch (deferredSelectionType) {
+            case DeferredSelectionType.BEFORE_FRAGMENT:
+                this.deferredSelection = DeferredSelectionBuilder.beforeFragment(operations);
+                break;
+            case DeferredSelectionType.INSIDE_FRAGMENT:
+                this.deferredSelection = DeferredSelectionBuilder.insideFragment(operations);
+                break;
+            case DeferredSelectionType.AFTER_FRAGMENT:
+                this.deferredSelection = DeferredSelectionBuilder.afterFragment(operations);
+                break;
+            case DeferredSelectionType.ENTIRE_FRAGMENT:
+                this.deferredSelection = DeferredSelectionBuilder.entireFragment(operations);
+                break;
+        }
+        return this;
+    }
+
+    public setDeferredSelection(deferredSelection: DeferredSelection): TransactionBuilder {
+        this.deferredSelection = deferredSelection;
         return this;
     }
 
     public build(): Transaction {
-        if (this.initialSelection === null || this.finalSelection === null)
+        if (this.initialSelection === null || this.deferredSelection === null)
             throw new Error('La selección inicial y final deben ser definidas antes de crear la transacción');
 
         const operationsList = [...this.removalOperations, ...this.injectingOperations];
@@ -38,12 +62,8 @@ class TransactionBuilder {
             operationsList,
             this.workspace.selection.editableDiv,
             this.initialSelection,
-            this.finalSelection,
+            this.deferredSelection,
         );
-    }
-
-    public test(): void {
-        console.log('Injecting ops:', this.injectingOperations);
     }
 }
 

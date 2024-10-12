@@ -5,21 +5,24 @@ import OperationType from '../../../core/transactions-manager/enums/operation-ty
 
 class OperationsBuilder {
 
+    private injectedElements: number = 0;
+
     constructor(private readonly selectionWorkspace: SelectionWorkspace) {}
 
-    public injectText(text: string): Operation {
+    public injectText(text: string): Operation[] {
         const { commonAncestorPath, editableDiv, isTextNode } = this.getSelectionProperties();
         if (!isTextNode)
             throw new Error('Solo se puede inyectar texto en un nodo de texto');
 
         const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath]);
-        return new Operation(OperationType.TEXT_INJECTION, targetElement, text);
+        return [new Operation(OperationType.TEXT_INJECTION, targetElement, text)];
     }
 
     public injectNodes(newNodes: Node[]): Operation[] {
         const { startIdx, commonAncestorPath, editableDiv } = this.getSelectionProperties();
-        return newNodes.map((node, i) => {
-            const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath, startIdx + i]);
+        return newNodes.map((node) => {
+            this.injectedElements++;
+            const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath, startIdx + this.injectedElements]);
             return new Operation(OperationType.ELEMENT_INJECTION, targetElement, node);
         });
     }

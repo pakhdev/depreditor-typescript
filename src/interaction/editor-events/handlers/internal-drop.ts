@@ -13,16 +13,18 @@ const internalDrop: HookHandler = (event?: Event, processor?: Processor): void =
 
     const previousSelectionWorkspace = new SelectionWorkspace(processor.core, SelectionStateType.PREVIOUS);
     const operationsBuilder = new OperationsBuilder(previousSelectionWorkspace);
-
-    const injectingOperations = previousSelectionWorkspace.selection.commonAncestor.isTextNode ? [] :
-        operationsBuilder.injectNodes([
-            ...previousSelectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.BEFORE).nodes,
-            ...previousSelectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.AFTER).nodes,
-        ]);
-    const removalOperations = operationsBuilder.removeSelected();
+    const transactionBuilder = processor.core.transactions.builder(previousSelectionWorkspace);
     const selectedPart = previousSelectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.WITHIN).nodes;
 
-    processor.commandHandler.handleInsertion(selectedPart, injectingOperations, removalOperations);
+    if (!previousSelectionWorkspace.selection.commonAncestor.isTextNode)
+        transactionBuilder.appendInjections(operationsBuilder.injectNodes([
+            ...previousSelectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.BEFORE).nodes,
+            ...previousSelectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.AFTER).nodes,
+        ]));
+
+    transactionBuilder.appendRemovals(operationsBuilder.removeSelected());
+
+    processor.commandHandler.handleInsertion(selectedPart, transactionBuilder);
 };
 
 export default internalDrop;
