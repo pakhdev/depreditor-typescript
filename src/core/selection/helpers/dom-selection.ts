@@ -42,7 +42,7 @@ class DomSelection {
         const commonAncestor = new SelectedElement(
             editableDiv,
             range.commonAncestorContainer,
-            { start: startElement.position, end: endElement.position },
+            { start: startElement.offset.start, end: endElement.offset.end },
         );
         return new StoredSelection(editableDiv, startElement, endElement, commonAncestor);
     }

@@ -10,11 +10,11 @@ class OperationsBuilder {
     constructor(private readonly selectionWorkspace: SelectionWorkspace) {}
 
     public injectText(text: string): Operation[] {
-        const { commonAncestorPath, editableDiv, isTextNode } = this.getSelectionProperties();
+        const { commonAncestorPath, editableDiv, isTextNode, offset } = this.getSelectionProperties();
         if (!isTextNode)
             throw new Error('Solo se puede inyectar texto en un nodo de texto');
 
-        const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath]);
+        const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath], offset);
         return [new Operation(OperationType.TEXT_INJECTION, targetElement, text)];
     }
 
@@ -35,10 +35,12 @@ class OperationsBuilder {
             offset,
             editableDiv,
             isTextNode,
-            isSomethingSelected,
+            isNothingSelected,
         } = this.getSelectionProperties();
-        if (isTextNode && isSomethingSelected)
+        if (isTextNode) {
+            if (isNothingSelected) return [];
             return [new Operation(OperationType.TEXT_REMOVAL, new SelectedElement(editableDiv, [...commonAncestorPath], offset))];
+        }
 
         return Array.from({ length: endIdx - startIdx + 1 }, (_, i) => {
             const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath, startIdx + i]);
@@ -51,10 +53,10 @@ class OperationsBuilder {
             startIndexInCommonAncestor: startIdx,
             endIndexInCommonAncestor: endIdx,
             commonAncestor: { path: commonAncestorPath, isTextNode, offset },
-            isSomethingSelected,
+            isNothingSelected,
             editableDiv,
         } = this.selectionWorkspace.selection;
-        return { startIdx, endIdx, commonAncestorPath, offset, editableDiv, isTextNode, isSomethingSelected };
+        return { startIdx, endIdx, commonAncestorPath, offset, editableDiv, isTextNode, isNothingSelected };
     }
 }
 

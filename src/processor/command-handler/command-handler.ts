@@ -32,18 +32,18 @@ class CommandHandler {
     public handleElement(node: Node, transactionBuilder?: TransactionBuilder) {
         const selectionWorkspace = new SelectionWorkspace(this.core);
         const operationsBuilder = new OperationsBuilder(selectionWorkspace);
-        const selectedPart = selectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.WITHIN).nodes;
         const containerProperties = this.core.containers.identify(node);
         const action = containerProperties
             ? ActionResolver.resolveContainerAction(selectionWorkspace, containerProperties)
             : ActionTypes.INSERT;
-        if (!transactionBuilder)
-            transactionBuilder = this.core.transactions.builder(selectionWorkspace);
-
         if (containerProperties)
             SelectionAdjuster.adjust(selectionWorkspace, containerProperties, action);
         else
             return this.insertNodes([node], transactionBuilder);
+        const selectedPart = selectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.WITHIN).nodes;
+
+        if (!transactionBuilder)
+            transactionBuilder = this.core.transactions.builder(selectionWorkspace);
 
         let newNodes: Node[] = [];
         if (action === ActionTypes.INSERT)
@@ -63,10 +63,12 @@ class CommandHandler {
             ? DeferredSelectionType.INSIDE_FRAGMENT
             : DeferredSelectionType.ENTIRE_FRAGMENT;
 
-        transactionBuilder
+        const transaction = transactionBuilder
             .appendInjections([...nodesBeforeOps, ...newNodesOps, ...nodesAfterOps])
             .computeDeferredSelection(newNodesOps, deferredSelectionType)
-            .appendRemovals(operationsBuilder.removeSelected());
+            .appendRemovals(operationsBuilder.removeSelected())
+            .build();
+        console.log(transaction);
     }
 
     public insertText(text: string, transactionBuilder?: TransactionBuilder) {
@@ -82,10 +84,12 @@ class CommandHandler {
 
         const textInjectionOp = operationsBuilder.injectText(text);
 
-        transactionBuilder
+        const transaction = transactionBuilder
             .appendInjections(textInjectionOp)
             .computeDeferredSelection(textInjectionOp, DeferredSelectionType.AFTER_FRAGMENT)
-            .appendRemovals(operationsBuilder.removeSelected());
+            .appendRemovals(operationsBuilder.removeSelected())
+            .build();
+        console.log(transaction);
     }
 
     public insertNodes(newNodes: Node[], transactionBuilder?: TransactionBuilder) {

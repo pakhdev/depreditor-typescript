@@ -25,7 +25,7 @@ class ElementWrapper {
         const formatting = this.processor.formattingReader.getNodesFormatting(nodes);
         const formattingEntry = formatting.entries.find(entry => entry.formatting === containerProperties);
         if (!formattingEntry)
-            throw new Error('Format not found');
+            throw new Error('Formato no encontrado');
 
         formattingEntry.nodes.forEach(node => this.unwrapNode(node));
         return formattingEntry.nodes;
