@@ -4,7 +4,8 @@ class EventHooks {
     private readonly hooks: { [key: string]: HookHandler[] };
     private domChangeObserver: MutationObserver | null = null;
     private isDragDetected = false;
-    private isMouseButtonPressed = false;
+    private waitingForMouseUp = false;
+    private waitingForSelectionChange = false;
 
     constructor(private readonly editableDiv: HTMLDivElement) {
         this.hooks = {
@@ -77,18 +78,42 @@ class EventHooks {
                 this.executeHooks('userNavigation', event);
             }
         });
-        this.editableDiv.addEventListener('focus', (event) => {
-            if (!this.isMouseButtonPressed)
-                this.executeHooks('userNavigation', event);
+        this.editableDiv.addEventListener('focus', () => {
+            this.waitingForSelectionChange = true;
         });
+
+        // FIX para problemas en la detección precisa de selección en el editor
+        // Los listeners 'selectionchange' y 'mouseup' están asignados al objeto document
+        // Esto se hace en caso de que el usuario suelte el botón del ratón fuera del área del editor
+        // Se requieren ambos eventos para ejecutar el hook 'userNavigation', porque en el caso
+        // de hacer clic dentro de una selección existente, el evento 'mouseup' solo no es suficiente.
         this.editableDiv.addEventListener('mousedown', (event) => {
-            if (event.button === 0)
-                this.isMouseButtonPressed = true;
+            // Inicia el seguimiento de eventos al detectar un clic con el botón izquierdo (button === 0)
+            if (event.button === 0) {
+                this.waitingForMouseUp = true;
+                this.waitingForSelectionChange = true;
+            }
         });
-        this.editableDiv.addEventListener('mouseup', (event) => {
-            this.executeHooks('userNavigation', event);
-            this.isMouseButtonPressed = false;
+
+        document.addEventListener('selectionchange', (event) => {
+            // Detecta cambios en la selección; si 'mouseup' ya ocurrió, ejecuta el hook
+            if (this.waitingForSelectionChange) {
+                if (!this.waitingForMouseUp)
+                    this.executeHooks('userNavigation', event);
+                this.waitingForSelectionChange = false;
+            }
         });
+
+        document.addEventListener('mouseup', (event) => {
+            // Al soltar el botón del ratón, si 'selectionchange' ya ocurrió, ejecuta el hook
+            if (this.waitingForMouseUp) {
+                if (!this.waitingForSelectionChange)
+                    this.executeHooks('userNavigation', event);
+                this.waitingForMouseUp = false;
+            }
+        });
+        // FINAL del FIX
+
         this.editableDiv.addEventListener('dragstart', (event) => {
             this.executeHooks('dragStart', event);
         });

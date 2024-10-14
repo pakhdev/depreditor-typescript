@@ -44,6 +44,7 @@ class DomSelection {
             range.commonAncestorContainer,
             { start: startElement.offset.start, end: endElement.offset.end },
         );
+        commonAncestor.offset = this.getCommonAncestorOffset(commonAncestor, startElement, endElement);
         return new StoredSelection(editableDiv, startElement, endElement, commonAncestor);
     }
 
@@ -102,6 +103,17 @@ class DomSelection {
 
     private static isSelectionOnEditor(selection: Selection, editableDiv: HTMLDivElement): boolean {
         return !!(selection?.focusNode && editableDiv.contains(selection.anchorNode) && selection.rangeCount);
+    }
+
+    private static getCommonAncestorOffset(commonAncestor: SelectedElement, startElement: SelectedElement, endElement: SelectedElement): {
+        start: number,
+        end: number
+    } {
+        if (commonAncestor.node.nodeType === Node.TEXT_NODE)
+            return { start: startElement.offset.start, end: endElement.offset.end };
+
+        const childrenIdxPos = commonAncestor.path.length;
+        return { start: startElement.path[childrenIdxPos], end: endElement.path[childrenIdxPos] };
     }
 }
 
