@@ -8,8 +8,10 @@ class FragmentsCloner {
     constructor(private readonly selection: StoredSelection) {}
 
     public selectedPart(part: AffectedNodesPart): ClonedFragment {
-        const affectedNodes = this.selection.getAffectedNodes(part);
         const clonedFragment = new ClonedFragment();
+        const affectedNodes = this.selection.getAffectedNodes(part);
+        if (!affectedNodes.length) return clonedFragment;
+
         affectedNodes.map(node => this.cloneNodeWithChildren(node, clonedFragment, true));
         this.adjustTextNodes(clonedFragment, part);
         return clonedFragment;

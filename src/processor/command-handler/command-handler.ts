@@ -8,6 +8,7 @@ import SelectionAdjuster from './helpers/selection-adjuster.ts';
 import SelectionWorkspace from '../selection-workspace/selection-workspace.ts';
 import TransactionBuilder from '../../core/transactions-manager/helpers/transaction-builder.ts';
 import DeferredSelectionType from '../../core/transactions-manager/enums/deferred-selection-type.enum.ts';
+import ContainerProperties from '../../core/containers/interfaces/container-properties.interface.ts';
 
 class CommandHandler {
 
@@ -46,9 +47,11 @@ class CommandHandler {
             transactionBuilder = this.core.transactions.builder(selectionWorkspace);
 
         let newNodes: Node[] = [];
-        if (action === ActionTypes.INSERT)
+        if (action === ActionTypes.INSERT) {
+            if (containerProperties)
+                node = this.fillEmptyFormattingNode(node, containerProperties!);
             newNodes = [node];
-        else if (action === ActionTypes.UNWRAP)
+        } else if (action === ActionTypes.UNWRAP)
             newNodes = this.processor.elementWrapper.unwrap(selectedPart, containerProperties!);
         else if (action === ActionTypes.WRAP)
             newNodes = this.processor.elementWrapper.wrap(selectedPart, node, containerProperties!);
@@ -162,6 +165,22 @@ class CommandHandler {
             nodesBefore: selectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.BEFORE).nodes,
             nodesAfter: selectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.AFTER).nodes,
         };
+    }
+
+    private fillEmptyFormattingNode(node: Node, containerProperties: ContainerProperties): Node {
+        let currentContainer = node;
+        while (containerProperties.childContainer) {
+            const { tagName, attributes, styles, classes } = containerProperties.childContainer;
+            const childContainer = this.processor.htmlBuilder.createElement(tagName, {
+                ...attributes,
+                styles,
+                classes,
+            });
+            currentContainer.appendChild(childContainer);
+            containerProperties = containerProperties.childContainer;
+        }
+        currentContainer.appendChild(document.createTextNode(''));
+        return node;
     }
 
 }

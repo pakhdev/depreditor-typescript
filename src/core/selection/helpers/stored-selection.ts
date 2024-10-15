@@ -14,11 +14,11 @@ class StoredSelection {
     ) {}
 
     public get startIndexInCommonAncestor(): number {
-        return this.getIndexInCommonAncestor(this.startElement);
+        return this.commonAncestor.offset.start;
     }
 
     public get endIndexInCommonAncestor(): number {
-        return this.getIndexInCommonAncestor(this.endElement);
+        return this.commonAncestor.offset.end;
     }
 
     public get isSomethingSelected(): boolean {
@@ -42,6 +42,7 @@ class StoredSelection {
 
     public setCommonAncestorNode(commonAncestor: Node): void {
         this.commonAncestor = new SelectedElement(this.editableDiv, commonAncestor);
+        this.commonAncestor.offset = this.getCommonAncestorOffset(this.commonAncestor, this.startElement, this.endElement);
     }
 
     public updateAllSelectionPoints(selectionParams: SelectionParams): void {
@@ -60,16 +61,15 @@ class StoredSelection {
         return AffectedNodesFetcher.get(this, part);
     }
 
-    private getIndexInCommonAncestor(element: SelectedElement): number {
-        if (this.commonAncestor.node.nodeType === Node.TEXT_NODE)
-            return element.offset.start;
+    private getCommonAncestorOffset(commonAncestor: SelectedElement, startElement: SelectedElement, endElement: SelectedElement): {
+        start: number,
+        end: number
+    } {
+        if (commonAncestor.node.nodeType === Node.TEXT_NODE)
+            return { start: startElement.offset.start, end: endElement.offset.end };
 
-        if (!this.commonAncestor.node.hasChildNodes())
-            throw new Error('El nodo común no tiene nodos hijos');
-
-        const commonAncestorChildren = Array.from(this.commonAncestor.node.childNodes);
-        const elementOrContainer = commonAncestorChildren.find(childNode => childNode.contains(element.node));
-        return commonAncestorChildren.indexOf(elementOrContainer as ChildNode);
+        const childrenIdxPos = commonAncestor.path.length;
+        return { start: startElement.path[childrenIdxPos], end: endElement.path[childrenIdxPos] + 1 };
     }
 
 }

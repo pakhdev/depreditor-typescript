@@ -10,8 +10,10 @@ class ElementWrapper {
         const tempContainer = HtmlElementBuilder.createElement('div');
         tempContainer.append(...nodes);
         this.unwrapFormattingNodes(containerProperties, nodes);
+        nodes = Array.from(tempContainer.childNodes);
+
         if (containerProperties.isBlock) {
-            this.wrapNodes([...nodes], wrapperElement);
+            this.wrapNodes(nodes, wrapperElement);
         } else {
             const textBlocks = this.processor.fragmentsFinder.findTextBlocks(nodes);
             this.wrapTextBlocks(textBlocks, wrapperElement);

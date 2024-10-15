@@ -47,7 +47,7 @@ class SelectionWorkspace {
         if (!commonAncestor.path.length)
             return false;
 
-        let node: Node | null = commonAncestor.parentNode;
+        let node: Node | null = commonAncestor.node;
         const { ownerEditor } = commonAncestor;
         while (node && node !== ownerEditor) {
             const element = node as HTMLElement;

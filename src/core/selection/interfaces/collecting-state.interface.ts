@@ -1,6 +1,5 @@
 interface CollectingState {
-    startContainerReached: boolean;
-    startPointReached: boolean;
+    startReached: boolean;
 }
 
 export default CollectingState;

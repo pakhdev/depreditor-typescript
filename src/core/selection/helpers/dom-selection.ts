@@ -113,7 +113,7 @@ class DomSelection {
             return { start: startElement.offset.start, end: endElement.offset.end };
 
         const childrenIdxPos = commonAncestor.path.length;
-        return { start: startElement.path[childrenIdxPos], end: endElement.path[childrenIdxPos] };
+        return { start: startElement.path[childrenIdxPos], end: endElement.path[childrenIdxPos] + 1 };
     }
 }
 

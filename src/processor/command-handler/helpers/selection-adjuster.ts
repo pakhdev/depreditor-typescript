@@ -18,6 +18,9 @@ class SelectionAdjuster {
     }
 
     private static adjustWrap(workspace: SelectionWorkspace, containerProperties: ContainerProperties): void {
+        if (containerProperties.isBlock)
+            workspace.extend.outsideInlineParents();
+
         const { formatting, isNothingSelected } = workspace;
         const similarFormatting = formatting.getSimilar(containerProperties);
         if (similarFormatting)

@@ -9,9 +9,6 @@ class ActionResolver {
         const { commonAncestor, isNothingSelected } = workspace;
         const { types } = containerProperties;
 
-        console.log('!workspace.isNothingSelected', !workspace.isNothingSelected); // FALSE
-        console.log('types.includes(ContainerType.WRAPPER)', types.includes(ContainerType.WRAPPER));
-
         if (!isNothingSelected) {
             if (types.includes(ContainerType.WRAPPER)) {
                 const isAlreadyFormatted = workspace.formatting.entries.some(
@@ -19,9 +16,6 @@ class ActionResolver {
                 );
                 if (isAlreadyFormatted)
                     return ActionTypes.UNWRAP;
-
-                console.log('!isNothingSelected', !isNothingSelected);
-                console.log('(isNothingSelected && commonAncestor.nodeType === Node.TEXT_NODE)', (isNothingSelected && commonAncestor.nodeType === Node.TEXT_NODE));
 
                 if (!isNothingSelected || (isNothingSelected && commonAncestor.nodeType === Node.TEXT_NODE))
                     return ActionTypes.WRAP;
