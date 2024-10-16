@@ -8,8 +8,8 @@ class AffectedNodesFetcher {
 
     public static get(storedSelection: StoredSelection, part: AffectedNodesPart): AffectedNodes[] {
         const {
-            startElement,
-            endElement,
+            startElement: { node: startNode },
+            endElement: { node: endNode },
             commonAncestor,
             startIndexInCommonAncestor: startIndex,
             endIndexInCommonAncestor: endIndex,
@@ -18,72 +18,45 @@ class AffectedNodesFetcher {
         if (commonAncestor.node.nodeType === Node.TEXT_NODE)
             return [{ node: commonAncestor.node, children: [] }];
 
-        let startContainer = commonAncestor.node.childNodes[startIndex];
-        if (part === AffectedNodesPart.AFTER)
-            startContainer = commonAncestor.node.childNodes[endIndex];
+        if (startIndex === endIndex)
+            return [];
 
-        let endContainer: Node | undefined = undefined;
-        if (part === AffectedNodesPart.AFTER)
-            endContainer = commonAncestor.node.childNodes[endIndex];
-
-        let startNode: Node | undefined = undefined;
-        if (part === AffectedNodesPart.WITHIN)
-            startNode = startElement.node;
-        if (part === AffectedNodesPart.AFTER)
-            startNode = endElement.node;
-
-        let endNode: Node | undefined = undefined;
-        if (part === AffectedNodesPart.BEFORE)
-            endNode = startElement.node;
-        if (part === AffectedNodesPart.WITHIN)
-            endNode = endElement.node;
-
-        return this.collect({
-            collectFrom: commonAncestor.node,
-            startContainer,
-            endContainer,
-            startNode,
-            endNode,
-        });
+        const nodes = Array.from(commonAncestor.node.childNodes).splice(startIndex, endIndex - startIndex);
+        switch (part) {
+            case AffectedNodesPart.BEFORE:
+                return this.collect({ nodes, end: startNode, excludeEnd: true });
+            case AffectedNodesPart.WITHIN:
+                return this.collect({ nodes, start: startNode, end: endNode });
+            case AffectedNodesPart.AFTER:
+                return this.collect({ nodes, start: endNode, excludeStart: true });
+        }
     }
 
     private static collect(range: CollectingRange, state?: CollectingState): AffectedNodes[] {
         const affectedNodes: AffectedNodes[] = [];
-        if (!state) {
-            state = {
-                startContainerReached: !range.startContainer,
-                startPointReached: !range.startNode,
-            };
-        }
+        if (!state) state = { startReached: !range.start };
 
-        const { collectFrom, startContainer, endContainer, startNode, endNode } = range;
-        const children = Array.from(collectFrom.childNodes);
+        for (const node of range.nodes) {
+            if (node === range.start)
+                state.startReached = true;
 
-        for (const child of children) {
-            if (child === startContainer)
-                state.startContainerReached = true;
+            if (range.excludeEnd && node === range.end)
+                return affectedNodes;
 
-            if (!state.startContainerReached)
-                continue;
+            if (range.excludeStart && node === range.start)
+                return affectedNodes;
 
-            if (child === startNode)
-                state.startPointReached = true;
-
-            if (state.startPointReached || (!state.startPointReached && child.contains(startNode!)))
+            if (state.startReached || (range.start && node.contains(range.start)))
                 affectedNodes.push({
-                    node: child,
+                    node,
                     children: this.collect({
-                        ...range,
-                        collectFrom: child,
-                        startContainer: undefined,
-                        endContainer: undefined,
+                        nodes: Array.from(node.childNodes),
+                        start: range.start,
+                        end: range.end,
                     }, state),
                 });
 
-            if (endNode && (child === endNode || child.contains(endNode)))
-                break;
-
-            if (endContainer && child === endContainer)
+            if (range.end && (node === range.end || node.contains(range.end)))
                 break;
         }
 

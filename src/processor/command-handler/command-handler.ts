@@ -69,7 +69,7 @@ class CommandHandler {
         const transaction = transactionBuilder
             .appendInjections([...nodesBeforeOps, ...newNodesOps, ...nodesAfterOps])
             .computeDeferredSelection(newNodesOps, deferredSelectionType)
-            .appendRemovals(operationsBuilder.removeSelected())
+            .appendRemovals(operationsBuilder.removeSelected(true))
             .build();
         console.log(transaction);
     }

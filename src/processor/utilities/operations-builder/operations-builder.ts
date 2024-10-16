@@ -27,7 +27,7 @@ class OperationsBuilder {
         });
     }
 
-    public removeSelected(): Operation[] {
+    public removeSelected(forceNodeRemoval: boolean = false): Operation[] {
         const {
             startIdx,
             endIdx,
@@ -37,12 +37,18 @@ class OperationsBuilder {
             isTextNode,
             isNothingSelected,
         } = this.getSelectionProperties();
-        if (isTextNode) {
-            if (isNothingSelected) return [];
-            return [new Operation(OperationType.TEXT_REMOVAL, new SelectedElement(editableDiv, [...commonAncestorPath], offset))];
-        }
 
-        return Array.from({ length: endIdx - startIdx + 1 }, (_, i) => {
+        if (isNothingSelected) {
+            if (forceNodeRemoval) {
+                const targetPath = isTextNode ? [...commonAncestorPath] : [...commonAncestorPath, startIdx];
+                return [new Operation(OperationType.ELEMENT_REMOVAL, new SelectedElement(editableDiv, targetPath))];
+            }
+            return [];
+        }
+        if (isTextNode)
+            return [new Operation(OperationType.TEXT_REMOVAL, new SelectedElement(editableDiv, [...commonAncestorPath], offset))];
+
+        return Array.from({ length: endIdx - startIdx }, (_, i) => {
             const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath, startIdx + i]);
             return new Operation(OperationType.ELEMENT_REMOVAL, targetElement);
         });

@@ -33,6 +33,7 @@ class WorkspaceExtender {
             const parentNode = this.workspaceSelection.commonAncestor.parentNode;
             this.workspaceSelection.setCommonAncestorNode(parentNode);
         }
+        this.workspaceSelection.setCommonAncestorNode(this.workspaceSelection.commonAncestor.parentNode);
     }
 
     public selectNext(): 'char' | 'element' | 'range' | null {
@@ -42,6 +43,7 @@ class WorkspaceExtender {
     public selectPrevious(): 'char' | 'element' | 'range' | null {
         return new AdjacentPartSelector(this.workspaceSelection).selectPrevious();
     }
+
 }
 
 export default WorkspaceExtender;
