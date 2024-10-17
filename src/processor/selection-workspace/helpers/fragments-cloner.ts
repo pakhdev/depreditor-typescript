@@ -14,7 +14,8 @@ class FragmentsCloner {
 
         affectedNodes.map(node => this.cloneNodeWithChildren(node, clonedFragment, true));
         this.adjustTextNodes(clonedFragment, part);
-        return clonedFragment;
+
+        return this.fragmentIsNotEmpty(clonedFragment) ? clonedFragment : new ClonedFragment();
     }
 
     private cloneNodeWithChildren(node: AffectedNodes, clonedFragment: ClonedFragment, isRoot: boolean): Node {
@@ -48,6 +49,19 @@ class FragmentsCloner {
         if (node.nodeType !== Node.TEXT_NODE || !node.textContent) return;
         if (end === undefined) end = node.textContent.length;
         node.textContent = node.textContent.slice(start, end);
+    }
+
+    private fragmentIsNotEmpty(fragment: ClonedFragment | Node[]): boolean {
+        const nodes = fragment instanceof ClonedFragment ? fragment.nodes : fragment;
+        for (const node of nodes) {
+            if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim() !== '')
+                return true;
+            if (node.nodeType === Node.ELEMENT_NODE && !node.childNodes.length)
+                return true;
+            if (node.hasChildNodes() && this.fragmentIsNotEmpty(Array.from(node.childNodes)))
+                return true;
+        }
+        return false;
     }
 }
 

@@ -65,11 +65,11 @@ class CommandHandler {
         const deferredSelectionType = (action === ActionTypes.INSERT)
             ? DeferredSelectionType.INSIDE_FRAGMENT
             : DeferredSelectionType.ENTIRE_FRAGMENT;
-
+        const forceNodeRemoval = this.forceNodeRemoval(selectionWorkspace);
         const transaction = transactionBuilder
             .appendInjections([...nodesBeforeOps, ...newNodesOps, ...nodesAfterOps])
             .computeDeferredSelection(newNodesOps, deferredSelectionType)
-            .appendRemovals(operationsBuilder.removeSelected(true))
+            .appendRemovals(operationsBuilder.removeSelected(forceNodeRemoval))
             .build();
         console.log(transaction);
     }
@@ -116,11 +116,11 @@ class CommandHandler {
         const nodesBeforeOps = operationsBuilder.injectNodes(nodesBefore);
         const newNodesOps = operationsBuilder.injectNodes(newNodes);
         const nodesAfterOps = operationsBuilder.injectNodes(nodesAfter);
-
-        transactionBuilder
+        const transaction = transactionBuilder
             .appendInjections([...nodesBeforeOps, ...newNodesOps, ...nodesAfterOps])
             .computeDeferredSelection(newNodesOps, DeferredSelectionType.AFTER_FRAGMENT)
             .appendRemovals(operationsBuilder.removeSelected());
+        console.log(transaction);
     }
 
     public handleDeletion() {
@@ -181,6 +181,12 @@ class CommandHandler {
         }
         currentContainer.appendChild(document.createTextNode(''));
         return node;
+    }
+
+    private forceNodeRemoval(selectionWorkspace: SelectionWorkspace): boolean {
+        const { commonAncestor } = selectionWorkspace.selection;
+        if (commonAncestor.isTextNode && (commonAncestor.offset.end === 0 || commonAncestor.offset.start === commonAncestor.node.textContent?.length))
+            return true;
     }
 
 }

@@ -12,7 +12,7 @@ class ElementWrapper {
         this.unwrapFormattingNodes(containerProperties, nodes);
         nodes = Array.from(tempContainer.childNodes);
 
-        if (containerProperties.isBlock) {
+        if (containerProperties.isBlock && !containerProperties.childContainer) {
             this.wrapNodes(nodes, wrapperElement);
         } else {
             const textBlocks = this.processor.fragmentsFinder.findTextBlocks(nodes);
@@ -24,13 +24,15 @@ class ElementWrapper {
     }
 
     public unwrap(nodes: Node[], containerProperties: ContainerProperties): Node[] {
+        const tempContainer = HtmlElementBuilder.createElement('div');
+        tempContainer.append(...nodes);
         const formatting = this.processor.formattingReader.getNodesFormatting(nodes);
         const formattingEntry = formatting.entries.find(entry => entry.formatting === containerProperties);
         if (!formattingEntry)
             throw new Error('Formato no encontrado');
 
         formattingEntry.nodes.forEach(node => this.unwrapNode(node));
-        return formattingEntry.nodes;
+        return Array.from(tempContainer.childNodes);
     }
 
     private unwrapNode(node: Node): void {
@@ -74,7 +76,11 @@ class ElementWrapper {
         const childContainer = HtmlElementBuilder.createElement(tagName, { ...attributes, styles, classes });
 
         textBlocks.forEach(textBlock => {
-            textBlock.nodes.forEach(line => this.wrapNodes([line], childContainer));
+            textBlock.nodes.forEach(lineNode =>
+                lineNode.nodeName === 'BR'
+                    ? lineNode.parentNode?.removeChild(lineNode)
+                    : this.wrapNodes([lineNode], childContainer),
+            );
         });
     }
 }

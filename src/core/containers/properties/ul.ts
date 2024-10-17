@@ -4,7 +4,7 @@ import li from './li.ts';
 
 const ul: ContainerProperties = {
     tagName: 'ul',
-    types: [ContainerType.INSERTABLE],
+    types: [ContainerType.WRAPPER, ContainerType.INSERTABLE],
     childContainer: li,
 };
 
