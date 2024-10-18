@@ -21,13 +21,13 @@ class OperationsBuilder {
     public injectNodes(newNodes: Node[]): Operation[] {
         const { startIdx, commonAncestorPath, editableDiv } = this.getSelectionProperties();
         return newNodes.map((node) => {
-            this.injectedElements++;
             const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath, startIdx + this.injectedElements]);
+            this.injectedElements++;
             return new Operation(OperationType.ELEMENT_INJECTION, targetElement, node);
         });
     }
 
-    public removeSelected(forceNodeRemoval: boolean = false): Operation[] {
+    public removeSelected(): Operation[] {
         const {
             startIdx,
             endIdx,
@@ -38,15 +38,12 @@ class OperationsBuilder {
             isNothingSelected,
         } = this.getSelectionProperties();
 
-        if (isNothingSelected) {
-            if (forceNodeRemoval) {
-                const targetPath = isTextNode ? [...commonAncestorPath] : [...commonAncestorPath, startIdx];
-                return [new Operation(OperationType.ELEMENT_REMOVAL, new SelectedElement(editableDiv, targetPath))];
-            }
-            return [];
-        }
-        if (isTextNode)
+        if (isTextNode) {
+            if (isNothingSelected)
+                return [];
+
             return [new Operation(OperationType.TEXT_REMOVAL, new SelectedElement(editableDiv, [...commonAncestorPath], offset))];
+        }
 
         return Array.from({ length: endIdx - startIdx }, (_, i) => {
             const targetElement = new SelectedElement(editableDiv, [...commonAncestorPath, startIdx + i]);

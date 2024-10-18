@@ -6,9 +6,9 @@ import OperationsBuilder from '../utilities/operations-builder/operations-builde
 import Processor from '../processor.ts';
 import SelectionAdjuster from './helpers/selection-adjuster.ts';
 import SelectionWorkspace from '../selection-workspace/selection-workspace.ts';
-import TransactionBuilder from '../../core/transactions-manager/helpers/transaction-builder.ts';
 import DeferredSelectionType from '../../core/transactions-manager/enums/deferred-selection-type.enum.ts';
 import ContainerProperties from '../../core/containers/interfaces/container-properties.interface.ts';
+import HandlingContext from './interfaces/handling-context.interface.ts';
 
 class CommandHandler {
 
@@ -17,21 +17,28 @@ class CommandHandler {
         private readonly processor: Processor,
     ) {}
 
-    public handleInsertion(input: Node[] | string, transactionBuilder?: TransactionBuilder) {
+    public handleInsertion(input: Node[] | string, handlingContext?: HandlingContext) {
         if (!input.length) return;
 
-        if (typeof input === 'string' || (input.length === 1 && input[0].nodeType === Node.TEXT_NODE)) {
+        const selectionWorkspace = handlingContext?.workspace ?? new SelectionWorkspace(this.core);
+        const isInsertingIntoTextNode = selectionWorkspace.selection.commonAncestor.isTextNode;
+
+        if (isInsertingIntoTextNode && (typeof input === 'string' || (input.length === 1 && input[0].nodeType === Node.TEXT_NODE))) {
             const text = typeof input === 'string' ? input : input[0].textContent;
-            if (text) this.insertText(text, transactionBuilder);
+            if (text) this.insertText(text, handlingContext);
         } else {
+            if (typeof input === 'string')
+                input = [document.createTextNode(input)];
             (input.length === 1)
-                ? this.handleElement(input[0], transactionBuilder)
-                : this.insertNodes(input, transactionBuilder);
+                ? this.handleElement(input[0], handlingContext)
+                : this.insertNodes(input, handlingContext);
         }
     }
 
-    public handleElement(node: Node, transactionBuilder?: TransactionBuilder) {
-        const selectionWorkspace = new SelectionWorkspace(this.core);
+    public handleElement(node: Node, handlingContext?: HandlingContext) {
+        const selectionWorkspace = handlingContext?.workspace ?? new SelectionWorkspace(this.core);
+        this.moveCursorFromTextEdge(selectionWorkspace);
+
         const operationsBuilder = new OperationsBuilder(selectionWorkspace);
         const containerProperties = this.core.containers.identify(node);
         const action = containerProperties
@@ -40,11 +47,9 @@ class CommandHandler {
         if (containerProperties)
             SelectionAdjuster.adjust(selectionWorkspace, containerProperties, action);
         else
-            return this.insertNodes([node], transactionBuilder);
+            return this.insertNodes([node], handlingContext);
         const selectedPart = selectionWorkspace.cloneFragment.selectedPart(AffectedNodesPart.WITHIN).nodes;
-
-        if (!transactionBuilder)
-            transactionBuilder = this.core.transactions.builder(selectionWorkspace);
+        const transactionBuilder = handlingContext?.transactionBuilder || this.core.transactions.builder(selectionWorkspace);
 
         let newNodes: Node[] = [];
         if (action === ActionTypes.INSERT) {
@@ -65,25 +70,23 @@ class CommandHandler {
         const deferredSelectionType = (action === ActionTypes.INSERT)
             ? DeferredSelectionType.INSIDE_FRAGMENT
             : DeferredSelectionType.ENTIRE_FRAGMENT;
-        const forceNodeRemoval = this.forceNodeRemoval(selectionWorkspace);
         const transaction = transactionBuilder
             .appendInjections([...nodesBeforeOps, ...newNodesOps, ...nodesAfterOps])
             .computeDeferredSelection(newNodesOps, deferredSelectionType)
-            .appendRemovals(operationsBuilder.removeSelected(forceNodeRemoval))
+            .appendRemovals(operationsBuilder.removeSelected())
             .build();
         console.log(transaction);
     }
 
-    public insertText(text: string, transactionBuilder?: TransactionBuilder) {
+    public insertText(text: string, handlingContext?: HandlingContext) {
         const selectionWorkspace = new SelectionWorkspace(this.core);
         const operationsBuilder = new OperationsBuilder(selectionWorkspace);
         const isAncestorTextNode = selectionWorkspace.selection.commonAncestor.isTextNode;
 
-        if (!transactionBuilder)
-            transactionBuilder = this.core.transactions.builder(selectionWorkspace);
+        const transactionBuilder = handlingContext?.transactionBuilder ?? this.core.transactions.builder(selectionWorkspace);
 
         if (!isAncestorTextNode)
-            this.insertNodes([document.createTextNode(text)], transactionBuilder);
+            this.insertNodes([document.createTextNode(text)], handlingContext);
 
         const textInjectionOp = operationsBuilder.injectText(text);
 
@@ -95,13 +98,14 @@ class CommandHandler {
         console.log(transaction);
     }
 
-    public insertNodes(newNodes: Node[], transactionBuilder?: TransactionBuilder) {
+    public insertNodes(newNodes: Node[], handlingContext?: HandlingContext) {
         const selectionWorkspace = new SelectionWorkspace(this.core);
+        this.moveCursorFromTextEdge(selectionWorkspace);
+
         const operationsBuilder = new OperationsBuilder(selectionWorkspace);
         const insertionZoneFormatting = this.processor.formattingReader.getInsertionPointFormatting();
         let newNodesFormatting = this.processor.formattingReader.getNodesFormatting(newNodes);
-        if (!transactionBuilder)
-            transactionBuilder = this.core.transactions.builder(selectionWorkspace);
+        const transactionBuilder = handlingContext?.transactionBuilder ?? this.core.transactions.builder(selectionWorkspace);
 
         insertionZoneFormatting.entries.forEach(entry => {
             if (newNodesFormatting.entries.find(e => e.formatting === entry.formatting))
@@ -131,7 +135,7 @@ class CommandHandler {
             this.deleteSelectedContent();
     }
 
-    private deleteSelectedText() {
+    public deleteSelectedText() {
         const selectionWorkspace = new SelectionWorkspace(this.core);
         const operationsBuilder = new OperationsBuilder(selectionWorkspace);
         const { offset: { start: offset }, path } = selectionWorkspace.selection.commonAncestor;
@@ -142,7 +146,7 @@ class CommandHandler {
             .appendRemovals(operationsBuilder.removeSelected());
     }
 
-    private deleteSelectedContent() {
+    public deleteSelectedContent() {
         const selectionWorkspace = new SelectionWorkspace(this.core);
         const operationsBuilder = new OperationsBuilder(selectionWorkspace);
 
@@ -183,10 +187,17 @@ class CommandHandler {
         return node;
     }
 
-    private forceNodeRemoval(selectionWorkspace: SelectionWorkspace): boolean {
+    private moveCursorFromTextEdge(selectionWorkspace: SelectionWorkspace): void {
         const { commonAncestor } = selectionWorkspace.selection;
-        if (commonAncestor.isTextNode && (commonAncestor.offset.end === 0 || commonAncestor.offset.start === commonAncestor.node.textContent?.length))
-            return true;
+        const { parentNode } = commonAncestor.node;
+
+        if (commonAncestor.isTextNode && (commonAncestor.offset.end === 0 || commonAncestor.offset.start === commonAncestor.node.textContent?.length)) {
+            const { position } = commonAncestor;
+            let offset = (commonAncestor.offset.end === 0)
+                ? { start: position, end: position }
+                : { start: position + 1, end: position + 1 };
+            selectionWorkspace.selection.updateAllSelectionPoints({ node: parentNode!, offset });
+        }
     }
 
 }
