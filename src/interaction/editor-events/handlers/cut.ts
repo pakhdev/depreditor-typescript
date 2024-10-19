@@ -1,7 +1,7 @@
 import Processor from '../../../processor/processor.ts';
-import HookHandler from '../../../core/event-hooks/interfaces/hook-handler.interface.ts';
+import EditorEventHandler from '../interfaces/editor-event-handler.interface.ts';
 
-const cut: HookHandler = (event?: Event, processor?: Processor): void => {
+const cut: EditorEventHandler = (event: Event, processor: Processor): void => {
     if (!event || !processor)
         throw new Error('Cut: El evento o el procesador no están definidos');
 

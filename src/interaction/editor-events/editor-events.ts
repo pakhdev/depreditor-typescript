@@ -1,38 +1,33 @@
 import Core from '../../core/core.ts';
-import Processor from '../../processor/processor.ts';
+import HandlingContext from '../../processor/command-handler/interfaces/handling-context.interface.ts';
 import Interaction from '../interaction.ts';
-import HookHandlers from './interfaces/hook-handlers.interface.ts';
-import write from './handlers/write.ts';
-import backspace from './handlers/backspace.ts';
-import cut from './handlers/cut.ts';
-import remove from './handlers/remove.ts';
-import paste from './handlers/paste.ts';
-import externalDrop from './handlers/external-drop.ts';
-import internalDrop from './handlers/internal-drop.ts';
+import InterceptorsRunner from './interception/interceptors-runner.ts';
+import Processor from '../../processor/processor.ts';
+import editorEventsConfig from './config/editor-events.config.ts';
+import EditorEventConfig from './interfaces/editor-event-config.interface.ts';
 
 class EditorEvents {
-    private readonly list: HookHandlers[] = [
-        { hooks: ['writing'], method: write },
-        { hooks: ['backspace'], method: backspace },
-        { hooks: ['cut'], method: cut },
-        { hooks: ['delete'], method: remove },
-        { hooks: ['paste'], method: paste },
-        { hooks: ['externalDrop'], method: externalDrop },
-        { hooks: ['internalDrop'], method: internalDrop },
-    ];
+    private readonly eventsConfig: EditorEventConfig[] = editorEventsConfig;
 
     constructor(
         private readonly core: Core,
         private readonly processor: Processor,
         private readonly interaction: Interaction,
     ) {
-        this.registerActions();
+        this.registerHandlers();
     }
 
-    private registerActions(): void {
-        this.list.forEach(action => {
-            this.core.eventHooks.on(action.hooks, (event) => action.method(event, this.processor, this.interaction));
+    private registerHandlers(): void {
+        this.eventsConfig.forEach(eventConfig => {
+            this.core.eventHooks.on(eventConfig.hooks, (event) => this.handleHook(event!, eventConfig));
         });
+    }
+
+    private handleHook(event: Event, eventConfig: EditorEventConfig): void {
+        const handlingContext: HandlingContext = {};
+        if (new InterceptorsRunner(this.core, this.processor).run(eventConfig, handlingContext))
+            return;
+        eventConfig.method(event, this.processor, this.interaction, handlingContext);
     }
 }
 

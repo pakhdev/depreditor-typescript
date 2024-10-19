@@ -1,7 +1,7 @@
 import CommandHandler from '../command-handler/command-handler.ts';
 import Core from '../../core/core.ts';
 import Processor from '../processor.ts';
-import TransactionBuilder from '../../core/transactions-manager/helpers/transaction-builder.ts';
+import HandlingContext from '../command-handler/interfaces/handling-context.interface.ts';
 
 class CommandHandlerPort {
 
@@ -14,16 +14,16 @@ class CommandHandlerPort {
         this.commandHandler = new CommandHandler(this.core, this.processor);
     }
 
-    public insertNodes(newNodes: Node[]): void {
-        return this.commandHandler.insertNodes(newNodes);
+    public insertNodes(newNodes: Node[], handlingContext?: HandlingContext): void {
+        return this.commandHandler.insertNodes(newNodes, handlingContext);
     }
 
     public insertText(text: string): void {
         return this.commandHandler.insertText(text);
     }
 
-    public handleInsertion(input: Node[] | string, transactionBuilder?: TransactionBuilder): void {
-        return this.commandHandler.handleInsertion(input, transactionBuilder);
+    public handleInsertion(input: Node[] | string, handlingContext?: HandlingContext): void {
+        return this.commandHandler.handleInsertion(input, handlingContext);
     }
 
     public handleElement(node: Node): void {
@@ -32,6 +32,10 @@ class CommandHandlerPort {
 
     public handleDeletion(): void {
         return this.commandHandler.handleDeletion();
+    }
+
+    public deleteSelectedContent(): void {
+        return this.commandHandler.deleteSelectedContent();
     }
 }
 

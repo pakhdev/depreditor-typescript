@@ -1,10 +1,11 @@
-import HookHandler from '../../../core/event-hooks/interfaces/hook-handler.interface.ts';
 import Interaction from '../../interaction.ts';
 import Processor from '../../../processor/processor.ts';
 import TextPreprocessor from '../helpers/text-preprocessor.ts';
 import editorConfig from '../../../editor-config/editor-config.ts';
+import EditorEventHandler from '../interfaces/editor-event-handler.interface.ts';
+import HandlingContext from '../../../processor/command-handler/interfaces/handling-context.interface.ts';
 
-const paste: HookHandler = (event?: Event, processor?: Processor, interaction?: Interaction): void => {
+const paste: EditorEventHandler = (event: Event, processor: Processor, interaction: Interaction, handlingContext: HandlingContext): void => {
     if (!event || !processor || !interaction)
         throw new Error('Paste: El evento, el procesador o la clase de interacción no están definidos');
     const e = event as ClipboardEvent;
@@ -18,6 +19,7 @@ const paste: HookHandler = (event?: Event, processor?: Processor, interaction?: 
     let text = new TextPreprocessor(clipboardData.getData('text')).sanitize();
     processor.commandHandler.handleInsertion(
         text.containsBreakLine() ? text.getAsHtml() : text.getAsText(),
+        handlingContext,
     );
 };
 

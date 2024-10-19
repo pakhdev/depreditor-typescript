@@ -1,7 +1,7 @@
 import Processor from '../../../processor/processor.ts';
-import HookHandler from '../../../core/event-hooks/interfaces/hook-handler.interface.ts';
+import EditorEventHandler from '../interfaces/editor-event-handler.interface.ts';
 
-const remove: HookHandler = (event?: Event, processor?: Processor): void => {
+const remove: EditorEventHandler = (event: Event, processor: Processor): void => {
     if (!event || !processor)
         throw new Error('Remove: El evento o el procesador no están definidos');
     const e = event as KeyboardEvent;

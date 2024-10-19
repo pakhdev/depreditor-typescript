@@ -1,10 +1,10 @@
 import Processor from '../../../processor/processor.ts';
-import HookHandler from '../../../core/event-hooks/interfaces/hook-handler.interface.ts';
 import TextPreprocessor from '../helpers/text-preprocessor.ts';
+import EditorEventHandler from '../interfaces/editor-event-handler.interface.ts';
+import HandlingContext from '../../../processor/command-handler/interfaces/handling-context.interface.ts';
+import Interaction from '../../interaction.ts';
 
-const externalDrop: HookHandler = (event?: Event, processor?: Processor): void => {
-    if (!event || !processor)
-        throw new Error('ExternalDrop: El evento o el procesador no están definidos');
+const externalDrop: EditorEventHandler = (event: Event, processor: Processor, _: Interaction, handlingContext: HandlingContext): void => {
     const e = event as DragEvent;
     e.preventDefault();
     const dataTransfer = e.dataTransfer;
@@ -13,6 +13,7 @@ const externalDrop: HookHandler = (event?: Event, processor?: Processor): void =
 
     processor.commandHandler.handleInsertion(
         text.containsBreakLine() ? text.getAsHtml() : text.getAsText(),
+        handlingContext,
     );
 };
 

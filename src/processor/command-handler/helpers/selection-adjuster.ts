@@ -18,7 +18,7 @@ class SelectionAdjuster {
     }
 
     private static adjustWrap(workspace: SelectionWorkspace, containerProperties: ContainerProperties): void {
-        if (containerProperties.isBlock)
+        if (containerProperties.isBlock && workspace.hasInlineParent)
             workspace.extend.outsideInlineParents();
 
         const { formatting, isNothingSelected } = workspace;
@@ -39,7 +39,7 @@ class SelectionAdjuster {
     }
 
     private static adjustInsert(workspace: SelectionWorkspace, containerProperties: ContainerProperties): void {
-        if (containerProperties.isBlock)
+        if (containerProperties.isBlock && workspace.hasInlineParent)
             workspace.extend.outsideInlineParents();
     }
 }

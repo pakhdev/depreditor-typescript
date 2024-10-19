@@ -1,12 +1,12 @@
-import HookHandler from '../../../core/event-hooks/interfaces/hook-handler.interface.ts';
 import Processor from '../../../processor/processor.ts';
+import EditorEventHandler from '../interfaces/editor-event-handler.interface.ts';
 
-const write: HookHandler = (event?: Event, processor?: Processor): void => {
+const write: EditorEventHandler = (event: Event, processor: Processor): void => {
     if (!event || !processor)
         throw new Error('Write: El evento o el procesador no están definidos');
     const e = event as KeyboardEvent;
     e.preventDefault();
-    processor.commandHandler.insertText(e.key);
+    processor.commandHandler.handleInsertion(e.key);
 };
 
 export default write;
